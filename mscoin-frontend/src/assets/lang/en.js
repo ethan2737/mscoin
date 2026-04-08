@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     common: {
         login: 'Log In',
         register: 'Sign Up',

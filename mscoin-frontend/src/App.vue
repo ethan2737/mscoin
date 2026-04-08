@@ -3,9 +3,8 @@
     <div class="page-content">
       <div class="time_download" style="display: none;">
         <div class="leftwrapper">
-          <!-- <img src="../src/assets/images/clock.png" alt="" class="clock"> -->
-          <Icon type="ios-clock-outline" class="clock"></Icon>
-          <span>{{time|dateFormat}}&#160;&#160;{{utc}}</span>
+          <el-icon class="clock"><Clock /></el-icon>
+          <span>{{ formattedTime }}&nbsp;&nbsp;{{ utc }}</span>
         </div>
       </div>
       <div class="layout">
@@ -14,602 +13,635 @@
             <div class="layout-logo"></div>
           </router-link>
           <div class="layout-ceiling-main">
-            <!-- 导航条 -->
             <div class="header_nav">
-              <Menu :active-name="activeNav" width="auto" :open-names="['1']">
-                <Submenu name="1">
+              <el-menu
+                :default-active="activeNav"
+                mode="horizontal"
+                :ellipsis="false"
+                background-color="#172636"
+                text-color="#828ea1"
+                active-text-color="#f0a70a"
+              >
+                <el-sub-menu index="1">
+                  <template #title>
+                    <span>{{ $t("header.index") }}</span>
+                  </template>
                   <router-link to="/">
-                    <MenuItem name="nav-index">{{$t("header.index")}}</MenuItem>
+                    <el-menu-item index="nav-index">{{ $t("header.index") }}</el-menu-item>
                   </router-link>
                   <router-link to="/exchange">
-                    <MenuItem name="nav-exchange">{{$t("header.exchange")}}</MenuItem>
+                    <el-menu-item index="nav-exchange">{{ $t("header.exchange") }}</el-menu-item>
                   </router-link>
                   <router-link to="/ctc">
-                    <MenuItem name="nav-ctc">{{$t("header.ctc")}}</MenuItem>
+                    <el-menu-item index="nav-ctc">{{ $t("header.ctc") }}</el-menu-item>
                   </router-link>
                   <router-link to="/otc/trade/usdt">
-                    <MenuItem name="nav-otc">{{$t("header.otc")}}</MenuItem>
+                    <el-menu-item index="nav-otc">{{ $t("header.otc") }}</el-menu-item>
                   </router-link>
                   <router-link to="/swapindex/1">
-                    <MenuItem name="nav-swapindex">{{$t("header.swap")}}</MenuItem>
+                    <el-menu-item index="nav-swapindex">{{ $t("header.swap") }}</el-menu-item>
                   </router-link>
                   <router-link to="/swapindex/2">
-                    <MenuItem name="nav-secswap">{{$t("header.secswap")}}</MenuItem>
+                    <el-menu-item index="nav-secswap">{{ $t("header.secswap") }}</el-menu-item>
                   </router-link>
-                  <router-link to="/lab" style="position:relative;">
-                    <MenuItem name="nav-lab">{{$t("header.lab")}}</MenuItem>
+                  <router-link to="/lab">
+                    <el-menu-item index="nav-lab">{{ $t("header.lab") }}</el-menu-item>
                   </router-link>
-                  <router-link to="/mining" style="position:relative;">
-                    <MenuItem name="nav-mining">{{$t("header.mining")}}</MenuItem>
+                  <router-link to="/mining">
+                    <el-menu-item index="nav-mining">{{ $t("header.mining") }}</el-menu-item>
                   </router-link>
-                  <router-link to="/crowdfunding" style="position:relative;">
-                    <MenuItem name="nav-crowdfunding">{{$t("header.crowdfunding")}}</MenuItem>
+                  <router-link to="/crowdfunding">
+                    <el-menu-item index="nav-crowdfunding">{{ $t("header.crowdfunding") }}</el-menu-item>
                   </router-link>
-                </Submenu>
-              </Menu>
+                </el-sub-menu>
+              </el-menu>
             </div>
             <div class="header_nav_mobile_triggle" @click="toggleMemu()">
-              <Icon type="md-menu" style="font-size: 26px;color:#cccccc;"/>
+              <el-icon style="font-size: 26px; color: #cccccc;"><Menu /></el-icon>
             </div>
             <div class="header_nav" style="float:right;margin-left: 10px;">
-              <Menu mode="horizontal" width="auto" @on-select="changelanguage" style="height: 50px;line-height:50px;">
-                  <Submenu name="lang">
-                      <template slot="title" class="lang-title">
-                        <span style="display: none;">{{languageValue}}</span>
-                        <img class="lang-img" v-if="lang=='简体中文'" src="./assets/images/lang-zh.png"></img>
-                        <img class="lang-img" v-if="lang=='English'" src="./assets/images/lang-en.png"></img>
-                      </template>
-                      <MenuItem name="zh" class="lang-item"><img src="./assets/images/lang-zh.png"></img>简体中文</MenuItem>
-                      <MenuItem name="en" class="lang-item"><img src="./assets/images/lang-en.png"></img>ENGLISH</MenuItem>
-                  </Submenu>
-              </Menu>
+              <el-dropdown @command="changelanguage" trigger="click">
+                <div class="lang-title" style="display: flex; align-items: center; cursor: pointer;">
+                  <img v-if="lang === '简体中文'" class="lang-img" src="./assets/images/lang-zh.png" alt="中文">
+                  <img v-if="lang === 'English'" class="lang-img" src="./assets/images/lang-en.png" alt="English">
+                </div>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="zh">
+                      <img src="./assets/images/lang-zh.png" style="width: 20px; margin-right: 5px; vertical-align: middle;">简体中文
+                    </el-dropdown-item>
+                    <el-dropdown-item command="en">
+                      <img src="./assets/images/lang-en.png" style="width: 20px; margin-right: 5px; vertical-align: middle;">ENGLISH
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </div>
-           
+
             <div class="rr login-container">
-              <!-- 判断是否登录 -->
-              <!-- 登录 -->
               <div class="login_register isLogin" v-if="isLogin">
                 <div class="mymsg">
-                  <router-link to="/uc/safe">{{$t("header.usercenter")}}</router-link>
+                  <router-link to="/uc/safe">{{ $t("header.usercenter") }}</router-link>
                 </div>
-                <Dropdown>
-                  <a href="javascript:void(0)">
-                    <Icon type="md-person" size="20" />
-                    <span>{{strpo(member.username)}}</span>
-                    <Icon type="md-arrow-dropdown" size="16" />
-                  </a>
-                  <DropdownMenu slot="list">
-                      <DropdownItem>
-                        <router-link to="/uc/money">
-                          <Icon type="logo-bitcoin" /> &nbsp;{{$t("header.assetmanage")}}
+                <el-dropdown>
+                  <div style="display: flex; align-items: center; cursor: pointer; color: #828ea1;">
+                    <el-icon style="margin-right: 4px;"><User /></el-icon>
+                    <span style="margin-right: 8px;">{{ strpo(member.username) }}</span>
+                    <el-icon><ArrowDown /></el-icon>
+                  </div>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item>
+                        <router-link to="/uc/money" style="color: inherit; display: flex; align-items: center;">
+                          <el-icon><Coin /></el-icon> &nbsp;{{ $t("header.assetmanage") }}
                         </router-link>
-                      </DropdownItem>
-                      <DropdownItem>
-                        <router-link to="/uc/entrust/current">
-                          <Icon type="md-swap" /> &nbsp;{{$t("header.trademanage")}}
+                      </el-dropdown-item>
+                      <el-dropdown-item>
+                        <router-link to="/uc/entrust/current" style="color: inherit; display: flex; align-items: center;">
+                          <el-icon><Switch /></el-icon> &nbsp;{{ $t("header.trademanage") }}
                         </router-link>
-                      </DropdownItem>
-                      <DropdownItem>
-                        <router-link to="/uc/contract/entrust/current">
-                          <Icon type="md-swap" /> &nbsp;{{$t("header.contractmanage")}}
+                      </el-dropdown-item>
+                      <el-dropdown-item>
+                        <router-link to="/uc/contract/entrust/current" style="color: inherit; display: flex; align-items: center;">
+                          <el-icon><Switch /></el-icon> &nbsp;{{ $t("header.contractmanage") }}
                         </router-link>
-                      </DropdownItem>
-                      <DropdownItem>
-                        <router-link to="/uc/innovation/myorders">
-                          <Icon type="md-swap" /> &nbsp;{{$t("header.innovationmanage")}}
+                      </el-dropdown-item>
+                      <el-dropdown-item>
+                        <router-link to="/uc/innovation/myorders" style="color: inherit; display: flex; align-items: center;">
+                          <el-icon><Switch /></el-icon> &nbsp;{{ $t("header.innovationmanage") }}
                         </router-link>
-                      </DropdownItem>
-                      <DropdownItem>
-                        <div @click="logout">
-                          <Icon type="md-log-out" /> &nbsp;{{$t("common.logout")}}
+                      </el-dropdown-item>
+                      <el-dropdown-item divided>
+                        <div @click="logout" style="display: flex; align-items: center;">
+                          <el-icon><SwitchButton /></el-icon> &nbsp;{{ $t("common.logout") }}
                         </div>
-                      </DropdownItem>
-                  </DropdownMenu>
-                </Dropdown>
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
               </div>
-              <!-- 未登录 -->
               <div class="login_register" v-else>
-                <Menu active-name11="1-1" width="auto" :open-names="['2']">
-                  <Submenu name="2" id="login_register_theme">
+                <el-menu
+                  mode="horizontal"
+                  :ellipsis="false"
+                  background-color="#172636"
+                  text-color="#828ea1"
+                  active-text-color="#f0a70a"
+                >
+                  <el-sub-menu index="2">
+                    <template #title>
+                      <span>{{ $t("common.loginregister") }}</span>
+                    </template>
                     <router-link to="/login" id="login">
-                      <MenuItem name="1-1">{{$t("common.login")}}</MenuItem>
+                      <el-menu-item index="1-1">{{ $t("common.login") }}</el-menu-item>
                     </router-link>
                     <router-link to="/register" id="register">
-                      <MenuItem name="1-2">{{$t("common.register")}}</MenuItem>
+                      <el-menu-item index="1-2" style="color: #f0a70a;">{{ $t("common.register") }}</el-menu-item>
                     </router-link>
-                  </Submenu>
-                </Menu>
+                  </el-sub-menu>
+                </el-menu>
               </div>
             </div>
           </div>
         </div>
       </div>
       <router-view v-if="isRouterAlive"></router-view>
-      <!-- </div> -->
     </div>
-    <Drawer :closable="true" width="40" v-model="navDrawerModal" class="header_nav_mobile">
-        <Menu :active-name="activeNav" width="auto" @on-select="changelanguage">
-            <router-link to="/">
-              <MenuItem name="nav-index" style="text-align:left;color:#bdc2ca;">{{$t("header.index")}}</MenuItem>
-            </router-link>
-            <!-- <router-link to="/exchange">
-              <MenuItem name="nav-exchange" style="text-align:left;color:#bdc2ca;">{{$t("header.exchange")}}</MenuItem>
-            </router-link> -->
-            <router-link to="/ctc">
-              <MenuItem name="nav-ctc" style="text-align:left;color:#bdc2ca;">{{$t("header.ctc")}}</MenuItem>
-            </router-link>
-            <router-link to="/otc/trade/usdt">
-              <MenuItem name="nav-otc" style="text-align:left;color:#bdc2ca;">{{$t("header.otc")}}</MenuItem>
-            </router-link>
-            <router-link to="/lab">
-              <MenuItem name="nav-lab" style="text-align:left;color:#bdc2ca;">{{$t("header.lab")}}</MenuItem>
-            </router-link>
-            <router-link to="/mining">
-                    <MenuItem name="nav-mining" style="text-align:left;color:#bdc2ca;">{{$t("header.mining")}}</MenuItem>
-                  </router-link>
-            <router-link to="/crowdfunding">
-              <MenuItem name="nav-crowdfunding" style="text-align:left;color:#bdc2ca;">{{$t("header.crowdfunding")}}</MenuItem>
-            </router-link>
-            <router-link to="/invite">
-                    <MenuItem name="nav-invite" style="text-align:left;color:#bdc2ca;">{{$t("header.invite")}}</MenuItem>
-            </router-link>
-            <!-- <MenuItem name="nav-invite" style="text-align:left;">{{$t("header.invite")}}</MenuItem> -->
-            <router-link to="/announcement/0">
-              <MenuItem name="nav-service" style="text-align:left;color:#bdc2ca;">{{$t("header.service")}}</MenuItem>
-            </router-link>
-            <!-- <router-link to="/whitepaper">
-              <MenuItem name="nav-whitepaper" style="text-align:left;">{{$t("header.whitepaper")}}</MenuItem>
-            </router-link> -->
-            <Submenu name="nav-login" id="login_register_theme" v-if="!isLogin">
-              <template slot="title" class="lang-title">
-                  <span style="color:#bdc2ca;">{{$t("common.loginregister")}}</span>
-              </template>
-              <router-link to="/login" id="login">
-                <MenuItem name="1-1" class="lang-item" style="padding-left:20px!important;">{{$t("common.login")}}</MenuItem>
-              </router-link>
-              <router-link to="/register" id="register">
-                <MenuItem name="1-2" class="lang-item" style="padding-left:20px!important;">{{$t("common.register")}}</MenuItem>
-              </router-link>
-            </Submenu>
-            <Submenu name="nav_personal" v-if="isLogin">
-                <template slot="title" class="lang-title">
-                  <span style="color:#bdc2ca;">{{$t("header.usercenter")}}</span>
-                </template>
-                <router-link to="/uc/safe">
-                  <MenuItem name="nav_safe" class="lang-item" style="padding-left:20px!important;">{{$t("uc.member.securitysetting")}}</MenuItem>
-                </router-link>
-                <router-link to="/uc/money">
-                  <MenuItem name="nav_assets" class="lang-item" style="padding-left:20px!important;">{{$t("header.assetmanage")}}</MenuItem>
-                </router-link>
-                <router-link to="/uc/innovation/myminings">
-                  <MenuItem name="nav_innnovationmanage" class="lang-item" style="padding-left:20px!important;">{{$t("header.innovationmanage")}}</MenuItem>
-                </router-link>
-            </Submenu>
-            <div class="lang-item" v-if="isLogin" @click="logout" style="margin-top:5px;padding-left:5px!important;color:#bdc2ca;">
-                  {{$t("common.logout")}}
-              </div>
-            <div style="height: 1px;width:100%;background:rgb(59, 69, 85);margin-top:10px;margin-bottom:10px;"></div>
-            <Submenu name="lang">
-                <template slot="title" class="lang-title">
-                  <span style="color:#bdc2ca;">{{languageValue}}</span>
-                </template>
-                <MenuItem name="zh" class="lang-item" style="padding-left:20px!important;"><img src="./assets/images/lang-zh.png"></img>简体中文</MenuItem>
-                <MenuItem name="en" class="lang-item" style="padding-left:20px!important;"><img src="./assets/images/lang-en.png"></img>ENGLISH</MenuItem>
-            </Submenu>
-            <router-link to="/app">
-              <MenuItem name="nav-appdownload" style="text-align:left;color:#bdc2ca;">{{$t("header.appdownlaod")}}</MenuItem>
-            </router-link>
-        </Menu>
-    </Drawer>
+    <el-drawer v-model="navDrawerModal" size="40%" direction="rtl" class="header_nav_mobile">
+      <el-menu
+        :default-active="activeNav"
+        mode="vertical"
+        background-color="#2b323a"
+        text-color="#bdc2ca"
+        active-text-color="#f0a70a"
+      >
+        <router-link to="/">
+          <el-menu-item index="nav-index">{{ $t("header.index") }}</el-menu-item>
+        </router-link>
+        <router-link to="/ctc">
+          <el-menu-item index="nav-ctc">{{ $t("header.ctc") }}</el-menu-item>
+        </router-link>
+        <router-link to="/otc/trade/usdt">
+          <el-menu-item index="nav-otc">{{ $t("header.otc") }}</el-menu-item>
+        </router-link>
+        <router-link to="/lab">
+          <el-menu-item index="nav-lab">{{ $t("header.lab") }}</el-menu-item>
+        </router-link>
+        <router-link to="/mining">
+          <el-menu-item index="nav-mining">{{ $t("header.mining") }}</el-menu-item>
+        </router-link>
+        <router-link to="/crowdfunding">
+          <el-menu-item index="nav-crowdfunding">{{ $t("header.crowdfunding") }}</el-menu-item>
+        </router-link>
+        <router-link to="/invite">
+          <el-menu-item index="nav-invite">{{ $t("header.invite") }}</el-menu-item>
+        </router-link>
+        <router-link to="/announcement/0">
+          <el-menu-item index="nav-service">{{ $t("header.service") }}</el-menu-item>
+        </router-link>
+
+        <el-sub-menu index="nav-login" v-if="!isLogin">
+          <template #title>
+            <span>{{ $t("common.loginregister") }}</span>
+          </template>
+          <router-link to="/login">
+            <el-menu-item index="1-1" style="padding-left: 20px !important;">{{ $t("common.login") }}</el-menu-item>
+          </router-link>
+          <router-link to="/register">
+            <el-menu-item index="1-2" style="padding-left: 20px !important;">{{ $t("common.register") }}</el-menu-item>
+          </router-link>
+        </el-sub-menu>
+
+        <el-sub-menu index="nav_personal" v-if="isLogin">
+          <template #title>
+            <span>{{ $t("header.usercenter") }}</span>
+          </template>
+          <router-link to="/uc/safe">
+            <el-menu-item index="nav_safe" style="padding-left: 20px !important;">{{ $t("uc.member.securitysetting") }}</el-menu-item>
+          </router-link>
+          <router-link to="/uc/money">
+            <el-menu-item index="nav_assets" style="padding-left: 20px !important;">{{ $t("header.assetmanage") }}</el-menu-item>
+          </router-link>
+          <router-link to="/uc/innovation/myminings">
+            <el-menu-item index="nav_innnovationmanage" style="padding-left: 20px !important;">{{ $t("header.innovationmanage") }}</el-menu-item>
+          </router-link>
+        </el-sub-menu>
+
+        <div v-if="isLogin" @click="logout" style="margin-top: 5px; padding: 8px 24px 8px 5px; color: #bdc2ca; cursor: pointer;">
+          {{ $t("common.logout") }}
+        </div>
+
+        <div style="height: 1px; width: 100%; background: rgb(59, 69, 85); margin-top: 10px; margin-bottom: 10px;"></div>
+
+        <el-sub-menu index="lang">
+          <template #title>
+            <span>{{ languageValue }}</span>
+          </template>
+          <el-menu-item index="zh" style="padding-left: 20px !important;">
+            <img src="./assets/images/lang-zh.png" style="width: 20px; margin-right: 5px; vertical-align: middle;">简体中文
+          </el-menu-item>
+          <el-menu-item index="en" style="padding-left: 20px !important;">
+            <img src="./assets/images/lang-en.png" style="width: 20px; margin-right: 5px; vertical-align: middle;">ENGLISH
+          </el-menu-item>
+        </el-sub-menu>
+
+        <router-link to="/app">
+          <el-menu-item index="nav-appdownload">{{ $t("header.appdownlaod") }}</el-menu-item>
+        </router-link>
+      </el-menu>
+    </el-drawer>
     <div class="shoujiShow">
       <div class="sjShow_content">
         <div>
-          <router-link to="/helplist?cate=0&cateTitle=新手指南">{{$t("footer.xszn")}}</router-link>
+          <router-link to="/helplist?cate=0&cateTitle=新手指南">{{ $t("footer.xszn") }}</router-link>
         </div>
         <div>
-          <router-link to="/helplist?cate=1&cateTitle=常见问题">{{$t("footer.cjwt")}}</router-link>
+          <router-link to="/helplist?cate=1&cateTitle=常见问题">{{ $t("footer.cjwt") }}</router-link>
         </div>
         <div>
-          <router-link to="/helplist?cate=2&cateTitle=交易指南">{{$t("footer.jyzn")}}</router-link>
+          <router-link to="/helplist?cate=2&cateTitle=交易指南">{{ $t("footer.jyzn") }}</router-link>
         </div>
         <div>
-          <router-link to="/helplist?cate=3&cateTitle=币种资料">{{$t("footer.bzzl")}}</router-link>
+          <router-link to="/helplist?cate=3&cateTitle=币种资料">{{ $t("footer.bzzl") }}</router-link>
         </div>
       </div>
     </div>
     <div class="footer">
       <div class="footer_content">
         <div class="footer_left">
-          <img  src="./assets/images/logo-bottom.png" style="margin:0" ></img>
-          <!-- <h3>Caymanex.Pro</h3> -->
-          <p style="letter-spacing:2px;">{{$t("footer.gsmc")}}</p>
+          <img src="./assets/images/logo-bottom.png" style="margin: 0;" alt="">
+          <p style="letter-spacing: 2px;">{{ $t("footer.gsmc") }}</p>
           <p>Copyright © 2023 - MSZLU.COM All rights reserved.&nbsp;&nbsp;</p>
-          
         </div>
-        <!-- <div class="footer_right" style="margin-left: 5%;border-left: 1px solid #243051;padding-left: 5%;">
-          <ul>
-            <li class="footer_title">
-              <span>{{$t("footer.yqlj")}}</span>
-            </li>
-            <li>
-              <a target="_blank"  href="https://www.feixiaohao.com/">非小号</a>
-            </li>
-            <li>
-              <a target="_blank" href="https://www.8btc.com/">巴比特</a>
-            </li>
-            <li>
-              <a target="_blank" href="https://www.chainnode.com/">链节点</a>
-            </li>
-            <li>
-              <a target="_blank" href="https://www.jinse.com/">金色财经</a>
-            </li>
-          </ul>
-        </div> -->
         <div class="footer_right">
           <ul>
             <li class="footer_title">
-              <span>{{$t("footer.gsjj")}}</span>
+              <span>{{ $t("footer.gsjj") }}</span>
             </li>
             <li>
-              <router-link target="_blank" to="/about-us">{{$t("footer.gywm")}}</router-link>
+              <router-link target="_blank" to="/about-us">{{ $t("footer.gywm") }}</router-link>
             </li>
             <li>
-              <router-link target="_blank" to="/helpdetail?cate=6&id=39&cateTitle=其他">{{$t("footer.jrwm")}}</router-link>
+              <router-link target="_blank" :to="'/helpdetail?cate=6&id=39&cateTitle=其他'">{{ $t("footer.jrwm") }}</router-link>
             </li>
             <li>
-              <router-link target="_blank" to="/announcement/0">{{$t("footer.notice")}}</router-link>
+              <router-link target="_blank" to="/announcement/0">{{ $t("footer.notice") }}</router-link>
             </li>
             <li class="wechatclick">
-              <poptip width="80" trigger="hover" placement="right">
-                <a href="javascript:;" class="wechat">{{$t("footer.apidoc")}}</a>
-                <div slot="content">
-                  <p style="text-align:center;">{{$t("footer.zwkf")}}</p>
-                </div>
-              </poptip>
+              <el-popover placement="right" width="80" trigger="hover">
+                <template #reference>
+                  <a href="javascript:;" class="wechat">{{ $t("footer.apidoc") }}</a>
+                </template>
+                <p style="text-align: center;">{{ $t("footer.zwkf") }}</p>
+              </el-popover>
             </li>
           </ul>
           <ul>
             <li class="footer_title">
-              <span>{{$t("footer.bzzx")}}</span>
+              <span>{{ $t("footer.bzzx") }}</span>
             </li>
             <li>
-              <router-link to="/helplist?cate=0&cateTitle=新手指南">{{$t("footer.xszn")}}</router-link>
+              <router-link to="/helplist?cate=0&cateTitle=新手指南">{{ $t("footer.xszn") }}</router-link>
             </li>
             <li>
-              <router-link to="/helplist?cate=1&cateTitle=常见问题">{{$t("footer.cjwt")}}</router-link>
+              <router-link to="/helplist?cate=1&cateTitle=常见问题">{{ $t("footer.cjwt") }}</router-link>
             </li>
             <li>
-              <router-link to="/helplist?cate=2&cateTitle=交易指南">{{$t("footer.jyzn")}}</router-link>
+              <router-link to="/helplist?cate=2&cateTitle=交易指南">{{ $t("footer.jyzn") }}</router-link>
             </li>
             <li>
-              <router-link to="/helplist?cate=3&cateTitle=币种资料">{{$t("footer.bzzl")}}</router-link>
+              <router-link to="/helplist?cate=3&cateTitle=币种资料">{{ $t("footer.bzzl") }}</router-link>
             </li>
           </ul>
           <ul>
             <li class="footer_title">
-              <span>{{$t("footer.tkxy")}}</span>
+              <span>{{ $t("footer.tkxy") }}</span>
             </li>
             <li>
-              <router-link target="_blank" to="/helpdetail?cate=5&id=2&cateTitle=条款协议">{{$t("footer.mztk")}}</router-link>
+              <router-link target="_blank" :to="'/helpdetail?cate=5&id=2&cateTitle=条款协议'">{{ $t("footer.mztk") }}</router-link>
             </li>
             <li>
-              <router-link target="_blank" to="/helpdetail?cate=5&id=3&cateTitle=条款协议">{{$t("footer.ystk")}}</router-link>
+              <router-link target="_blank" :to="'/helpdetail?cate=5&id=3&cateTitle=条款协议'">{{ $t("footer.ystk") }}</router-link>
             </li>
             <li>
-              <router-link target="_blank" to="/helpdetail?cate=5&id=5&cateTitle=条款协议">{{$t("footer.fwtk")}}</router-link>
+              <router-link target="_blank" :to="'/helpdetail?cate=5&id=5&cateTitle=条款协议'">{{ $t("footer.fwtk") }}</router-link>
             </li>
             <li>
-              <router-link target="_blank" to="/helpdetail?cate=5&id=38&cateTitle=条款协议">{{$t("footer.fltk")}}</router-link>
+              <router-link target="_blank" :to="'/helpdetail?cate=5&id=38&cateTitle=条款协议'">{{ $t("footer.fltk") }}</router-link>
             </li>
           </ul>
           <ul>
             <li class="footer_title">
-              <span>{{$t("footer.lxwm")}}</span>
+              <span>{{ $t("footer.lxwm") }}</span>
             </li>
             <li class="wechatclick">
-              <poptip width="200" trigger="hover" placement="right">
-                <a href="javascript:;" class="wechat">{{$t("footer.kfyx")}}</a>
-                <div slot="content">
-                  <p style="text-align:center;">service@MSZLU.COM</p>
-                </div>
-              </poptip>
+              <el-popover placement="right" width="200" trigger="hover">
+                <template #reference>
+                  <a href="javascript:;" class="wechat">{{ $t("footer.kfyx") }}</a>
+                </template>
+                <p style="text-align: center;">service@MSZLU.COM</p>
+              </el-popover>
             </li>
             <li class="wechatclick">
-              <poptip width="200" trigger="hover" placement="right">
-                <a href="javascript:;" class="wechat">{{$t("footer.swhz")}}</a>
-                <div slot="content">
-                  <p style="text-align:center;">support@MSZLU.COM</p>
-                </div>
-              </poptip>
+              <el-popover placement="right" width="200" trigger="hover">
+                <template #reference>
+                  <a href="javascript:;" class="wechat">{{ $t("footer.swhz") }}</a>
+                </template>
+                <p style="text-align: center;">support@MSZLU.COM</p>
+              </el-popover>
             </li>
             <li class="wechatclick">
-              <poptip width="200" trigger="hover" placement="right">
-                <a href="javascript:;" class="wechat">{{$t("footer.sbsq")}}</a>
-                <div slot="content">
-                  <p style="text-align:center;">list@MSZLU.COM</p>
-                </div>
-              </poptip>
+              <el-popover placement="right" width="200" trigger="hover">
+                <template #reference>
+                  <a href="javascript:;" class="wechat">{{ $t("footer.sbsq") }}</a>
+                </template>
+                <p style="text-align: center;">list@MSZLU.COM</p>
+              </el-popover>
             </li>
             <li class="wechatclick">
-              <poptip width="200" trigger="hover" placement="right">
-                <a href="javascript:;" class="wechat">{{$t("footer.tsjb")}}</a>
-                <div slot="content">
-                  <p style="text-align:center;">ceo@MSZLU.COM</p>
-                </div>
-              </poptip>
+              <el-popover placement="right" width="200" trigger="hover">
+                <template #reference>
+                  <a href="javascript:;" class="wechat">{{ $t("footer.tsjb") }}</a>
+                </template>
+                <p style="text-align: center;">ceo@MSZLU.COM</p>
+              </el-popover>
             </li>
           </ul>
         </div>
       </div>
     </div>
-    <template>
-      <BackTop :bottom="140"></BackTop>
-    </template>
+    <el-back-top :bottom="140" />
   </div>
 </template>
-<script>
-import Vue from "vue";
-import { mapGetters, mapActions } from "vuex";
-export default {
-  name: "app",
-  provide () {
-    return {
-      reload: this.reload
-    }
-  },
-  data() {
-    return {
-      isRouterAlive: true,
-      pageView: "page-view",
-      utc: null,
-      time: null,
-      content: " ",
-      navDrawerModal: false,
-      wechat: this.$t("footer.wechat")
-    };
-  },
-  watch: {
-    activeNav: function() {
-      switch (this.activeNav) {
-        case "nav-exchange":
-          window.document.title = (this.lang == "简体中文" ? "交易中心" : "Exchange") + " - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台";
-          break;
-        case "nav-service":
-          window.document.title = (this.lang == "简体中文" ? "公告" : "Announcement") + " - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台";
-          break;
-        case "nav-about":
-          window.document.title = (this.lang == "简体中文" ? "关于" : "About") + " - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台";
-          break;
-        case "nav-lab":
-          window.document.title = (this.lang == "简体中文" ? "公益创新室" : "Lab") + " - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台";
-          break;
-        case "nav-mining":
-          window.document.title = (this.lang == "简体中文" ? "矿机" : "Mining") + " - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台";
-          break;
-        case "nav-invite":
-          window.document.title = (this.lang == "简体中文" ? "全球传递爱" : "Promotion") + " - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台";
-          break;
-        default:
-          window.document.title = "MSCOIN | MSCOIN官网 - 全球比特币交易平台 | 全球数字货币交易平台";
-          break;
-      }
-    },
-    $route(to, from) {
-      this.pageView = "page-view";
-      if (to.path == "/reg") {
-        this.pageView = "page-view2";
-        if(!this.isMobile()){
-            if(this.$route.query.code != undefined && this.$route.query.code != "" && this.$route.query.code != null){
-                this.$router.replace('/register?code='+this.$route.query.code);
-            }else{
-                this.$router.replace('/register');
-            }
-        }
-      }
 
-      if(to.path == "/exchange") {
-        if(this.isMobile()){
-          this.$router.replace('/reg');
-        }
-      }
+<script setup>
+/**
+ * Vue 3 迁移 - 根组件 App.vue
+ * 包含全局布局：头部导航、移动端抽屉、底部信息
+ */
+import { ref, reactive, computed, onMounted, onBeforeUnmount, provide, nextTick, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { ElMessage, ElMenu, ElSubMenu, ElMenuItem, ElDropdown, ElDropdownMenu, ElDropdownItem, ElDrawer, ElPopover, ElBackTop, ElIcon } from 'element-plus'
+import { Clock, Menu, ArrowDown, User, Coin, Switch, SwitchButton } from '@element-plus/icons-vue'
+import axios from 'axios'
 
-      if (to.path == "/app") {
-        this.pageView = "page-view2";
-      }
+// 使用 vue-i18n
+const { t: $t } = useI18n()
 
-      // 红包页面
-      if(to.path.length > 11 && to.path.substr(0,9) == "/envelope"){
-        this.pageView = "page-view3";
-      }
-    },
-    exchangeSkin() {
+// 注入 store, router 和 i18n
+const store = inject('store')
+const router = inject('router')
 
-    }
-  },
-  computed: {
-    activeNav: function() {
-      return this.$store.state.activeNav;
-    },
-    isLogin: function() {
-      return this.$store.getters.isLogin;
-    },
-    member: function() {
-      return this.$store.getters.member;
-    },
-    languageValue: function() {
-      var curlang = this.$store.getters.lang;
-      if (curlang == "English") this.$i18n.locale = "en";
-      return curlang;
-    },
-    lang() {
-      return this.$store.state.lang;
-    },
-    exchangeSkin() {
-      return this.$store.state.exchangeSkin;
-    }
-  },
-  created: function() {
-    this.initialize();
-    var d = new Date(),
-      gmtHours = d.getTimezoneOffset() / 60;
-    this.utc = "GMT " + (gmtHours > 0 ? "-" : "+") + " " + String(gmtHours)[1];
-    setInterval(() => {
-      this.time = new Date().getTime();
-    }, 1000);
+const host = 'http://localhost'
 
-    // 隐藏加载层
-    let initLoading = document.getElementById("initLoading");
-    if(initLoading != null){
-      document.body.removeChild(initLoading);
-    }
-    let token = this.getQueryVariable("token"); // 获取到外部传过来的token
-    if (!!token && token!="null" && token!="") {
-      localStorage.setItem('TOKEN', token);
-      this.$http
-        .post(this.host + this.api.uc.memberInfo, {})
-        .then(response => {
-          var resp = response.body;
-          if (resp.code == 0) {
-            this.$store.commit("setMember", resp.data);
-          } else {
-            this.$Notice.error({
-              title: this.$t("common.tip"),
-              desc:resp.message
-            });
-          }
-        });
-    }
-  },
-  methods: {
-    reload () {
-      this.isRouterAlive = false;
-      this.$nextTick(function () {
-        this.isRouterAlive = true;
-      })
-    },
-    isMobile() {
-　　let flag = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)
-    　　return flag;
-    },
-    toggleMemu(){
-      this.navDrawerModal = !this.navDrawerModal;
-    },
-    strpo(str) {
-      if (str.length > 4) {
-        str = str.slice(0, 4) + "···";
-      } else {
-        str = str;
-      }
-      return str;
-    },
-    initialize() {
-      this.$store.commit("navigate", "nav-index");
-      this.$store.commit("recoveryMember");
-      this.$store.commit("initLang");
-      this.$store.commit("initLoginTimes");
-      this.checkLogin();
-    },
-    logout() {
-      this.$http.post(this.host + "/uc/loginout", {}).then(response => {
-        var resp = response.body;
-        if (resp.code == 0) {
-          this.$Message.success(resp.message);
-          this.$store.commit("setMember", null);
-          setTimeout(() => {
-            location.href = "/";
-          }, 1500);
-        } else {
-          this.$Message.error(resp.message);
-        }
-      });
-    },
-    checkLogin() {
-      this.$http.post(this.host + "/uc/check/login", {}).then(response => {
-        var result = response.body;
-        if (result.code == 0 && result.data == false) {
-          this.$store.commit("setMember", null);
-        }
-      });
-    },
-    changelanguage: function(name) {
-      console.log("change language: " + name);
-      if (name == "en") {
-        this.$store.commit("setlang", "English");
-        this.$i18n.locale = "en";
-        this.reload();
-      }
-      if (name == "zh") {
-        this.$store.commit("setlang", "简体中文");
-        this.$i18n.locale = "zh";
-        this.reload();
-      }
-    },
-    getQueryVariable: function(key)
-    {
-        var after = window.location.search;
-        //key存在先通过search取值如果取不到就通过hash来取
-        after = after.substr(1) || window.location.hash.split("?")[1];
-        if(after)
-        {
-            var reg = new RegExp("(^|&)"+ key +"=([^&]*)(&|$)");
-            var r = after.match(reg);
-            if(r != null)
-            {
-                return  decodeURIComponent(r[2]);
-            }
-            else
-            {
-                return null;
-            }
-        }
+// 状态
+const isRouterAlive = ref(true)
+const pageView = ref('page-view')
+const utc = ref(null)
+const formattedTime = ref(null)
+const navDrawerModal = ref(false)
+const timeTimer = ref(null)
+
+// 计算属性
+const activeNav = computed(() => store?.state.activeNav || 'nav-index')
+const isLogin = computed(() => store?.getters.isLogin || false)
+const member = computed(() => store?.getters.member || { username: '' })
+const lang = computed(() => store?.state.lang || '简体中文')
+const languageValue = computed(() => store?.getters.lang || '简体中文')
+
+// 提供 reload 方法给子组件
+const reload = () => {
+  isRouterAlive.value = false
+  nextTick(() => {
+    isRouterAlive.value = true
+  })
+}
+
+provide('reload', reload)
+
+// 工具方法
+const strpo = (str) => {
+  if (!str) return ''
+  if (str.length > 4) {
+    return str.slice(0, 4) + '···'
+  }
+  return str
+}
+
+const toggleMemu = () => {
+  navDrawerModal.value = !navDrawerModal.value
+}
+
+const isMobile = () => {
+  return /phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone/i.test(navigator.userAgent)
+}
+
+const getQueryVariable = (key) => {
+  const after = window.location.search || window.location.hash.split('?')[1]
+  if (after) {
+    const reg = new RegExp('(^|&)' + key + '=([^&]*)(&|$)')
+    const r = after.match(reg)
+    if (r != null) {
+      return decodeURIComponent(r[2])
     }
   }
-};
+  return null
+}
+
+// 语言切换
+const changelanguage = (name) => {
+  if (name === 'en') {
+    store?.commit('setlang', 'English')
+    reload()
+  }
+  if (name === 'zh') {
+    store?.commit('setlang', '简体中文')
+    reload()
+  }
+}
+
+// 初始化
+const initialize = () => {
+  store?.commit('navigate', 'nav-index')
+  store?.commit('recoveryMember')
+  store?.commit('initLang')
+  store?.commit('initLoginTimes')
+  checkLogin()
+}
+
+// 退出登录
+const logout = () => {
+  const token = localStorage.getItem('TOKEN')
+  axios.post(`${host}/uc/loginout`, {}, {
+    headers: { 'x-auth-token': token }
+  }).then(response => {
+    const resp = response.data
+    if (resp.code === 0) {
+      ElMessage.success(resp.message)
+      store?.commit('setMember', null)
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 1500)
+    } else {
+      ElMessage.error(resp.message)
+    }
+  }).catch(() => {})
+}
+
+// 检查登录状态
+const checkLogin = () => {
+  const token = localStorage.getItem('TOKEN')
+  axios.post(`${host}/uc/check/login`, {}, {
+    headers: { 'x-auth-token': token }
+  }).then(response => {
+    const result = response.data
+    if (result.code === 0 && result.data === false) {
+      store?.commit('setMember', null)
+    }
+  }).catch(() => {})
+}
+
+// 处理外部 token
+const handleExternalToken = () => {
+  const token = getQueryVariable('token')
+  if (token && token !== 'null' && token !== '') {
+    localStorage.setItem('TOKEN', token)
+    axios.post(`${host}${api.uc.memberInfo}`, {}, {
+      headers: { 'x-auth-token': token }
+    }).then(response => {
+      const resp = response.data
+      if (resp.code === 0) {
+        store?.commit('setMember', resp.data)
+      } else {
+        ElMessage.error(resp.message)
+      }
+    }).catch(() => {})
+  }
+}
+
+// 路由监听
+const handleRouteChange = (to) => {
+  pageView.value = 'page-view'
+
+  if (to.path === '/reg') {
+    pageView.value = 'page-view2'
+    if (!isMobile()) {
+      const code = getQueryVariable('code')
+      if (code !== undefined && code !== '' && code !== null) {
+        router.replace('/register?code=' + code)
+      } else {
+        router.replace('/register')
+      }
+    }
+  }
+
+  if (to.path === '/exchange' && isMobile()) {
+    router.replace('/reg')
+  }
+
+  if (to.path === '/app') {
+    pageView.value = 'page-view2'
+  }
+
+  if (to.path.length > 11 && to.path.substr(0, 9) === '/envelope') {
+    pageView.value = 'page-view3'
+  }
+}
+
+// 页面标题更新
+const updatePageTitle = () => {
+  switch (activeNav.value) {
+    case 'nav-exchange':
+      window.document.title = (lang.value === '简体中文' ? '交易中心' : 'Exchange') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+      break
+    case 'nav-service':
+      window.document.title = (lang.value === '简体中文' ? '公告' : 'Announcement') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+      break
+    case 'nav-about':
+      window.document.title = (lang.value === '简体中文' ? '关于' : 'About') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+      break
+    case 'nav-lab':
+      window.document.title = (lang.value === '简体中文' ? '公益创新室' : 'Lab') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+      break
+    case 'nav-mining':
+      window.document.title = (lang.value === '简体中文' ? '矿机' : 'Mining') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+      break
+    case 'nav-invite':
+      window.document.title = (lang.value === '简体中文' ? '全球传递爱' : 'Promotion') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+      break
+    default:
+      window.document.title = 'MSCOIN | MSCOIN 官网 - 全球比特币交易平台 | 全球数字货币交易平台'
+      break
+  }
+}
+
+// 生命周期
+onMounted(() => {
+  // 初始化时间
+  const d = new Date()
+  const gmtHours = d.getTimezoneOffset() / 60
+  utc.value = 'GMT ' + (gmtHours > 0 ? '-' : '+') + ' ' + String(gmtHours)[1]
+
+  // 启动时间定时器
+  timeTimer.value = setInterval(() => {
+    formattedTime.value = new Date().getTime()
+  }, 1000)
+
+  // 隐藏初始加载层
+  const initLoading = document.getElementById('initLoading')
+  if (initLoading) {
+    document.body.removeChild(initLoading)
+  }
+
+  // 初始化
+  initialize()
+  handleExternalToken()
+
+  // 监听路由变化
+  router?.afterEach((to) => {
+    handleRouteChange(to)
+    updatePageTitle()
+  })
+
+  // 初始更新标题
+  updatePageTitle()
+})
+
+onBeforeUnmount(() => {
+  if (timeTimer.value) {
+    clearInterval(timeTimer.value)
+  }
+})
 </script>
 
-
 <style scoped lang="scss">
-@media screen and (max-width:768px){
-  .header_nav_mobile_triggle{
-    display: inline-block!important;
+// 样式保持与原 App.vue 一致，仅替换 iView 类名为 Element Plus
+@media screen and (max-width: 768px) {
+  .header_nav_mobile_triggle {
+    display: inline-block !important;
   }
-  .footer_content{
+  .footer_content {
     padding: 70px 2% 85px 5%;
   }
-  .page-view, .page-view2{
-    .page-content{
-      .layout{
+  .page-view, .page-view2 {
+    .page-content {
+      .layout {
         height: 45px;
-        .layout-ceiling{
-          padding: 5px 10px!important;
-          .layout-ceiling-main{
-            height: 35px!important;
-            line-height: 35px!important;
+        .layout-ceiling {
+          padding: 5px 10px !important;
+          .layout-ceiling-main {
+            height: 35px !important;
+            line-height: 35px !important;
           }
-          .layout-logo{
-            width: 200px!important;
-            height: 35px!important;
+          .layout-logo {
+            width: 200px !important;
+            height: 35px !important;
           }
         }
       }
     }
   }
 }
-.header_nav_mobile_triggle{
+
+.header_nav_mobile_triggle {
   display: none;
-  float:right;
+  float: right;
   padding: 0 5px 0 20px;
 }
+
 .page-view2 .nav-pdf {
   color: #333;
   font-size: 14px;
 }
+
 .nav-pdf {
   font-size: 14px;
   color: #fff;
 }
+
 .page-view {
   height: 100%;
+
   .page-content {
     .time_download {
       padding: 0 80px;
@@ -617,13 +649,16 @@ export default {
       background-color: #000;
       line-height: 35px;
       overflow: hidden;
+
       .leftwrapper {
         float: left;
+
         .clock {
           display: inline-block;
           vertical-align: middle;
           color: #fff;
         }
+
         span {
           color: #fff;
           line-height: 35px;
@@ -631,311 +666,15 @@ export default {
         }
       }
     }
+
     .layout {
       width: 100%;
       position: absolute;
       z-index: 10;
+
       .layout-ceiling {
         padding: 5px 20px;
-        .layout-logo{
-          width: 300px;
-          height: 48px;
-          background: url(./assets/images/logo.png) no-repeat;
-          background-size: 100% 100%;
-          float: left;
-          position: absolute;
-          z-index: 10;
-        }
-        .layout-ceiling-main {
-          height: 50px;
-          line-height: 50px;
-          margin-left: 218px;
-          .header_nav {
-            li.ivu-menu-submenu.ivu-menu-item-active.ivu-menu-opened.ivu-menu-child-item-active {
-              background: none;
-              .ivu-menu {
-                a {
-                  &:hover {
-                    li {
-                      background: none;
-                      color: #f0a70a;
-                    }
-                  }
-                  li.ivu-menu-item.ivu-menu-item-active.ivu-menu-item-selected {
-                    color: #f0a70a;
-                        border-bottom: 3px solid #ffa800;
-                  }
-                }
-                .router-link-exact-active.router-link-active {
-                  li {
-                    color: #f0a70a;
-                  }
-                }
-              }
-            }
-            .ivu-menu-vertical.ivu-menu-light {
-              background: none;
-              &:after {
-                width: 0;
-              }
-            }
-          }
-        }
-        .rr {
-          float:right;
-          z-index: 10;
-          .mymsg {
-            float: left;
-            padding-right: 20px;
-            a {
-              color: #828ea1;
-              display: inline;
-              padding-right: 20px;
-              border-right: 1px solid #828ea1;
-            }
-            a:hover{
-              color:#FFF;
-            }
-          }
-          .login_register {
-            float: left;
-            padding-right: 20px;
-            border-right: 1px solid #273c55;
-            line-height: 50px;
-            .ivu-menu {
-              background: transparent;
-              #login,
-              #register {
-                display: inline-block;
-                min-width: 60px;
-                height: 100%;
-                text-align: center;
-                line-height: 20px;
-                margin-left: 0px;
-                box-sizing: border-box;
-                li {
-                  height: 100%;
-                  color: #828ea1;
-                }
-                &:hover {
-                  li {
-                    color: #fff;
-                  }
-                }
-              }
-              #login{
-                border-right: 1px solid #273c55;
-              }
-              #register {
-                color: #f0a70a!important;
-                &:hover {
-                  li {
-                    color: #fff;
-                  }
-                }
-              }
-            }
-          }
-          .isLogin {
-            .ivu-dropdown {
-              display: block;
-              float: left;
-              .ivu-dropdown-rel {
-                a {
-                  margin-left: 0;
-                  color: #828ea1;
-                }
-                a:hover{
-                  color:#FFF;
-                }
-              }
-              .ivu-select-dropdown {
-                position: absolute;
-              }
-            }
-          }
-        }
-        .rightwrapper {
-          float: right;
-          .appdownload {
-            float: left;
-            // padding: 0 20px;
-            padding-right: 0px;
-            .ivu-poptip-rel {
-              a {
-                color: #828ea1;
-              }
-              i.ivu-icon.ivu-icon-arrow-down-b {
-                margin-left: 5px;
-              }
-            }
-          }
-          .ios,
-          .andrio {
-            float: left;
-            text-align: center;
-            img {
-              width: 116px;
-              height: 116px;
-              margin: 0 auto;
-              border-radius: 3px;
-            }
-            .tips {
-              height: 30px;
-              img {
-                width: 14px;
-                height: 14px;
-                margin-top: 5px;
-                margin-right: 5px;
-              }
-              span {
-                font-size: 14px;
-                // color: #000;
-              }
-            }
-          }
-          .andrio {
-            float: right;
-          }
-          .ivu-dropdown-rel a {
-            color: #fff;
-          }
-          .ivu-select-dropdown {
-            z-index: 901;
-            #change_language_theme {
-              li {
-                background: #fff;
-                color: #333;
-              }
-            }
-          }
-          .changelanguage {
-            float: left;
-            .languagelogo {
-              float: left;
-              padding-top: 5px;
-              height: 45px;
-              padding-left: 15px;
-              margin-right: 12px;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-.page-view2 {
-  .ivu-select-single .ivu-select-selection{
-    background-color: #0c1621;
-    &:hover{
-      border-color: transparent;
-    }
-    &:focus{
-      border-color: transparent;
-    }
-  }
-  .ivu-input-group-prepend {
-    background-color: #0b1520;
-    border: 1px solid #0b1520;
-  }
-  .page-content {
-    .time_download {
-      padding: 0 80px;
-      height: 35px;
-      background-color: #000;
-      line-height: 35px;
-      overflow: hidden;
-      .leftwrapper {
-        float: left;
-        .clock {
-          display: inline-block;
-          vertical-align: middle;
-          color: #fff;
-        }
-        span {
-          color: #fff;
-          line-height: 35px;
-          font-size: 12px;
-        }
-      }
-      .rightwrapper {
-        float: right;
-        .appdownload {
-          float: left;
-          // padding: 0 20px;
-          padding-right: 30px;
-          .ivu-poptip-rel {
-            a {
-              color: #fff;
-              font-size: 12px;
-            }
-            i.ivu-icon.ivu-icon-arrow-down-b {
-              margin-left: 5px;
-            }
-          }
-        }
-        .ios,
-        .andrio {
-          float: left;
-          text-align: center;
-          img {
-            width: 106px;
-            height: 106px;
-            margin: 0 auto;
-          }
-          .tips {
-            height: 30px;
-            img {
-              width: 14px;
-              height: 14px;
-              margin-top: 5px;
-              margin-right: 5px;
-            }
-            span {
-              font-size: 14px;
-              // color: #000;
-            }
-          }
-        }
-        .andrio {
-          float: right;
-        }
-        .ivu-dropdown-rel a {
-          color: #fff;
-        }
-        .ivu-select-dropdown {
-          z-index: 901;
-          #change_language_theme {
-            li {
-              background: #fff;
-              color: #333;
-            }
-          }
-        }
-        .changelanguage {
-          float: left;
-          .languagelogo {
-            float: left;
-            padding-top: 5px;
-            height: 45px;
-            padding-left: 15px;
-            margin-right: 12px;
-          }
-        }
-      }
-    }
-    .layout {
-      background: #172636;
-      // -moz-box-shadow:0px 2px 5px #f5f5f5;
-      // -webkit-box-shadow:0px 2px 5px #f5f5f5;
-      //  box-shadow:0px 2px 5px #f5f5f5;
-      // border-bottom: 1px solid #eee;
-      width: 100%;
-      z-index: 10;
-      position: absolute;
-      top: 0;
-      .layout-ceiling {
-        padding: 5px 20px;
+
         .layout-logo {
           width: 300px;
           height: 48px;
@@ -943,194 +682,170 @@ export default {
           background-size: 100% 100%;
           float: left;
           position: absolute;
+          z-index: 10;
         }
-        .layout-ceiling-main {
 
+        .layout-ceiling-main {
           height: 50px;
           line-height: 50px;
           margin-left: 218px;
+
           .header_nav {
-            display: none;
-            li.ivu-menu-submenu.ivu-menu-item-active.ivu-menu-opened.ivu-menu-child-item-active {
-              background: #172636;
-              .ivu-menu {
-                a {
-                  &:hover {
-                    li {
-                      background: none;
-                      color: #f0a70a;
-                    }
-                  }
-                  li.ivu-menu-item.ivu-menu-item-active.ivu-menu-item-selected {
-                    color: #f0a70a;
-                    border-bottom: 3px solid #ffa800;
-                  }
-                  li {
-                    color: #828ea1;
-                  }
-                }
-                .router-link-exact-active.router-link-active {
-                  li {
-                    color: #f0a70a;
-                  }
-                }
-              }
-            }
-            .ivu-menu-vertical.ivu-menu-light {
-              &:after {
-                width: 0;
-              }
-            }
-          }
-        }
-        .rr {
-          display: none;
-          z-index: 10;
-          float:right;
-          .mymsg {
-            float: left;
-            padding-right: 20px;
-            a {
-              display: inline;
-              padding-right: 20px;
-              border-right: 1px solid #828ea1;
-            }
-            a:hover{
-              color: #FFF;
-            }
-          }
-          .login_register {
-            float: left;
-            padding-right: 20px;
-            border-right: 1px solid #273c55;
-            line-height: 50px;
-            .ivu-menu {
+            :deep(.el-menu) {
               background: transparent;
-              #login,
-              #register {
-                display: inline-block;
-                min-width: 60px;
-                height: 100%;
-                text-align: center;
-                line-height: 20px;
-                margin-left: 0px;
-                box-sizing: border-box;
-                li {
-                  height: 100%;
-                  color: #828ea1;
-                }
+              border-bottom: none;
+
+              &--vertical {
+                background: transparent;
+              }
+
+              .el-sub-menu__title {
                 &:hover {
-                  li {
-                    color: #fff;
-                  }
+                  background: transparent !important;
                 }
               }
-              #login{
-                border-right: 1px solid #273c55;
-              }
-              #register {
-                color: #f0a70a!important;
+
+              .el-menu-item {
                 &:hover {
-                  li {
-                    color: #fff;
-                  }
+                  background: transparent !important;
+                }
+
+                &.is-active {
+                  color: #f0a70a !important;
+                  border-bottom: 3px solid #ffa800;
                 }
               }
             }
           }
-          .isLogin {
-            a {
-              color:#828ea1;
-            }
-            a:hover{
-              color: #FFF;
-            }
-            .ivu-dropdown {
-              display: block;
+
+          .rr {
+            float: right;
+            z-index: 10;
+
+            .mymsg {
               float: left;
-              .ivu-dropdown-rel {
-                a {
-                  margin-left: 0;
-                }
-              }
-              .ivu-select-dropdown {
-                position: absolute;
-              }
-            }
-          }
-        }
-        .rightwrapper {
-          display: none;
-          float: right;
-          .appdownload {
-            float: left;
-            // padding: 0 20px;
-            padding-right: 0px;
-            .ivu-poptip-rel {
+              padding-right: 20px;
+
               a {
                 color: #828ea1;
-              }
-              i.ivu-icon.ivu-icon-arrow-down-b {
-                margin-left: 5px;
-              }
-            }
-          }
-          .ios,
-          .andrio {
-            float: left;
-            text-align: center;
-            img {
-              width: 106px;
-              height: 106px;
-              margin: 0 auto;
-            }
-            .tips {
-              height: 30px;
-              img {
-                width: 14px;
-                height: 14px;
-                margin-top: 5px;
-                margin-right: 5px;
-                border-radius: 3px;
-              }
-              span {
-                font-size: 14px;
-                // color: #000;
+                display: inline;
+                padding-right: 20px;
+                border-right: 1px solid #828ea1;
+
+                &:hover {
+                  color: #fff;
+                }
               }
             }
-          }
-          .andrio {
-            float: right;
-          }
-          .ivu-dropdown-rel a {
-            color: #fff;
-          }
-          .ivu-select-dropdown {
-            z-index: 901;
-            #change_language_theme {
-              li {
-                background: #fff;
-                color: #333;
-              }
-            }
-          }
-          .changelanguage {
-            float: left;
-            .languagelogo {
+
+            .login_register {
               float: left;
-              padding-top: 5px;
-              height: 45px;
-              padding-left: 15px;
-              margin-right: 12px;
+              padding-right: 20px;
+              border-right: 1px solid #273c55;
+              line-height: 50px;
+
+              :deep(.el-menu) {
+                background: transparent;
+
+                #login,
+                #register {
+                  display: inline-block;
+                  min-width: 60px;
+                  height: 100%;
+                  text-align: center;
+                  line-height: 20px;
+                  margin-left: 0;
+                  box-sizing: border-box;
+
+                  .el-menu-item {
+                    height: 100%;
+                    color: #828ea1;
+                  }
+
+                  &:hover {
+                    .el-menu-item {
+                      color: #fff;
+                    }
+                  }
+                }
+
+                #login {
+                  border-right: 1px solid #273c55;
+                }
+
+                #register {
+                  .el-menu-item {
+                    color: #f0a70a !important;
+                  }
+
+                  &:hover {
+                    .el-menu-item {
+                      color: #fff;
+                    }
+                  }
+                }
+              }
+            }
+
+            .isLogin {
+              :deep(.el-dropdown) {
+                display: block;
+                float: left;
+
+                .el-dropdown-link {
+                  color: #828ea1;
+
+                  &:hover {
+                    color: #fff;
+                  }
+                }
+              }
             }
           }
         }
       }
     }
   }
-  .footer{
-    .footer_content{
-      .footer_right{
+}
+
+.page-view2 {
+  :deep(.el-select__selection) {
+    background-color: #0c1621;
+
+    &:hover {
+      border-color: transparent;
+    }
+
+    &:focus {
+      border-color: transparent;
+    }
+  }
+
+  .page-content {
+    .layout {
+      background: #172636;
+      width: 100%;
+      z-index: 10;
+      position: absolute;
+      top: 0;
+
+      .layout-ceiling {
+        .layout-ceiling-main {
+          .header_nav {
+            display: none;
+          }
+        }
+
+        .rr {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .footer {
+    .footer_content {
+      .footer_right {
         display: none;
       }
     }
@@ -1138,54 +853,45 @@ export default {
 }
 
 .page-view3 {
-  background: linear-gradient(150deg, #c3333d, #bc000d, #ff1d2c);;
+  background: linear-gradient(150deg, #c3333d, #bc000d, #ff1d2c);
   min-height: 100%;
-  background-color: #FFF;
-  .page-content{
-    padding-bottom: 20px!important;
-    .layout{
+  background-color: #fff;
+
+  .page-content {
+    padding-bottom: 20px !important;
+
+    .layout {
       display: none;
     }
-    .time_download{
+
+    .time_download {
       display: none;
     }
   }
-  .footer{
+
+  .footer {
     display: none;
   }
 }
-.wechatclick .api2 {
-  overflow: hidden;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  div {
-    img {
-      width: 100px;
-    }
-    span {
-      display: block;
-      color: #333;
-      text-align: center;
-    }
-  }
-}
+
 .appdownload {
-  /deep/ .ivu-poptip-inner {
+  :deep(.el-popover) {
     background-color: #27313e;
     color: #fff;
     padding-top: 10px;
   }
-  /deep/ .ivu-poptip-popper .ivu-poptip-arrow {
-    border-bottom-color: #27313e;
-  }
-  /deep/ .ivu-poptip-popper .ivu-poptip-arrow:after {
-    border-bottom-color: #27313e;
+}
+
+.wechatclick {
+  :deep(.el-popover) {
+    background-color: #27313e;
+    color: #fff;
   }
 }
 </style>
 
 <style lang="scss">
+// 全局样式
 .container_test {
   padding-top: 60px;
 }
@@ -1197,6 +903,7 @@ export default {
     color: #f0ac19;
   }
 }
+
 .ivu-table-filter-list .ivu-table-filter-select-item-selected {
   color: #f0ac19;
   &:hover {
@@ -1207,67 +914,79 @@ export default {
 .ivu-table-filter i.on {
   color: #fff;
 }
-//tips
+
 .ivu-message {
   color: #333;
 }
+
 .ivu-poptip-inner {
   background-color: #27313e;
   color: #fff;
+
   .ivu-poptip-body-content-inner {
     color: #fff;
   }
 }
+
 .ivu-poptip-popper {
-  // border-top-color:#27313e;
   .ivu-poptip-arrow:after {
-    left: 0!important;
+    left: 0 !important;
     border-right-color: #27313e !important;
   }
 }
-/* 多选框 */
+
 .exchange .ivu-checkbox-checked .ivu-checkbox-inner {
   background-color: #f0a70a;
   border-color: #f0a70a;
 }
-/* modal */
+
 .ivu-modal-confirm-head {
   text-align: center;
   margin-bottom: 15px;
 }
+
 .ivu-modal-header p,
 .ivu-modal-header-inner {
   color: #fff;
 }
+
 .ivu-modal-body {
   border-radius: 5px;
+
   .ivu-modal-confirm {
     .ivu-modal-confirm-body {
       font-size: 14px;
     }
   }
 }
+
 .ivu-modal-confirm-footer .ivu-btn-primary {
   background-color: #f0a70a;
   border-color: #f0a70a;
 }
+
 .ivu-modal-confirm-footer .ivu-btn-text {
   &:hover {
     color: #f0a70a;
   }
 }
+
 .ivu-table-wrapper {
   background-color: #192330;
+
   .ivu-table {
     box-shadow: 0px 0px 4px #27313e;
     background-color: #192330;
     color: #ccc;
+
     &:before {
       background: transparent;
     }
+
     &:after {
       background: #192330;
     }
+
     .ivu-table-header {
       th {
         background-color: #27313e;
@@ -1275,9 +994,11 @@ export default {
         color: #ccc;
       }
     }
-    .ivu-table-row:hover{
+
+    .ivu-table-row:hover {
       background: #1e2834;
     }
+
     .ivu-table-row td {
       background-color: transparent;
       border: none;
@@ -1286,16 +1007,20 @@ export default {
     }
   }
 }
+
 .ivu-table td {
   background-color: #192330;
   border-bottom: 1px solid #27313e;
 }
+
 .ivu-menu-light.ivu-menu-vertical .ivu-menu-item-active:not(.ivu-menu-submenu) {
   background: none;
+
   &:after {
     background: none;
   }
 }
+
 .ivu-select-dropdown .ivu-select-item {
   color: #ccc;
   padding: 6px 16px;
@@ -1303,27 +1028,32 @@ export default {
 
 .page-view {
   height: 100%;
+
   .page-content {
     .layout {
       .layout-ceiling {
-        background: #172636;
-        box-shadow: 0 0 5px 5px rgba(0,0,0,0.1);
-        .layout-ceiling-main {
-          .header_nav {
-            .ivu-menu-vertical.ivu-menu-light {
-              .ivu-menu-submenu-title {
-                i.ivu-icon.ivu-icon-ios-arrow-down.ivu-menu-submenu-title-icon {
-                  &:before {
-                    content: "";
+        .layout-ceiling {
+          background: #172636;
+          box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.1);
+
+          .layout-ceiling-main {
+            .header_nav {
+              .ivu-menu-vertical.ivu-menu-light {
+                .ivu-menu-submenu-title {
+                  i.ivu-icon.ivu-icon-ios-arrow-down.ivu-menu-submenu-title-icon {
+                    &:before {
+                      content: '';
+                    }
                   }
                 }
               }
             }
-          }
-          .rr {
-            .login_register .ivu-menu-submenu-title .ivu-icon {
-              &:before {
-                content: "";
+
+            .rr {
+              .login_register .ivu-menu-submenu-title .ivu-icon {
+                &:before {
+                  content: '';
+                }
               }
             }
           }
@@ -1332,8 +1062,10 @@ export default {
     }
   }
 }
+
 .page-view2 {
   height: 100%;
+
   .page-content {
     .layout {
       .layout-ceiling {
@@ -1343,16 +1075,17 @@ export default {
               .ivu-menu-submenu-title {
                 i.ivu-icon.ivu-icon-ios-arrow-down.ivu-menu-submenu-title-icon {
                   &:before {
-                    content: "";
+                    content: '';
                   }
                 }
               }
             }
           }
+
           .rr {
             .login_register .ivu-menu-submenu-title .ivu-icon {
               &:before {
-                content: "";
+                content: '';
               }
             }
           }
@@ -1361,6 +1094,7 @@ export default {
     }
   }
 }
+
 html,
 body {
   height: 100%;
@@ -1368,8 +1102,6 @@ body {
   background: #0b1520;
   color: #fff;
 }
-
-/*自定义滚动条样式*/
 
 ::-webkit-scrollbar {
   width: 3px;
@@ -1396,21 +1128,13 @@ body {
   width: 10px;
 }
 
-// .login_right {
-//   position: absolute;
-//   background: #fff;
-//   width: 350px;
-//   height: 510px;
-//   top: 35px;
-//   right: 50px;
-// }
-
 .login_title {
   color: #000;
   text-align: center;
   height: 80px;
   font-size: 25px;
 }
+
 .login_right .ivu-select-dropdown {
   background: #fff;
 }
@@ -1456,29 +1180,45 @@ body {
   height: 40px;
   text-align: center;
   margin-left: 20px;
-  /*padding: 0 15px;*/
 }
- .shoujiShow{
+
+.shoujiShow {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  .header_nav {
     display: none;
   }
-@media screen and (max-width:768px){
-  .header_nav{ display:none; }
-  .login-container{ display: none; }
-  .footer_right{display:none;}
-  .rightwrapper{display:none;}
-  .shoujiShow{
-    display: block!important;
+
+  .login-container {
+    display: none;
   }
-  .sjShow_content{
+
+  .footer_right {
+    display: none;
+  }
+
+  .rightwrapper {
+    display: none;
+  }
+
+  .shoujiShow {
+    display: block !important;
+  }
+
+  .sjShow_content {
     display: flex;
     position: relative;
     top: -150px;
   }
-  .sjShow_content div{
+
+  .sjShow_content div {
     width: 25%;
     text-align: center;
   }
-  .sjShow_content div a{
+
+  .sjShow_content div a {
     color: #ccc;
   }
 }
@@ -1498,9 +1238,11 @@ body {
 .layout-ceiling-main .ivu-select-dropdown {
   background: #27313e;
   margin-left: 25px;
+
   .ivu-dropdown-item {
     padding: 10px 16px;
     color: #ccc;
+
     &:hover {
       color: #f0ac19;
     }
@@ -1515,17 +1257,11 @@ body {
   line-height: 20px;
 }
 
-// .ivu-dropdown-item:hover {
-//   background: #27313e;
-// }
-
-// .ivu-dropdown-item {
-//   color: #fff;
-// }
 .ivu-dropdown-item:hover {
   background-color: #27313e;
   color: #f0ac19;
 }
+
 .ivu-dropdown-item img {
   width: 14px;
   vertical-align: middle;
@@ -1534,8 +1270,6 @@ body {
 .ivu-radio-inner:after {
   background: #18202a;
 }
-
-/*安全中心*/
 
 .user_center {
   height: 900px;
@@ -1548,7 +1282,7 @@ body {
 .ivu-menu-vertical .ivu-menu-submenu .ivu-menu-item {
   padding-left: 0 !important;
   padding-right: 0;
-  color: rgba(130,142,161,1);
+  color: rgba(130, 142, 161, 1);
   font-size: 14px;
   border-right: 0 !important;
 }
@@ -1594,7 +1328,7 @@ body {
 
 .category .ivu-radio-group-button .ivu-radio-wrapper-checked {
   color: #fff;
-  background: #2f3d52;
+  background: #2f3e52;
   box-shadow: none;
 }
 
@@ -1653,7 +1387,6 @@ body {
   float: left;
 }
 
-// 粘住底部布局
 .page-content {
   min-height: 100%;
   padding-bottom: 200px;
@@ -1664,6 +1397,7 @@ body {
   overflow: hidden;
   margin-top: -200px;
 }
+
 .footer_content {
   height: 300px;
   padding: 80px 10%;
@@ -1689,36 +1423,37 @@ body {
 
 .footer_right {
   float: right;
-  /*margin-top: 15px;*/
   text-align: left;
-  /* margin-right: 20px; */
 }
 
 .footer_right ul {
   float: left;
   margin: 0 30px;
 }
-.footer_right ul li{
-  list-style-type:none;
+
+.footer_right ul li {
+  list-style-type: none;
 }
+
 .footer_right ul li a {
   color: #828ea1;
   line-height: 30px;
   display: block;
   font-size: 12px;
 }
-.footer_right ul li a:hover{
-  color: #FFFFFF;
+
+.footer_right ul li a:hover {
+  color: #fff;
 }
+
 .footer_title {
   font-size: 13px;
   height: 40px;
 }
+
 .ivu-select-selected-value {
   color: #bbbec4;
 }
-
-/*法币交易*/
 
 .ivu-col {
   text-align: center;
@@ -1730,26 +1465,22 @@ body {
       .layout-ceiling {
         .rr {
           .login_register {
-            .ivu-menu-light.ivu-menu-vertical
-              .ivu-menu-item-active:not(.ivu-menu-submenu) {
+            .ivu-menu-light.ivu-menu-vertical .ivu-menu-item-active:not(.ivu-menu-submenu) {
               color: #fff;
             }
           }
+
           .isLogin {
             .ivu-dropdown {
               display: inline-block;
+
               .ivu-select-dropdown {
                 padding: 0;
                 margin: 0;
+
                 .ivu-dropdown-menu {
                   .ivu-dropdown-item {
-                    // background: #27313e;
-                    // color: #ccc;
                     border-radius: 5px;
-                    // &:hover {
-                    //   background: #27313e;
-                    //   color: #ccc;
-                    // }
                   }
                 }
               }
@@ -1760,6 +1491,7 @@ body {
     }
   }
 }
+
 .changelanguage {
   .ivu-dropdown {
     .ivu-select-dropdown {
@@ -1767,127 +1499,151 @@ body {
     }
   }
 }
-// 重置分页器颜色
+
 .ivu-page-next,
 .ivu-page-prev {
   background-color: #192330;
 }
+
 .ivu-page-item {
   background-color: #192330;
   border-color: #27313e;
 }
+
 .ivu-page-item-jump-next,
 .ivu-page-item-jump-prev,
 .ivu-page-next,
 .ivu-page-prev {
   border-color: #27313e;
 }
+
 .ivu-page-item-active {
-  // background-color: #f0ac19;
-  // border-color: #f0ac19;
-  // color: #fff;
-  font-weight:bold;
+  font-weight: bold;
 }
+
 .ivu-page-next:hover,
 .ivu-page-prev:hover {
   border-color: #f0ac19;
 }
+
 .ivu-page-next:hover a,
 .ivu-page-prev:hover a {
   color: #f0ac19;
 }
 
-.ivu-page-item-jump-prev a,
+.ivu-page-item-jump-next a,
 .ivu-page-item-jump-next a {
   color: #666;
 }
+
 .ivu-page-item-jump-prev a:hover,
 .ivu-page-item-jump-next a:hover {
   color: #f0ac19;
 }
+
 .ivu-page-item:hover {
   border-color: #f0ac19;
 }
+
 .ivu-page-item:hover a {
   color: #f0ac19;
 }
+
 .ivu-page-item.ivu-page-item-active a {
   color: #f0ac19;
 }
+
 .ivu-page-disabled {
   a {
     cursor: not-allowed;
+
     .ivu-icon {
       cursor: not-allowed;
     }
   }
 }
-/*input框样式重置*/
+
 .ivu-input,
 .ivu-input-number-input,
 .ivu-input-number {
   background-color: #192330;
   color: #fff;
   border-color: #27313e;
+
   &:hover {
     border-color: #27313e;
   }
+
   &:focus {
     border-color: #27313e;
     box-shadow: none;
   }
 }
+
 .ivu-input[disabled]:hover,
 fieldset[disabled] .ivu-input:hover {
   border-color: #27313e;
 }
+
 .ivu-input[disabled],
 fieldset[disabled] .ivu-input {
   background-color: #27313e;
 }
+
 .ivu-input-number-focused {
   box-shadow: none;
 }
+
 .ivu-input-number:focus {
   box-shadow: none;
 }
+
 .ivu-form .ivu-form-item-label {
   color: #ccc;
 }
+
 .ivu-input-number-handler-wrap {
   background: #27313e;
   border-left: 1px solid #192330;
 }
+
 .ivu-input-number-handler {
   border-top: 1px solid #192330;
 }
+
 .ivu-input-number-handler:hover .ivu-input-number-handler-up-inner,
 .ivu-input-number-handler:hover .ivu-input-number-handler-down-inner {
   color: #ccc;
 }
+
 .ivu-input-group-append,
 .ivu-input-group-prepend {
   color: #ccc;
 }
-/*下拉框样式重置*/
+
 .ivu-select-selection {
   background-color: #192330;
   color: #fff;
   border: 1px solid #27313e;
 }
+
 .ivu-select-selection:hover {
   border-color: #27313e;
 }
+
 .ivu-select-visible .ivu-select-selection {
   border-color: #27313e;
   box-shadow: none;
 }
+
 .ivu-select-selected-value {
   color: #fff;
 }
+
 .ivu-select-selection-focused {
   border-color: #27313e;
 }
+
 .ivu-select-dropdown {
   background-color: #192330;
 }
@@ -1895,30 +1651,35 @@ fieldset[disabled] .ivu-input {
 .ivu-select-disabled .ivu-select-selection {
   background-color: #27313e;
 }
+
 .ivu-select-disabled .ivu-select-selection:hover {
   border-color: #27313e;
 }
-/*下拉框*/
+
 .ivu-select-item-selected {
   background-color: #192330;
   color: #ccc;
 }
+
 .ivu-select-item-focus {
   background-color: #192330;
 }
+
 .ivu-select-item:hover {
   background-color: #27313e;
-  // color:#ccc;
   color: #f0ac19;
 }
+
 .ivu-select-multiple .ivu-select-item-selected {
   background-color: #192330;
   color: #f0ac19;
 }
+
 .ivu-select-multiple .ivu-select-item-focus,
 .ivu-select-multiple .ivu-select-item-selected:hover {
   background-color: #192330;
 }
+
 .ivu-select-multiple .ivu-select-item-selected:after {
   color: #f0ac19;
 }
@@ -1928,133 +1689,145 @@ fieldset[disabled] .ivu-input {
   background-color: #192330;
   color: #f0ac19;
 }
-// chexkboxes
+
 .ivu-checkbox-inner {
   background-color: #192330;
 }
 
-// 开关
 .ivu-switch {
   border: 1px solid #27313e;
   background-color: #192330;
 }
+
 .ivu-switch:after {
   background-color: #ccc;
 }
-// tag
+
 .ivu-tag {
   border: 1px solid #27313e;
   border-radius: 3px;
   background: #192330;
 }
+
 .ivu-tag-text {
   color: #ccc;
 }
-/*table组件样式重置*/
+
 .ivu-table-wrapper {
   border: none;
 }
+
 .ivu-table-wrapper > .ivu-spin-fix {
   background-color: rgba(0, 0, 0, 0.2);
   border: none;
   border-color: #fff;
 }
+
 .ivu-spin-fix {
   background-color: rgba(0, 0, 0, 0.2);
   border: none;
   border-color: #fff;
 }
-/*加载样式重置*/
+
 .ivu-spin-dot {
   background: #f0ac19;
 }
+
 .ivu-tabs-bar {
   border-color: #f5f5f5;
 }
-/*日期组件样式重置*/
+
 .ivu-picker-panel-icon-btn {
   &:hover {
     color: #f0ac19;
   }
 }
+
 .ivu-date-picker-focused input {
   border-color: #1f2936;
   box-shadow: none;
 }
+
 .ivu-date-picker-cells-focused em {
-  // -moz-box-shadow: 0 0 0 1px #f0ac19 inset;
-  // -webkit-box-shadow: 0 0 0 1px #f0ac19 inset;
-  // box-shadow: 0 0 0 1px #f0ac19 inset;
   box-shadow: none;
   color: #f0ac19;
+
   &:after {
-    // background: #27313e;
   }
 }
+
 .ivu-date-picker-cells-cell {
   color: #fff;
 }
+
 .ivu-date-picker-cells-cell-selected em,
 .ivu-date-picker-cells-cell-selected:hover em {
   background: #27313e;
   color: #f0ac19;
 }
+
 .ivu-date-picker-cells-cell-today em:after {
   background: #27313e;
 }
+
 .ivu-date-picker-cells-cell-range:before {
   background: rgba(240, 167, 10, 0.2);
 }
+
 .ivu-date-picker-cells-cell:hover em {
   background: #27313e;
   color: #f0ac19;
 }
-/*按钮样式重置*/
 
 .ivu-btn {
   border: none;
 }
+
 .ivu-btn-primary:hover {
   background: #f0ac19;
   border-color: #f0ac19;
 }
+
 .ivu-btn.ivu-btn-default {
   background-color: #27313e;
-  color: #FFF;
+  color: #fff;
+
   &:hover {
     color: #f0a70a;
-    // background: #27313e;
-    // border: 1px solid #f0a70a;
   }
+
   &:active {
     color: #f0a70a;
-    // border: 1px solid #f0a70a;
-    // background: #27313e;
   }
 }
-// primary按钮
+
 .ivu-btn-text {
   color: #ccc;
   border: 1px solid #27313e;
 }
+
 .ivu-btn-primary {
   background-color: #f0ac19;
   border-color: #f0ac19;
 }
+
 .ivu-btn-text:hover {
   background-color: transparent;
   color: #f0ac19;
 }
+
 .ivu-input-group-append,
 .ivu-input-group-prepend {
   background-color: #27313e;
   border: 1px solid #27313e;
 }
+
 .ivu-form-item-error .ivu-input-group-append,
 .ivu-form-item-error .ivu-input-group-prepend {
   background-color: #27313e;
   border: 1px solid #27313e;
 }
+
 .ivu-form-item-error .ivu-input,
 .ivu-form-item-error .ivu-input:focus,
 .ivu-form-item-error .ivu-input:hover {
@@ -2062,287 +1835,352 @@ fieldset[disabled] .ivu-input {
   box-shadow: none;
 }
 
-/*radio样式重置*/
 .ivu-radio-checked .ivu-radio-inner {
   border-color: #f0ac19;
 }
+
 .ivu-radio-checked:hover {
   .ivu-radio-inner {
     border-color: #f0ac19;
   }
 }
+
 .ivu-radio-inner:after {
   background: #f0ac19;
 }
+
 .ivu-switch-checked {
   border-color: #f0ac19;
   background-color: #f0ac19;
 }
+
 .ivu-switch:focus {
   box-shadow: none;
 }
+
 .ivu-radio-focus {
   box-shadow: none;
 }
 
-//弹窗
 .ivu-modal-content {
   background-color: #192330;
 }
+
 .ivu-modal-header {
   border-bottom: 1px solid #27313e;
 }
+
 .ivu-modal-confirm-head-icon-confirm {
   color: #fff;
 }
+
 .ivu-modal-header p {
   color: #fff;
 }
+
 .ivu-modal-footer {
   border-top: 1px solid #27313e;
 }
-/*排序小箭头样式重置*/
+
 .ivu-table-sort i.on {
   color: #f0ac19;
 }
+
 .ivu-table-sort i:hover {
   color: #f0ac19;
 }
-.ivu-modal-confirm-head-icon {
+
+.ivu-modal-confirm-head {
   font-size: 24px;
 }
+
 .ivu-modal-confirm-body {
   color: #fff;
   padding-left: 0;
 }
+
 .ivu-modal-confirm-head-title {
   color: #fff;
   margin-left: 5px;
 }
+
 .ivu-modal-confirm-footer {
   padding-top: 10px;
   border-top: 1px solid #27313e;
 }
-// 上传组件
+
 .ivu-upload-list-file:hover {
   background-color: #27313e;
 }
 
-.ivu-menu-light.ivu-menu-horizontal .ivu-menu-item-active, .ivu-menu-light.ivu-menu-horizontal .ivu-menu-item:hover, .ivu-menu-light.ivu-menu-horizontal .ivu-menu-submenu-active, .ivu-menu-light.ivu-menu-horizontal .ivu-menu-submenu:hover{
-  border-bottom:0!important;
-  color: #828ea1!important;
+.ivu-menu-light.ivu-menu-horizontal .ivu-menu-item-active,
+.ivu-menu-light.ivu-menu-horizontal .ivu-menu-item:hover,
+.ivu-menu-light.ivu-menu-horizontal .ivu-menu-submenu-active,
+.ivu-menu-light.ivu-menu-horizontal .ivu-menu-submenu:hover {
+  border-bottom: 0 !important;
+  color: #828ea1 !important;
 }
-.ivu-menu-horizontal .ivu-menu-submenu .ivu-select-dropdown .ivu-menu-item:hover{
-  background: #2f3e51!important;
+
+.ivu-menu-horizontal .ivu-menu-submenu .ivu-select-dropdown .ivu-menu-item:hover {
+  background: #2f3e51 !important;
 }
-.ivu-menu-horizontal.ivu-menu-light{
-  background:transparent!important;
+
+.ivu-menu-horizontal.ivu-menu-light {
+  background: transparent !important;
 }
-.ivu-menu-horizontal.ivu-menu-light:after{
-  height: 0!important;
+
+.ivu-menu-horizontal.ivu-menu-light:after {
+  height: 0 !important;
 }
-.ivu-select-dropdown{
-  border-radius: 0!important;
+
+.ivu-select-dropdown {
+  border-radius: 0 !important;
 }
-.lang-img{
-    height: 20px;
-    margin-bottom: -5px;
-    margin-right: 5px;
+
+.lang-img {
+  height: 20px;
+  margin-bottom: -5px;
+  margin-right: 5px;
 }
-.lang-item{
-  text-align:left;
-  img{
+
+.lang-item {
+  text-align: left;
+
+  img {
     height: 20px;
     margin-bottom: -5px;
     margin-right: 5px;
   }
-  &:hover{
-    background:#2f3e51;
+
+  &:hover {
+    background: #2f3e51;
   }
 }
-.ivu-message-notice-content{
+
+.ivu-message-notice-content {
   background: #324368;
   color: #a3bbcc;
 }
 
-.social-list{
-  ul{
+.social-list {
+  ul {
     list-style: none;
     padding-top: 5px;
-    li{
+
+    li {
       transition: all 0.5s;
-      width: 25px;height:25px;line-height:25px;border-radius:2px;background:rgb(57, 69, 89);text-align:center;float: left;margin-right:8px;color:#a3b6c6;
-      &:hover{
-        color: #FFF;
+      width: 25px;
+      height: 25px;
+      line-height: 25px;
+      border-radius: 2px;
+      background: rgb(57, 69, 89);
+      text-align: center;
+      float: left;
+      margin-right: 8px;
+      color: #a3b6c6;
+
+      &:hover {
+        color: #fff;
         cursor: pointer;
       }
     }
   }
 }
-.ivu-tooltip-inner{
+
+.ivu-tooltip-inner {
   background: #394559;
 }
-.ivu-tooltip-arrow{
+
+.ivu-tooltip-arrow {
   border-bottom-color: #394559;
 }
-.ivu-notice-notice{
+
+.ivu-notice-notice {
   background: #21364d;
 }
-.ivu-notice-title{
-  color: #FFFFFF;
+
+.ivu-notice-title {
+  color: #fff;
 }
-.ivu-notice-desc{
-  color: #FFFFFF;
+
+.ivu-notice-desc {
+  color: #fff;
 }
-.swiper-pagination-fraction, .swiper-pagination-custom, .swiper-container-horizontal > .swiper-pagination-bullets{
+
+.swiper-pagination-fraction,
+.swiper-pagination-custom,
+.swiper-container-horizontal > .swiper-pagination-bullets {
   bottom: -5px;
 }
-.swiper-pagination-bullet{
-  background: #FFF;
+
+.swiper-pagination-bullet {
+  background: #fff;
   border-radius: 2px;
   height: 3px;
   width: 15px;
   opacity: 0.3;
   transition: all 0.5s;
 }
-.swiper-pagination-bullet-active{
-  background: #f0a70a!important;
-  width:30px;
+
+.swiper-pagination-bullet-active {
+  background: #f0a70a !important;
+  width: 30px;
   opacity: 1;
 }
-.login_right .ivu-select-dropdown{
+
+.login_right .ivu-select-dropdown {
   background: #212b36;
 }
-.login_right .ivu-select-dropdown .ivu-select-item{
+
+.login_right .ivu-select-dropdown .ivu-select-item {
   text-align: left;
 }
-.ivu-form-item-error .ivu-input-group-append, .ivu-form-item-error .ivu-input-group-prepend, .ivu-input-group-prepend{
+
+.ivu-form-item-error .ivu-input-group-append,
+.ivu-form-item-error .ivu-input-group-prepend,
+.ivu-input-group-prepend {
   background-color: #17212e;
   border-bottom: 1px solid #27313e;
-  border-top:none;
+  border-top: none;
   border-left: none;
   border-right: none;
 }
-.ivu-input-group-append{
+
+.ivu-input-group-append {
   background-color: #17212e;
   border-bottom: 1px solid #27313e;
   border-left: none;
 }
-.ivu-select-single .ivu-select-selection{
+
+.ivu-select-single .ivu-select-selection {
   background-color: #17212e;
 }
-.login_form{
-  /* WebKit browsers */
+
+.login_form {
   input::-webkit-input-placeholder {
-    color: #8a8a8acf!important;
-    font-size: 0.95rem!important;
-    letter-spacing: 1px!important;
-  }
-  /* Mozilla Firefox 4 to 18 */
-  input:-moz-placeholder {
-    color: #8a8a8a!important;
-    font-size: 13px!important;
-    letter-spacing: 1px!important;
-  }
-  /* Mozilla Firefox 19+ */
-  input::-moz-placeholder {
-    color: #8a8a8a!important;
-    font-size: 13px!important;
-    letter-spacing: 1px!important;
-  }
-  /* Internet Explorer 10+ */
-  input::-ms-input-placeholder {
-    color: #8a8a8a!important;
-    font-size: 13px!important;
-    letter-spacing: 1px!important;
+    color: #8a8a8acf !important;
+    font-size: 0.95rem !important;
+    letter-spacing: 1px !important;
   }
 
-  .ivu-input-group-prepend{
+  input:-moz-placeholder {
+    color: #8a8a8a !important;
+    font-size: 13px !important;
+    letter-spacing: 1px !important;
+  }
+
+  input::-moz-placeholder {
+    color: #8a8a8a !important;
+    font-size: 13px !important;
+    letter-spacing: 1px !important;
+  }
+
+  input::-ms-input-placeholder {
+    color: #8a8a8a !important;
+    font-size: 13px !important;
+    letter-spacing: 1px !important;
+  }
+
+  .ivu-input-group-prepend {
     font-size: 0.95rem;
     letter-spacing: 1px;
   }
 }
 
-.login_form .login_right form.ivu-form.ivu-form-label-right.ivu-form-inline .password .ivu-form-item-content .ivu-input-wrapper.ivu-input-type .ivu-input{
+.login_form .login_right form.ivu-form.ivu-form-label-right.ivu-form-inline .password .ivu-form-item-content .ivu-input-wrapper.ivu-input-type .ivu-input {
   letter-spacing: 8px;
 }
 
-.ivu-menu-light{
-  background: transparent!important;
+.ivu-menu-light {
+  background: transparent !important;
 }
 
-
-.ivu-spin-fullscreen-wrapper{
-      background: #46597a70!important;
+.ivu-spin-fullscreen-wrapper {
+  background: #46597a70 !important;
 }
 
-.ivu-spin{
-  color:#f0a70a!important;
+.ivu-spin {
+  color: #f0a70a !important;
 }
-.ivu-poptip-popper[x-placement^=bottom] .ivu-poptip-arrow{
+
+.ivu-poptip-popper[x-placement^='bottom'] .ivu-poptip-arrow {
   border-bottom-color: #27313e;
 }
-.ivu-poptip-popper[x-placement^=bottom] .ivu-poptip-arrow:after{
+
+.ivu-poptip-popper[x-placement^='bottom'] .ivu-poptip-arrow:after {
   border-bottom-color: #27313e;
 }
 
 .ivu-poptip-title-inner {
-    color: #CCC;
-    font-size: 14px;
+  color: #ccc;
+  font-size: 14px;
 }
+
 .ivu-poptip-title:after {
-    background-color: #394253;
+  background-color: #394253;
 }
-.tag-hot{
-    display: inline-block;
-    padding: 0 4px;
-    background: #FF0000;
-    color: #FFF;
-    line-height: 16px;
-    font-size: 10px;
-    margin-left: 5px;
-    margin-top: -5px;
-    border-radius: 2px;
-    position: absolute;
-    top: 16px;
-    font-weight: 600;
+
+.tag-hot {
+  display: inline-block;
+  padding: 0 4px;
+  background: #ff0000;
+  color: #fff;
+  line-height: 16px;
+  font-size: 10px;
+  margin-left: 5px;
+  margin-top: -5px;
+  border-radius: 2px;
+  position: absolute;
+  top: 16px;
+  font-weight: 600;
 }
-.page{
-  text-align:right;
+
+.page {
+  text-align: right;
   margin-top: 10px;
-  .ivu-page{
-    .ivu-page-prev, .ivu-page-next{
-      background: transparent!important;
+
+  .ivu-page {
+    .ivu-page-prev,
+    .ivu-page-next {
+      background: transparent !important;
       color: #000;
       border: none;
     }
-    .ivu-page-item{
-      background-color: transparent!important;
+
+    .ivu-page-item {
+      background-color: transparent !important;
       color: #000;
       border: none;
     }
   }
 }
-.ivu-progress-bg{
-  border-radius: 0!important;
+
+.ivu-progress-bg {
+  border-radius: 0 !important;
   background-color: #ff8100;
   max-width: 100%;
 }
-.ivu-progress-success .ivu-progress-bg{
-  background-color: #ff8100!important;
+
+.ivu-progress-success .ivu-progress-bg {
+  background-color: #ff8100 !important;
 }
-.header_nav_mobile .ivu-menu-vertical .ivu-menu-item, .header_nav_mobile .ivu-menu-vertical .ivu-menu-submenu-title{
+
+.header_nav_mobile .ivu-menu-vertical .ivu-menu-item,
+.header_nav_mobile .ivu-menu-vertical .ivu-menu-submenu-title {
   padding: 8px 24px 8px 5px;
   color: #828ea1;
 }
-.header_nav_mobile .ivu-drawer-wrap .ivu-drawer-no-header .ivu-drawer-content .ivu-drawer-body{
+
+.header_nav_mobile .ivu-drawer-wrap .ivu-drawer-no-header .ivu-drawer-content .ivu-drawer-body {
   background: #2b323a;
   padding-top: 60px;
 }
-.header_nav_mobile .ivu-menu-vertical.ivu-menu-light:after{
-  background:transparent!important;
+
+.header_nav_mobile .ivu-menu-vertical.ivu-menu-light:after {
+  background: transparent !important;
 }
-.header_nav_mobile .ivu-menu-light.ivu-menu-vertical .ivu-menu-item-active:not(.ivu-menu-submenu){
+
+.header_nav_mobile .ivu-menu-light.ivu-menu-vertical .ivu-menu-item-active:not(.ivu-menu-submenu) {
   color: #f0a70a;
 }
 </style>
