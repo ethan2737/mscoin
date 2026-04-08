@@ -8,10 +8,10 @@ JWT:
 ExchangeRpc:
   Etcd:
     Hosts:
-      - 127.0.0.1:2379
+      - 127.0.0.1:32379
     Key: exchange.rpc
 Kafka:
-  Addr: localhost:9092
+  Addr: localhost:39092
   WriteCap: 100
   ReadCap: 100
   ConsumerGroup: "kline1m-thumb-consumer"

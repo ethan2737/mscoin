@@ -42,3 +42,9 @@ Thumbs.db
 *.tar.gz
 *.pdf
 *.rpm
+
+# Docker data (bind mounts in mscoin-backend/)
+mscoin-backend/docker/*/data/
+mscoin-backend/docker/*/db/
+mscoin-backend/docker/*/logs/
+mscoin-backend/docker/*/conf/
