@@ -17,12 +17,15 @@ vendor/
 
 # Node.js
 node_modules/
-npm-debug.log
-yarn-error.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
 
 # Build outputs
 dist/
+dist-vite/
 build/
+build/dist/
 
 # Logs
 logs/
