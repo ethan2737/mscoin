@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm cache:*)",
+      "Bash(rm -rf node_modules package-lock.json)",
+      "Bash(yarn --version)",
+      "Bash(pnpm --version)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3003)",
+      "Bash(cd:*)",
+      "Bash(sed -i 's/10\\\\/12/12\\\\/12/g' tasks.md)",
+      "Bash(sed -i '/首页已迁移/a\\\\- 合约首页已迁移 ✅（包含币种列表、K 线图、深度图、持仓管理、订单管理、杠杆调整）\\\\n- 合约 K 线已迁移 ✅（包含 TradingView 集成、WebSocket 实时行情、杠杆/时间调整）' tasks.md)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm list:*)",
+      "Read(//d E:/Project/web3/mscoin/**)",
+      "Bash(cp src/App-vue3.vue src/App.vue)",
+      "Bash(/d/SoftwareData/node_global/openspec status:*)",
+      "Bash(/d/SoftwareData/node_global/openspec instructions:*)"
+    ]
+  }
+}
