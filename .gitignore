@@ -5,6 +5,10 @@
 *.swo
 *~
 
+# Claude Code
+CLAUDE.md
+.claude/
+
 # Go
 *.exe
 *.exe~
