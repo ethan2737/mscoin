@@ -1,10 +1,7 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import vue from '@vitejs/plugin-vue2'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // Vite 中获取 __dirname 的替代方案
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -13,16 +10,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [
     vue(),
-    AutoImport({
-      imports: ['vue'],
-      resolvers: [ElementPlusResolver()],
-      eslintrc: {
-        enabled: true,
-      },
-    }),
-    Components({
-      resolvers: [ElementPlusResolver()],
-    }),
   ],
   resolve: {
     alias: {
@@ -51,13 +38,12 @@ export default defineConfig({
     assetsDir: 'static',
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index-vue3.html')
+        main: resolve(__dirname, 'index.html')
       },
       output: {
         manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'vuex'],
-          'element-plus': ['element-plus'],
-          'utils': ['axios', 'moment', 'socket.io-client']
+          'vendor': ['vue', 'vue-router', 'vuex', 'vue-resource', 'vue-i18n', 'iview'],
+          'utils': ['axios', 'moment', 'socket.io-client', 'jquery']
         }
       }
     }
@@ -65,7 +51,10 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       less: {
-        javascriptEnabled: true
+        javascriptEnabled: true,
+        modifyVars: {
+          hack: `true; @import '~iview/src/styles/index.less';`
+        }
       }
     }
   }
