@@ -6,12 +6,12 @@ JWT:
   AccessSecret: "!@#$mscoin"
   AccessExpire: 604800
 ExchangeRpc:
-  Etcd:
-    Hosts:
-      - 127.0.0.1:32379
-    Key: exchange.rpc
+  Endpoints:
+    - 127.0.0.1:8083
+  NonBlock: true
+  Timeout: 10000
 Kafka:
-  Addr: localhost:39092
+  Addr: 127.0.0.1:39092
   WriteCap: 100
   ReadCap: 100
   ConsumerGroup: "kline1m-thumb-consumer"

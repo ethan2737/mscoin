@@ -63,8 +63,6 @@ func (l *ExchangeOrderLogic) FindOrderCurrent(req *order.OrderReq) (*order.Order
 }
 
 func (l *ExchangeOrderLogic) Add(req *order.OrderReq) (*order.AddOrderRes, error) {
-	//添加订单 发布委托
-	//1.首先检查参数是否合法
 	memberRes, err := l.svcCtx.MemberRpc.FindMemberById(l.ctx, &member.MemberReq{
 		MemberId: req.UserId,
 	})
@@ -72,14 +70,15 @@ func (l *ExchangeOrderLogic) Add(req *order.OrderReq) (*order.AddOrderRes, error
 		return nil, err
 	}
 	if memberRes.TransactionStatus == 0 {
-		return nil, errors.New("此用户已经被禁止交易")
+		return nil, errors.New("姝ょ敤鎴峰凡缁忚绂佹浜ゆ槗")
 	}
 	if req.Type == model.TypeMap[model.LimitPrice] && req.Price <= 0 {
-		return nil, errors.New("限价模式下价格不能小于等于0")
+		return nil, errors.New("闄愪环妯″紡涓嬩环鏍间笉鑳藉皬浜庣瓑浜?")
 	}
 	if req.Amount <= 0 {
-		return nil, errors.New("数量不能小于等于0")
+		return nil, errors.New("鏁伴噺涓嶈兘灏忎簬绛変簬0")
 	}
+
 	exchangeCoin, err := l.svcCtx.MarketRpc.FindSymbolInfo(l.ctx, &market.MarketReq{
 		Symbol: req.Symbol,
 	})
@@ -89,34 +88,34 @@ func (l *ExchangeOrderLogic) Add(req *order.OrderReq) (*order.AddOrderRes, error
 	if exchangeCoin.Exchangeable != 1 && exchangeCoin.Enable != 1 {
 		return nil, errors.New("coin forbidden")
 	}
-	//基准币 BTC/USDT
+
 	baseSymbol := exchangeCoin.GetBaseSymbol()
-	//交易币
 	coinSymbol := exchangeCoin.GetCoinSymbol()
 	cc := baseSymbol
 	if req.Direction == model.DirectionMap[model.SELL] {
-		//根据交易币查询
 		cc = coinSymbol
 	}
+
 	coin, err := l.svcCtx.MarketRpc.FindCoinInfo(l.ctx, &market.MarketReq{
 		Unit: cc,
 	})
 	if err != nil || coin == nil {
 		return nil, errors.New("nonsupport coin")
 	}
+
 	if req.Type == model.TypeMap[model.MarketPrice] && req.Direction == model.DirectionMap[model.BUY] {
 		if exchangeCoin.GetMinTurnover() > 0 && req.Amount < float64(exchangeCoin.GetMinTurnover()) {
-			return nil, errors.New("成交额至少是" + fmt.Sprintf("%d", exchangeCoin.GetMinTurnover()))
+			return nil, errors.New("鎴愪氦棰濊嚦灏戞槸" + fmt.Sprintf("%d", exchangeCoin.GetMinTurnover()))
 		}
 	} else {
 		if exchangeCoin.GetMaxVolume() > 0 && exchangeCoin.GetMaxVolume() < req.Amount {
-			return nil, errors.New("数量超出" + fmt.Sprintf("%f", exchangeCoin.GetMaxVolume()))
+			return nil, errors.New("鏁伴噺瓒呭嚭" + fmt.Sprintf("%f", exchangeCoin.GetMaxVolume()))
 		}
 		if exchangeCoin.GetMinVolume() > 0 && exchangeCoin.GetMinVolume() > req.Amount {
-			return nil, errors.New("数量不能低于" + fmt.Sprintf("%f", exchangeCoin.GetMinVolume()))
+			return nil, errors.New("鏁伴噺涓嶈兘浣庝簬" + fmt.Sprintf("%f", exchangeCoin.GetMinVolume()))
 		}
 	}
-	//查询用户钱包 BTC/USDT
+
 	baseWallet, err := l.svcCtx.AssetRpc.FindWalletBySymbol(l.ctx, &asset.AssetReq{
 		UserId:   req.UserId,
 		CoinName: baseSymbol,
@@ -134,43 +133,40 @@ func (l *ExchangeOrderLogic) Add(req *order.OrderReq) (*order.AddOrderRes, error
 	if baseWallet.IsLock == 1 || exCoinWallet.IsLock == 1 {
 		return nil, errors.New("wallet locked")
 	}
+
 	if req.Direction == model.DirectionMap[model.SELL] && exchangeCoin.GetMinSellPrice() > 0 {
 		if req.Price < exchangeCoin.GetMinSellPrice() || req.Type == model.TypeMap[model.MarketPrice] {
-			return nil, errors.New("不能低于最低限价:" + fmt.Sprintf("%f", exchangeCoin.GetMinSellPrice()))
+			return nil, errors.New("涓嶈兘浣庝簬鏈€浣庨檺浠?" + fmt.Sprintf("%f", exchangeCoin.GetMinSellPrice()))
 		}
 	}
 	if req.Direction == model.DirectionMap[model.BUY] && exchangeCoin.GetMaxBuyPrice() > 0 {
 		if req.Price > exchangeCoin.GetMaxBuyPrice() || req.Type == model.TypeMap[model.MarketPrice] {
-			return nil, errors.New("不能低于最高限价:" + fmt.Sprintf("%f", exchangeCoin.GetMaxBuyPrice()))
+			return nil, errors.New("涓嶈兘浣庝簬鏈€楂橀檺浠?" + fmt.Sprintf("%f", exchangeCoin.GetMaxBuyPrice()))
 		}
 	}
-	//是否启用了市价买卖
 	if req.Type == model.TypeMap[model.MarketPrice] {
 		if req.Direction == model.DirectionMap[model.BUY] && exchangeCoin.EnableMarketBuy == 0 {
-			return nil, errors.New("不支持市价购买")
+			return nil, errors.New("涓嶆敮鎸佸競浠疯喘涔?")
 		} else if req.Direction == model.DirectionMap[model.SELL] && exchangeCoin.EnableMarketSell == 0 {
-			return nil, errors.New("不支持市价出售")
+			return nil, errors.New("涓嶆敮鎸佸競浠峰嚭鍞?")
 		}
 	}
-	//限制委托数量
+
 	count, err := l.exchangeOrderDomain.FindCurrentTradingCount(l.ctx, req.UserId, req.Symbol, req.Direction)
 	if err != nil {
 		return nil, err
 	}
 	if exchangeCoin.GetMaxTradingOrder() > 0 && count >= exchangeCoin.GetMaxTradingOrder() {
-		return nil, errors.New("超过最大挂单数量 " + fmt.Sprintf("%d", exchangeCoin.GetMaxTradingOrder()))
+		return nil, errors.New("瓒呰繃鏈€澶ф寕鍗曟暟閲?" + fmt.Sprintf("%d", exchangeCoin.GetMaxTradingOrder()))
 	}
-	//生成订单
-	//开始生成订单
+
 	exchangeOrder := model.NewOrder()
 	exchangeOrder.MemberId = req.UserId
 	exchangeOrder.Symbol = req.Symbol
 	exchangeOrder.BaseSymbol = baseSymbol
 	exchangeOrder.CoinSymbol = coinSymbol
-	typeCode := model.TypeMap.Code(req.Type)
-	exchangeOrder.Type = typeCode
-	directionCode := model.DirectionMap.Code(req.Direction)
-	exchangeOrder.Direction = directionCode
+	exchangeOrder.Type = model.TypeMap.Code(req.Type)
+	exchangeOrder.Direction = model.DirectionMap.Code(req.Direction)
 	if exchangeOrder.Type == model.MarketPrice {
 		exchangeOrder.Price = 0
 	} else {
@@ -178,30 +174,31 @@ func (l *ExchangeOrderLogic) Add(req *order.OrderReq) (*order.AddOrderRes, error
 	}
 	exchangeOrder.UseDiscount = "0"
 	exchangeOrder.Amount = req.Amount
-	//保存订单到数据库，发送消息到kafka，ucenter 钱包服务 接收到消息 进行资金的冻结
-	//AddOrder 保存订单 计算所需要的钱
+
+	var freezeMoney float64
 	err = l.transaction.Action(func(conn msdb.DbConn) error {
-		money, err := l.exchangeOrderDomain.AddOrder(l.ctx, conn, exchangeOrder, exchangeCoin, baseWallet, exCoinWallet)
-		if err != nil {
-			return errors.New("订单提交失败")
+		money, addErr := l.exchangeOrderDomain.AddOrder(l.ctx, conn, exchangeOrder, exchangeCoin, baseWallet, exCoinWallet)
+		if addErr != nil {
+			return errors.New("璁㈠崟鎻愪氦澶辫触")
 		}
-		//通过kafka发消息 订单创建成功的消息 钱包应该冻结钱了
-		err = l.kafkaDomain.SendOrderAdd(
-			"add-exchange-order",
-			req.UserId,
-			exchangeOrder.OrderId,
-			money,
-			req.Symbol,
-			exchangeOrder.Direction,
-			baseSymbol,
-			coinSymbol)
-		if err != nil {
-			return errors.New("发消息失败")
-		}
+		freezeMoney = money
 		return nil
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	err = l.kafkaDomain.SendOrderAdd(
+		"add-exchange-order",
+		req.UserId,
+		exchangeOrder.OrderId,
+		freezeMoney,
+		req.Symbol,
+		exchangeOrder.Direction,
+		baseSymbol,
+		coinSymbol)
+	if err != nil {
+		return nil, errors.New("鍙戞秷鎭け璐?")
 	}
 	return &order.AddOrderRes{
 		OrderId: exchangeOrder.OrderId,
@@ -220,7 +217,7 @@ func (l *ExchangeOrderLogic) FindByOrderId(req *order.OrderReq) (*order.Exchange
 
 func (l *ExchangeOrderLogic) CancelOrder(req *order.OrderReq) (*order.CancelOrderRes, error) {
 	l.exchangeOrderDomain.UpdateStatusCancel(l.ctx, req.OrderId)
-	return nil, nil
+	return &order.CancelOrderRes{}, nil
 }
 func NewExchangeOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ExchangeOrderLogic {
 	orderDomain := domain.NewExchangeOrderDomain(svcCtx.Db)
@@ -230,6 +227,6 @@ func NewExchangeOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Exc
 		Logger:              logx.WithContext(ctx),
 		exchangeOrderDomain: orderDomain,
 		transaction:         tran.NewTransaction(svcCtx.Db.Conn),
-		kafkaDomain:         domain.NewKafkaDomain(svcCtx.KafkaClient, orderDomain),
+		kafkaDomain:         svcCtx.KafkaDomain,
 	}
 }

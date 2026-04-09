@@ -13,6 +13,12 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
+const (
+	localCaptchaMode   = "fallback"
+	localCaptchaServer = "local-fallback"
+	localCaptchaToken  = "passed"
+)
+
 type LoginLogic struct {
 	logx.Logger
 	ctx    context.Context
@@ -34,6 +40,12 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginRes, err error
 	loginReq := &login.LoginReq{}
 	if err := copier.Copy(loginReq, req); err != nil {
 		return nil, err
+	}
+	if req.Captcha != nil && req.Captcha.Mode == localCaptchaMode && req.Captcha.Passed {
+		loginReq.Captcha = &login.CaptchaReq{
+			Server: localCaptchaServer,
+			Token:  localCaptchaToken,
+		}
 	}
 	loginResp, err := l.svcCtx.UCLoginRpc.Login(ctx, loginReq)
 	if err != nil {

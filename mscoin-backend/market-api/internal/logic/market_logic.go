@@ -17,28 +17,26 @@ type MarketLogic struct {
 	svcCtx *svc.ServiceContext
 }
 
-func (l *MarketLogic) SymbolThumbTrend(req *types.MarketReq) (list []*types.CoinThumbResp, err error) {
-	var thumbs []*market.CoinThumb
+func (l *MarketLogic) loadThumbs(req *types.MarketReq) ([]*market.CoinThumb, error) {
 	thumb := l.svcCtx.Processor.GetThumb()
-	isCache := false
-	if thumb != nil {
-		switch thumb.(type) {
-		case []*market.CoinThumb:
-			thumbs = thumb.([]*market.CoinThumb)
-			isCache = true
-		}
+	if thumbs, ok := thumb.([]*market.CoinThumb); ok && len(thumbs) > 0 {
+		return thumbs, nil
 	}
-	if !isCache {
-		ctx, cancelFunc := context.WithTimeout(l.ctx, 10*time.Second)
-		defer cancelFunc()
-		symbolThumbRes, err := l.svcCtx.MarketRpc.FindSymbolThumbTrend(ctx,
-			&market.MarketReq{
-				Ip: req.Ip,
-			})
-		if err != nil {
-			return nil, err
-		}
-		thumbs = symbolThumbRes.List
+	ctx, cancelFunc := context.WithTimeout(l.ctx, 10*time.Second)
+	defer cancelFunc()
+	symbolThumbRes, err := l.svcCtx.MarketRpc.FindSymbolThumbTrend(ctx, &market.MarketReq{
+		Ip: req.Ip,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return symbolThumbRes.List, nil
+}
+
+func (l *MarketLogic) SymbolThumbTrend(req *types.MarketReq) (list []*types.CoinThumbResp, err error) {
+	thumbs, err := l.loadThumbs(req)
+	if err != nil {
+		return nil, err
 	}
 	if err := copier.Copy(&list, thumbs); err != nil {
 		return nil, err
@@ -47,13 +45,9 @@ func (l *MarketLogic) SymbolThumbTrend(req *types.MarketReq) (list []*types.Coin
 }
 
 func (l *MarketLogic) SymbolThumb(req *types.MarketReq) (list []*types.CoinThumbResp, err error) {
-	var thumbs []*market.CoinThumb
-	thumb := l.svcCtx.Processor.GetThumb()
-	if thumb != nil {
-		switch thumb.(type) {
-		case []*market.CoinThumb:
-			thumbs = thumb.([]*market.CoinThumb)
-		}
+	thumbs, err := l.loadThumbs(req)
+	if err != nil {
+		return nil, err
 	}
 	if err := copier.Copy(&list, thumbs); err != nil {
 		return nil, err

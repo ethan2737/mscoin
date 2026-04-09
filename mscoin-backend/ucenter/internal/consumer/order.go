@@ -12,6 +12,7 @@ import (
 	"mscoin-common/msdb"
 	"mscoin-common/msdb/tran"
 	"mscoin-common/op"
+	"strings"
 	"time"
 	"ucenter/internal/database"
 	"ucenter/internal/domain"
@@ -45,6 +46,10 @@ func ExchangeOrderAdd(redisCli *redis.Redis, cli *database.KafkaClient, orderRpc
 			OrderId: orderId,
 		})
 		if err != nil {
+			if isOrderNotFoundError(err) {
+				logx.Infof("discard stale add-exchange-order message, order not found: %s", orderId)
+				continue
+			}
 			logx.Error(err)
 			cancelOrder(ctx, kafkaData, orderId, orderRpc, cli)
 			continue
@@ -108,11 +113,19 @@ func ExchangeOrderAdd(redisCli *redis.Redis, cli *database.KafkaClient, orderRpc
 	}
 }
 
+func isOrderNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "orderId") && strings.Contains(err.Error(), "不存在")
+}
+
 func cancelOrder(ctx context.Context, data database.KafkaData, orderId string, orderRpc eclient.Order, cli *database.KafkaClient) {
 	_, err := orderRpc.CancelOrder(ctx, &order.OrderReq{
 		OrderId: orderId,
 	})
 	if err != nil {
+		logx.Errorf("cancel order failed, requeueing message, orderId=%s err=%v", orderId, err)
 		cli.Rput(data)
 	}
 }

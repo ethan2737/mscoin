@@ -22,15 +22,13 @@ MarketRpc:
     Key: market.rpc
   NonBlock: true
 Kafka:
-  Addr: localhost:39092
+  Addr: 127.0.0.1:39092
   WriteCap: 100
   ReadCap: 100
   ConsumerGroup: "ucenter-consumer"
 ExchangeRpc:
-  Etcd:
-    Hosts:
-      - 127.0.0.1:32379
-    Key: exchange.rpc
+  Endpoints:
+    - 127.0.0.1:8083
   NonBlock: true
 Bitcoin:
   Address: "http://127.0.0.1:18332"
