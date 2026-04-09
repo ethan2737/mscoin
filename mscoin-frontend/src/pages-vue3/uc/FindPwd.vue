@@ -34,12 +34,13 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElNotification, ElForm, ElFormItem, ElInput, ElButton } from 'element-plus'
 import axios from 'axios'
-import { useRouter, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const codedisabled = ref(false)
 const sendcodeValue = ref('发送验证码')

@@ -255,16 +255,17 @@
  * Vue 3 迁移 - CTC 交易页面
  */
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { ElMessage, ElNotification, ElTable, ElPagination, ElTabs, ElTabPane, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElButton, ElDialog, ElCol, ElRow, ElIcon, ElSpin } from 'element-plus'
+import { ElMessage, ElNotification, ElTable, ElPagination, ElTabs, ElTabPane, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElButton, ElDialog, ElCol, ElRow, ElIcon } from 'element-plus'
 import { InfoFilled, Clock } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import moment from 'moment'
 
 const router = useRouter()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const activeTab = ref('all')
 const formValidateRef = ref(null)

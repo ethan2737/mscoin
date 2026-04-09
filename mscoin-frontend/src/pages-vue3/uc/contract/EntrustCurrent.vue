@@ -163,11 +163,11 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElTabs, ElTabPane, ElButton, ElSelect, ElOption, ElDatePicker, ElPagination } from 'element-plus'
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
 
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 const api = {
   swap: {
     current: '/uc/contract/current',

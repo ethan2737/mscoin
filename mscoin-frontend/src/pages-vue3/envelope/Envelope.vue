@@ -65,7 +65,7 @@
     </p>
 
     <div class="loading-overlay" v-if="spinShow">
-      <el-spinner />
+      <el-icon class="is-loading"><Loading /></el-icon>
     </div>
   </div>
 </template>
@@ -75,15 +75,17 @@
  * Vue 3 迁移 - 红包信封页面
  */
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElForm, ElFormItem, ElInput, ElButton, ElSpinner } from 'element-plus'
+import { ElMessage, ElForm, ElFormItem, ElInput, ElButton, ElIcon } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useRoute, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const spinShow = ref(false)
 const hasReceived = ref(false)

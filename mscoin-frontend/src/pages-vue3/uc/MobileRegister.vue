@@ -102,13 +102,14 @@
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { ElMessage, ElNotification, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElButton, ElCheckbox } from 'element-plus'
 import axios from 'axios'
-import { useRouter, useRoute, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const country = ref('中国')
 const codedisabled = ref(false)

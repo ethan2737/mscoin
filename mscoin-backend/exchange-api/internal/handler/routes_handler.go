@@ -12,8 +12,10 @@ func RegisterHandlers(r *Routers, serverCtx *svc.ServiceContext) {
 	orderGroup := r.Group()
 	orderGroup.Use(midd.Auth(serverCtx.Config.JWT.AccessSecret))
 	//历史委托订单 所有的订单
-	orderGroup.Post("/order/history",order.History)
+	orderGroup.Post("/order/history", order.History)
 	//当前委托订单 状态 正在交易的状态
-	orderGroup.Post("/order/current",order.Current)
-	orderGroup.Post("/order/add",order.Add)
+	orderGroup.Post("/order/current", order.Current)
+	orderGroup.Post("/order/add", order.Add)
+	orderGroup.Post("/order/cancel/:orderId", order.Cancel)
+	orderGroup.Post("/order/cancel", order.Cancel)
 }

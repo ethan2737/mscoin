@@ -61,12 +61,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElPagination } from 'element-plus'
 import axios from 'axios'
-import { useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
 
 const store = useStore()
 
-const host = 'http://localhost'
-const rootHost = 'http://localhost'
+const host = ''
+const rootHost = ''
 const api = {
   uc: {
     myInnovationOrderList: '/uc/activity/myOrders'

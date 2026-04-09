@@ -65,6 +65,7 @@ export default [
   // 首页
   { path: '/', redirect: '/index' },
   { path: '/index', component: Index },
+  { path: '/invite', redirect: '/partner' },
 
   // 用户认证
   { path: '/login', component: Login },
@@ -72,7 +73,7 @@ export default [
   { path: '/register', component: Register },
   { path: '/reg', component: Register },
   { path: '/mobile/register', component: MobileRegister },
-  { path: '/findpwd', component: FindPwd },
+  { path: '/findpwd', alias: '/findPwd', component: FindPwd },
 
   // 应用下载
   { path: '/app', component: AppDownload },
@@ -92,26 +93,29 @@ export default [
   { path: '/uc/crowdfunding/list', component: crowdfundingList },
 
   // 活动
-  { path: '/activity', component: Activity },
-  { path: '/activity/:id', component: ActivityDetail },
+  { path: '/activity', alias: '/lab', component: Activity },
+  { path: '/activity/:id', alias: '/lab/detail/:id', component: ActivityDetail },
   { path: '/partner', component: Partner },
   { path: '/bzb', component: Bzb },
 
   // CMS
   { path: '/help', component: Help },
-  { path: '/help/list', component: HelpList },
-  { path: '/help/detail', component: HelpDetail },
+  { path: '/help/list', alias: '/helplist', component: HelpList },
+  { path: '/help/detail', alias: '/helpdetail', component: HelpDetail },
   { path: '/notice', component: Notice },
-  { path: '/notice/item', component: NoticeItem },
+  { path: '/notice/item/:id?', alias: ['/announcement/:id', '/announcement'], component: NoticeItem },
   { path: '/notice/index', component: Noticeindex },
-  { path: '/about', component: AboutUs },
+  { path: '/about', alias: '/about-us', component: AboutUs },
 
   // OTC 交易
   { path: '/otc', component: OtcMain },
-  { path: '/otc/trade', component: OtcTrade },
-  { path: '/otc/trade/:id', component: OtcTradeInfo },
-  { path: '/otc/checkuser/:id', component: OtcCheckUser },
-  { path: '/otc/chat/:id', component: OtcChat },
+  { path: '/otc/trade', redirect: '/otc/trade/usdt' },
+  { path: '/otc/trade/:pathMatch(.*)*', component: OtcTrade },
+  { path: '/otc/tradeInfo', component: OtcTradeInfo },
+  { path: '/checkuser', component: OtcCheckUser },
+  { path: '/chat', component: OtcChat },
+  { path: '/otc/checkuser/:id', redirect: to => `/checkuser?id=${to.params.id}` },
+  { path: '/otc/chat/:id', redirect: to => `/chat?tradeId=${to.params.id}` },
   { path: '/otc/ad/publish', component: OtcAdPublish },
   { path: '/otc/myad', component: OtcMyAd },
 
@@ -139,6 +143,9 @@ export default [
       { path: 'withdraw/address', component: WithdrawAddress },
       { path: 'record', component: Record },
       { path: 'contract-record', component: ContractRecord },
+      { path: 'ad', component: OtcMyAd },
+      { path: 'ad/create', component: OtcAdPublish },
+      { path: 'ad/update', component: OtcAdPublish },
       { path: 'order', component: myorder },
       { path: 'entrust/current', component: EntrustCurrent },
       { path: 'entrust/history', component: EntrustHistory },
@@ -148,8 +155,8 @@ export default [
       { path: 'min/trade', component: MinTrade },
       { path: 'inviting/min', component: InvitingMin },
       { path: 'pay/dividends', component: PayDividends },
-      { path: 'innovation/orders', component: InnovationOrders },
-      { path: 'innovation/minings', component: InnovationMinings },
+      { path: 'innovation/orders', alias: 'innovation/myorders', component: InnovationOrders },
+      { path: 'innovation/minings', alias: 'innovation/myminings', component: InnovationMinings },
       { path: 'ident/business', component: IdentBusiness }
     ]
   },

@@ -136,12 +136,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElTabs, ElTabPane, ElButton } from 'element-plus'
 import axios from 'axios'
-import { useStore, useRouter } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const store = useStore()
 const router = useRouter()
 
-const host = 'http://localhost'
+const host = ''
 
 const loading = ref(true)
 const hasRealName = ref(false)

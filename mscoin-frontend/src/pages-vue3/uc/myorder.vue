@@ -3,26 +3,26 @@
     <div class="nav-right">
       <div class="bill_box_order">
         <div class="order_box">
+          <div class="tabs-header">
+            <el-input
+              v-model="ordKeyword"
+              :placeholder="$t('uc.otcorder.searchtip')"
+              class="search-input"
+              @keyup.enter="handleSearch"
+            >
+              <template #suffix>
+                <el-icon @click="handleSearch" style="cursor: pointer;"><Search /></el-icon>
+              </template>
+            </el-input>
+          </div>
           <el-tabs v-model="activeTab" @tab-click="handleTabClick">
             <el-tab-pane :label="$t('uc.otcorder.unpaid')" name="1" />
             <el-tab-pane :label="$t('uc.otcorder.paided')" name="2" />
             <el-tab-pane :label="$t('uc.otcorder.finished')" name="3" />
             <el-tab-pane :label="$t('uc.otcorder.canceled')" name="0" />
             <el-tab-pane :label="$t('uc.otcorder.appealing')" name="4" />
-            <template #extra>
-              <el-input
-                v-model="ordKeyword"
-                :placeholder="$t('uc.otcorder.searchtip')"
-                class="search-input"
-                @keyup.enter="handleSearch"
-              >
-                <template #suffix>
-                  <el-icon @click="handleSearch" style="cursor: pointer;"><Search /></el-icon>
-                </template>
-              </el-input>
-            </template>
-            <template #default>
-              <div class="order-table">
+          </el-tabs>
+          <div class="order-table">
                 <el-table :data="tableOrder" v-loading="loading" border style="width: 100%">
                   <el-table-column :label="$t('uc.otcorder.orderno')" min-width="60" align="center">
                     <template #default="{ row }">
@@ -56,8 +56,6 @@
                   />
                 </div>
               </div>
-            </template>
-          </el-tabs>
         </div>
       </div>
     </div>
@@ -75,7 +73,7 @@ import axios from 'axios'
 
 const router = inject('router')
 
-const host = 'http://localhost'
+const host = ''
 
 const activeTab = ref('1')
 const ordKeyword = ref('')

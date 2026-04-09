@@ -177,7 +177,7 @@ import moment from 'moment'
 const store = inject('store')
 const router = inject('router')
 
-const host = 'http://localhost'
+const host = ''
 const api = {
   swap: {
     symbolInfo: '/swap/symbol-info',

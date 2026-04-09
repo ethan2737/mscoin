@@ -1,339 +1,288 @@
 <template>
-  <div class="login_form">
-    <div class="login_right">
-      <el-form ref="formInline" :model="formInline" :rules="ruleInline" inline>
-        <div class="login_title">{{ loginTitle }}</div>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <h1>登录</h1>
+        <p>使用手机号或邮箱进入账户</p>
+      </div>
+
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <el-form-item prop="user">
-          <el-input
-            name="user"
-            type="text"
-            v-model="formInline.user"
-            :placeholder="userTip"
-            class="user"
-          >
+          <el-input v-model="form.user" placeholder="手机号或邮箱">
             <template #prepend>
-              <el-select v-model="country" style="width: 65px">
-                <el-option value="+86" label="+86"><span>+86</span><span style="margin-left:10px;color:#ccc">中国</span></el-option>
-                <el-option value="+65" label="+65"><span>+65</span><span style="margin-left:10px;color:#ccc">新加坡</span></el-option>
-                <el-option value="+82" label="+82"><span>+82</span><span style="margin-left:10px;color:#ccc">韩国</span></el-option>
-                <el-option value="+81" label="+81"><span>+81</span><span style="margin-left:10px;color:#ccc">日本</span></el-option>
-                <el-option value="+66" label="+66"><span>+66</span><span style="margin-left:10px;color:#ccc">泰国</span></el-option>
-                <el-option value="+7" label="+7"><span>+7</span><span style="margin-left:10px;color:#ccc">俄罗斯</span></el-option>
-                <el-option value="+44" label="+44"><span>+44</span><span style="margin-left:10px;color:#ccc">英国</span></el-option>
-                <el-option value="+84" label="+84"><span>+84</span><span style="margin-left:10px;color:#ccc">越南</span></el-option>
-                <el-option value="+91" label="+91"><span>+91</span><span style="margin-left:10px;color:#ccc">印度</span></el-option>
-                <el-option value="+39" label="+39"><span>+39</span><span style="margin-left:10px;color:#ccc">意大利</span></el-option>
-                <el-option value="+852" label="+852"><span>+852</span><span style="margin-left:10px;color:#ccc">香港</span></el-option>
-                <el-option value="+60" label="+60"><span>+60</span><span style="margin-left:10px;color:#ccc">马来西亚</span></el-option>
-                <el-option value="+886" label="+886"><span>+886</span><span style="margin-left:10px;color:#ccc">台湾省</span></el-option>
-                <el-option value="+90" label="+90"><span>+90</span><span style="margin-left:10px;color:#ccc">土耳其</span></el-option>
+              <el-select v-model="countryCode" style="width: 84px">
+                <el-option
+                  v-for="option in countryOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
               </el-select>
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item prop="password" class="password">
+
+        <el-form-item prop="password">
           <el-input
+            v-model="form.password"
             type="password"
-            v-model="formInline.password"
-            :placeholder="pwdTip"
+            show-password
+            placeholder="密码"
             @keyup.enter="doLogin"
           />
         </el-form-item>
-        <div id="VAPTCHAContainer" style="width: 300px;height: 36px;"/>
-        <p id="notice" class="hide">{{ validateMsg }}</p>
-        <p style="height:30px;margin-top:15px;">
-          <router-link to="/findPwd" style="color:#979797;float:right;padding-right:10px;font-size:12px;">
-            {{ forgetPwd }}
-          </router-link>
-        </p>
-        <el-form-item style="margin-bottom:15px;">
-          <el-button class="login_btn" @click="doLogin" :loading="logining">{{ loginTitle }}</el-button>
-        </el-form-item>
-        <div class='to_register'>
-          <span>{{ noAccount }}</span>
-          <router-link to="/register">{{ goRegister }}</router-link>
+
+        <div class="captcha-box">
+          <div class="captcha-box__title">人机验证</div>
+          <p class="captcha-box__desc">当前使用前端降级验证，后续可切回正式验证码服务。</p>
+          <el-button
+            class="captcha-box__button"
+            :type="captchaPassed ? 'success' : 'default'"
+            @click="markCaptchaPassed"
+          >
+            {{ captchaPassed ? '验证已完成' : '点击完成验证' }}
+          </el-button>
         </div>
+
+        <div class="auth-card__links">
+          <router-link to="/findPwd">忘记密码？</router-link>
+        </div>
+
+        <el-form-item>
+          <el-button class="auth-card__submit" type="warning" :loading="logining" @click="doLogin">
+            登录
+          </el-button>
+        </el-form-item>
       </el-form>
+
+      <div class="auth-card__footer">
+        <span>没有账号？</span>
+        <router-link to="/register">立即注册</router-link>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-/**
- * Vue 3 迁移 - 登录页面
- * 迁移点：
- * 1. 使用 <script setup> 语法
- * 2. 使用 Composition API 替代 Options API
- * 3. 使用 Element Plus 组件替代 iView 组件
- * 4. 使用 inject('store') 和 inject('router') 兼容 Vuex 3.x 和 Vue Router 3.x
- */
-import { ref, reactive, computed, inject, onMounted } from 'vue'
+import { reactive, ref, inject, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { vaptcha } from '../../extend/vaptcha'
+import axios from 'axios'
+import { buildApiUrl, useRuntimeContract } from '../../config/runtime-vue3'
 
-// Vuex 3.x 和 Vue Router 3.x 兼容方案
 const store = inject('store')
 const router = inject('router')
+const runtime = useRuntimeContract()
 
-// 文本常量（替代 i18n）
-const loginTitle = '登录'
-const userTip = '请输入手机号/邮箱'
-const pwdTip = '请输入密码'
-const validateMsg = '请先完成验证码验证'
-const forgetPwd = '忘记密码？'
-const noAccount = '没有账号？'
-const goRegister = '立即注册'
-
-// 表单数据
-const country = ref('+86')
+const formRef = ref(null)
+const countryCode = ref('+86')
+const captchaPassed = ref(false)
 const logining = ref(false)
-const captchaObj = ref(null)
 
-const formInline = reactive({
+const countryOptions = [
+  { value: '+86', label: '+86 中国' },
+  { value: '+65', label: '+65 新加坡' },
+  { value: '+81', label: '+81 日本' },
+  { value: '+82', label: '+82 韩国' },
+  { value: '+852', label: '+852 中国香港' },
+  { value: '+886', label: '+886 中国台湾' }
+]
+
+const form = reactive({
   user: '',
   password: ''
 })
 
-// 表单验证规则
-const validateUser = (rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('请输入手机号或邮箱'))
-  } else {
-    callback()
-  }
-}
-
-const validatePassword = (rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('请输入密码'))
-  } else if (value.length < 6) {
-    callback(new Error('密码长度至少 6 位'))
-  } else {
-    callback()
-  }
-}
-
-const ruleInline = reactive({
-  user: [{ validator: validateUser, trigger: 'blur' }],
+const rules = {
+  user: [
+    {
+      validator: (_rule, value, callback) => {
+        if (!value) {
+          callback(new Error('请输入手机号或邮箱'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }
+  ],
   password: [
-    { validator: validatePassword, trigger: 'blur' }
+    {
+      validator: (_rule, value, callback) => {
+        if (!value) {
+          callback(new Error('请输入密码'))
+          return
+        }
+        if (value.length < 6) {
+          callback(new Error('密码长度至少 6 位'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }
   ]
-})
-
-// 表单引用
-const formRef = ref(null)
-
-// 初始化验证码
-const initCaptcha = () => {
-  vaptcha().then((vaptcha) => {
-    vaptcha({
-      vid: '63fec1c3507890ee2e7f9dd1',
-      mode: 'click',
-      scene: 1,
-      container: '#VAPTCHAContainer',
-      area: 'auto'
-    }).then(function (VAPTCHAObj) {
-      VAPTCHAObj.render()
-      VAPTCHAObj.listen('pass', function () {
-        captchaObj.value = {
-          server: VAPTCHAObj.server,
-          token: VAPTCHAObj.token
-        }
-      })
-    })
-  })
 }
 
-// 登录处理
-const doLogin = () => {
-  const reg = /^[1][3,4,5,6,7,8,9][0-9]{9}$/
-  const tel = formInline.user
-  const flagtel = reg.test(tel)
-  const flagpass = formInline.password.length >= 6
-
-  if (!flagtel || !flagpass) {
-    ElMessage.error('请填写完整的信息')
-    return false
-  }
-
-  if (captchaObj.value === null) {
-    ElMessage.error('请先完成验证')
-    return false
-  }
-
-  handleSubmit()
+const markCaptchaPassed = () => {
+  captchaPassed.value = true
 }
 
-const handleSubmit = () => {
+const doLogin = async () => {
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  if (!captchaPassed.value) {
+    ElMessage.error('请先完成人机验证')
+    return
+  }
+
+  logining.value = true
   const params = {
-    username: formInline.user,
-    password: formInline.password,
-    captcha: captchaObj.value
+    username: form.user,
+    password: form.password,
+    captcha: {
+      mode: 'fallback',
+      passed: true
+    }
   }
 
-  // 使用 axios 替代 this.$http
-  import('axios').then(({ default: axios }) => {
-    const state = store.state
-    axios.post(state.host + state.api.uc.login, JSON.stringify(params))
-      .then(response => {
-        const resp = response.data
-        if (resp.code === 0) {
-          ElMessage.success('登录成功')
-          store.commit('setMember', resp.data)
-          localStorage.setItem('TOKEN', resp.data.token)
-          router.push('/uc/safe')
-        } else {
-          ElMessage.error(resp.message)
-        }
-      })
-      .catch(error => {
-        ElMessage.error('登录失败：' + error.message)
-      })
-  })
+  try {
+    const response = await axios.post(buildApiUrl(runtime.api.uc.login), params)
+    const resp = response.data
+    if (resp.code === 0) {
+      store.commit('setMember', resp.data)
+      localStorage.setItem(runtime.tokenKey, resp.data.token)
+      ElMessage.success('登录成功')
+      router.push('/uc/safe')
+      return
+    }
+    ElMessage.error(resp.message || '登录失败')
+  } catch (error) {
+    ElMessage.error(error?.response?.data?.message || '登录请求失败')
+  } finally {
+    logining.value = false
+  }
 }
 
-// 生命周期
 onMounted(() => {
   store.commit('navigate', 'nav-other')
   store.state.HeaderActiveName = '0'
-
-  // 检查是否已登录
   if (store.getters.isLogin) {
     router.push('/uc/safe')
-  } else {
-    initCaptcha()
   }
 })
 </script>
 
 <style scoped lang="scss">
-.login_form {
+.auth-page {
+  min-height: 760px;
   background: #0b1520 url(../../assets/images/login_bg.png) no-repeat center center;
-  height: 760px;
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
 
-  .login_right {
-    padding: 20px 30px 20px 30px;
-    position: absolute;
-    background: #17212e;
-    width: 350px;
-    height: 366px;
-    left: 50%;
-    top: 50%;
-    margin-left: -175px;
-    margin-top: -165px;
-    border-top: 4px solid #f0ac19;
-    border-radius: 5px;
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 28px 30px;
+  background: #17212e;
+  border-top: 4px solid #f0ac19;
+  border-radius: 6px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.32);
+}
 
-    .login_title {
-      height: 70px;
-      color: #fff;
-      text-align: center;
-      font-size: 25px;
-    }
+.auth-card__header {
+  margin-bottom: 18px;
+  text-align: center;
 
-    :deep(.el-form-item) {
-      .el-form-item__content {
-        .login_btn.el-button {
-          width: 100%;
-          background-color: #f0ac19;
-          border-color: #f0ac19;
-          color: #fff;
-          font-size: 18px;
-          border-radius: 5px;
-
-          &:hover, &:focus {
-            background-color: #e5a316;
-            border-color: #e5a316;
-          }
-        }
-      }
-    }
+  h1 {
+    margin: 0 0 8px;
+    color: #fff;
+    font-size: 28px;
+    font-weight: 600;
   }
 
-  .to_register {
-    overflow: hidden;
+  p {
+    margin: 0;
+    color: #8d99ae;
+    font-size: 13px;
+  }
+}
+
+.captcha-box {
+  margin: 10px 0 18px;
+  padding: 14px 16px;
+  border: 1px solid #27313e;
+  border-radius: 6px;
+  background: rgba(11, 21, 32, 0.45);
+}
+
+.captcha-box__title {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.captcha-box__desc {
+  margin: 6px 0 12px;
+  color: #8d99ae;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.captcha-box__button {
+  width: 100%;
+}
+
+.auth-card__links {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+
+  a {
+    color: #a6b2c6;
     font-size: 12px;
-
-    span {
-      float: left;
-    }
-
-    a {
-      float: right;
-      color: #f0ac19;
-    }
   }
 }
 
-.hide {
-  display: none;
+.auth-card__submit {
+  width: 100%;
+  height: 42px;
 }
 
-#notice {
-  color: red;
-}
+.auth-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #8d99ae;
+  font-size: 12px;
 
-:deep(.el-input) {
-  .el-input__inner {
-    background-color: transparent;
-    font-size: 14px;
-    border: none;
-    border-bottom: 1px solid #27313e;
-    border-radius: 0;
-
-    &:focus {
-      border-bottom: 1px solid #27313e;
-    }
-  }
-
-  .el-input-group__prepend {
-    background-color: #17212e;
-    border-bottom: 1px solid #27313e;
-    color: #fff;
+  a {
+    color: #f0ac19;
   }
 }
 
-:deep(.el-select) {
-  .el-input__inner {
-    background-color: transparent;
-    color: #fff;
-  }
+:deep(.el-input__wrapper),
+:deep(.el-select__wrapper) {
+  background: transparent;
+  box-shadow: none;
 }
 
-:deep(.el-dropdown-menu__item) {
-  background-color: #1c2a32;
+:deep(.el-input-group__prepend) {
+  background: #17212e;
+  border: 0;
+  border-bottom: 1px solid #27313e;
+  color: #fff;
+  box-shadow: none;
+}
+
+:deep(.el-input__inner) {
   color: #fff;
 }
-</style>
 
-<style lang="scss">
-// 全局样式覆盖
-.el-form.el-form--inline {
-  .el-form-item {
-    .el-form-item__content {
-      .el-input-wrapper {
-        .el-input {
-          .el-input__inner {
-            background-color: transparent;
-            color: #fff;
-          }
-        }
-      }
-    }
-  }
-}
-
-.el-select-dropdown {
-  background: #1c2a32;
-
-  .el-select-dropdown__item {
-    color: #fff;
-
-    &.selected {
-      color: #f0ac19;
-    }
-  }
+:deep(.el-form-item__label) {
+  color: #a6b2c6;
 }
 </style>

@@ -301,14 +301,16 @@ import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElRow, ElCol, ElProgress, ElInput, ElButton, ElForm, ElFormItem, ElDialog, ElIcon } from 'element-plus'
 import { InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useRoute, useStore } from 'vue-router/composables'
+import moment from 'moment'
+import { useStore } from 'vuex'
+import { useRouter, useRoute } from 'vue-router'
 import QRCode from 'qrcode'
 
 const router = useRouter()
 const route = useRoute()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 // 状态
 const mybalance = ref(0)
@@ -384,7 +386,6 @@ const isLogin = computed(() => store.getters.isLogin)
 
 // 工具函数
 const dateFormat = (tick) => {
-  const moment = require('moment')
   return moment(tick).format('YYYY-MM-DD HH:mm:ss')
 }
 

@@ -44,7 +44,7 @@
                   <router-link to="/swapindex/2">
                     <el-menu-item index="nav-secswap">{{ $t("header.secswap") }}</el-menu-item>
                   </router-link>
-                  <router-link to="/lab">
+                  <router-link to="/activity">
                     <el-menu-item index="nav-lab">{{ $t("header.lab") }}</el-menu-item>
                   </router-link>
                   <router-link to="/mining">
@@ -107,7 +107,7 @@
                         </router-link>
                       </el-dropdown-item>
                       <el-dropdown-item>
-                        <router-link to="/uc/innovation/myorders" style="color: inherit; display: flex; align-items: center;">
+                        <router-link to="/uc/innovation/orders" style="color: inherit; display: flex; align-items: center;">
                           <el-icon><Switch /></el-icon> &nbsp;{{ $t("header.innovationmanage") }}
                         </router-link>
                       </el-dropdown-item>
@@ -164,7 +164,7 @@
         <router-link to="/otc/trade/usdt">
           <el-menu-item index="nav-otc">{{ $t("header.otc") }}</el-menu-item>
         </router-link>
-        <router-link to="/lab">
+        <router-link to="/activity">
           <el-menu-item index="nav-lab">{{ $t("header.lab") }}</el-menu-item>
         </router-link>
         <router-link to="/mining">
@@ -173,10 +173,10 @@
         <router-link to="/crowdfunding">
           <el-menu-item index="nav-crowdfunding">{{ $t("header.crowdfunding") }}</el-menu-item>
         </router-link>
-        <router-link to="/invite">
+        <router-link to="/partner">
           <el-menu-item index="nav-invite">{{ $t("header.invite") }}</el-menu-item>
         </router-link>
-        <router-link to="/announcement/0">
+        <router-link to="/notice/item/0">
           <el-menu-item index="nav-service">{{ $t("header.service") }}</el-menu-item>
         </router-link>
 
@@ -202,7 +202,7 @@
           <router-link to="/uc/money">
             <el-menu-item index="nav_assets" style="padding-left: 20px !important;">{{ $t("header.assetmanage") }}</el-menu-item>
           </router-link>
-          <router-link to="/uc/innovation/myminings">
+          <router-link to="/uc/innovation/minings">
             <el-menu-item index="nav_innnovationmanage" style="padding-left: 20px !important;">{{ $t("header.innovationmanage") }}</el-menu-item>
           </router-link>
         </el-sub-menu>
@@ -233,16 +233,16 @@
     <div class="shoujiShow">
       <div class="sjShow_content">
         <div>
-          <router-link to="/helplist?cate=0&cateTitle=新手指南">{{ $t("footer.xszn") }}</router-link>
+          <router-link :to="{ path: '/help/list', query: { cate: '0', cateTitle: '新手指南' } }">{{ $t("footer.xszn") }}</router-link>
         </div>
         <div>
-          <router-link to="/helplist?cate=1&cateTitle=常见问题">{{ $t("footer.cjwt") }}</router-link>
+          <router-link :to="{ path: '/help/list', query: { cate: '1', cateTitle: '常见问题' } }">{{ $t("footer.cjwt") }}</router-link>
         </div>
         <div>
-          <router-link to="/helplist?cate=2&cateTitle=交易指南">{{ $t("footer.jyzn") }}</router-link>
+          <router-link :to="{ path: '/help/list', query: { cate: '2', cateTitle: '交易指南' } }">{{ $t("footer.jyzn") }}</router-link>
         </div>
         <div>
-          <router-link to="/helplist?cate=3&cateTitle=币种资料">{{ $t("footer.bzzl") }}</router-link>
+          <router-link :to="{ path: '/help/list', query: { cate: '3', cateTitle: '币种资料' } }">{{ $t("footer.bzzl") }}</router-link>
         </div>
       </div>
     </div>
@@ -259,13 +259,13 @@
               <span>{{ $t("footer.gsjj") }}</span>
             </li>
             <li>
-              <router-link target="_blank" to="/about-us">{{ $t("footer.gywm") }}</router-link>
+              <router-link target="_blank" to="/about">{{ $t("footer.gywm") }}</router-link>
             </li>
             <li>
               <router-link target="_blank" :to="'/helpdetail?cate=6&id=39&cateTitle=其他'">{{ $t("footer.jrwm") }}</router-link>
             </li>
             <li>
-              <router-link target="_blank" to="/announcement/0">{{ $t("footer.notice") }}</router-link>
+              <router-link target="_blank" to="/notice/item/0">{{ $t("footer.notice") }}</router-link>
             </li>
             <li class="wechatclick">
               <el-popover placement="right" width="80" trigger="hover">
@@ -281,16 +281,16 @@
               <span>{{ $t("footer.bzzx") }}</span>
             </li>
             <li>
-              <router-link to="/helplist?cate=0&cateTitle=新手指南">{{ $t("footer.xszn") }}</router-link>
+              <router-link :to="{ path: '/help/list', query: { cate: '0', cateTitle: '新手指南' } }">{{ $t("footer.xszn") }}</router-link>
             </li>
             <li>
-              <router-link to="/helplist?cate=1&cateTitle=常见问题">{{ $t("footer.cjwt") }}</router-link>
+              <router-link :to="{ path: '/help/list', query: { cate: '1', cateTitle: '常见问题' } }">{{ $t("footer.cjwt") }}</router-link>
             </li>
             <li>
-              <router-link to="/helplist?cate=2&cateTitle=交易指南">{{ $t("footer.jyzn") }}</router-link>
+              <router-link :to="{ path: '/help/list', query: { cate: '2', cateTitle: '交易指南' } }">{{ $t("footer.jyzn") }}</router-link>
             </li>
             <li>
-              <router-link to="/helplist?cate=3&cateTitle=币种资料">{{ $t("footer.bzzl") }}</router-link>
+              <router-link :to="{ path: '/help/list', query: { cate: '3', cateTitle: '币种资料' } }">{{ $t("footer.bzzl") }}</router-link>
             </li>
           </ul>
           <ul>
@@ -350,7 +350,7 @@
         </div>
       </div>
     </div>
-    <el-back-top :bottom="140" />
+    <el-backtop :bottom="140" />
   </div>
 </template>
 
@@ -361,7 +361,7 @@
  */
 import { ref, reactive, computed, onMounted, onBeforeUnmount, provide, nextTick, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ElMessage, ElMenu, ElSubMenu, ElMenuItem, ElDropdown, ElDropdownMenu, ElDropdownItem, ElDrawer, ElPopover, ElBackTop, ElIcon } from 'element-plus'
+import { ElMessage, ElMenu, ElSubMenu, ElMenuItem, ElDropdown, ElDropdownMenu, ElDropdownItem, ElDrawer, ElPopover, ElBacktop, ElIcon } from 'element-plus'
 import { Clock, Menu, ArrowDown, User, Coin, Switch, SwitchButton } from '@element-plus/icons-vue'
 import axios from 'axios'
 
@@ -372,7 +372,7 @@ const { t: $t } = useI18n()
 const store = inject('store')
 const router = inject('router')
 
-const host = 'http://localhost'
+const host = ''
 
 // 状态
 const isRouterAlive = ref(true)
@@ -691,11 +691,11 @@ onBeforeUnmount(() => {
           margin-left: 218px;
 
           .header_nav {
-            :deep(.el-menu) {
+            & :deep(.el-menu) {
               background: transparent;
               border-bottom: none;
 
-              &--vertical {
+              &.el-menu--vertical {
                 background: transparent;
               }
 
@@ -744,7 +744,7 @@ onBeforeUnmount(() => {
               border-right: 1px solid #273c55;
               line-height: 50px;
 
-              :deep(.el-menu) {
+              & :deep(.el-menu) {
                 background: transparent;
 
                 #login,

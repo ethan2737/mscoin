@@ -10,7 +10,7 @@
         <el-input
           v-model="searchText"
           placeholder="搜索币种"
-          prefix-icon="Search"
+          :prefix-icon="Search"
           clearable
         />
       </div>
@@ -47,8 +47,8 @@
                   :class="{ active: coin.isFavor }"
                   @click="toggleFavor(coin)"
                 >
-                  <Star v-if="coin.isFavor" />
-                  <StarFilled v-else />
+                  <StarFilled v-if="coin.isFavor" />
+                  <Star v-else />
                 </el-icon>
               </td>
               <td>
@@ -60,26 +60,26 @@
               <td>
                 <div class="price-info">
                   <div class="price">{{ formatPrice(coin.price) }}</div>
-                  <div class="price-cny">≈{{ formatPrice(coin.priceCNY) }} CNY</div>
+                  <div class="price-cny">≈ {{ formatPrice(coin.priceCNY) }} CNY</div>
                 </div>
               </td>
               <td>
                 <span :class="coin.rise >= 0 ? 'rise' : 'fall'">
-                  {{ coin.rise >= 0 ? '+' : '' }}{{ coin.rise }}%
+                  {{ coin.rise >= 0 ? '+' : '' }}{{ formatPercent(coin.rise) }}
                 </span>
               </td>
               <td>{{ formatPrice(coin.high) }}</td>
               <td>{{ formatPrice(coin.low) }}</td>
               <td>
                 <span :class="coin.change24h >= 0 ? 'rise' : 'fall'">
-                  {{ coin.change24h >= 0 ? '+' : '' }}{{ coin.change24h }}%
+                  {{ coin.change24h >= 0 ? '+' : '' }}{{ formatPercent(coin.change24h) }}
                 </span>
               </td>
               <td>{{ formatVolume(coin.volume) }}</td>
               <td>
                 <div class="action-buttons">
-                  <router-link :to="'/ctc?symbol=' + coin.symbol" class="trade-btn">
-                    买入
+                  <router-link :to="`/exchange/${coin.href}`" class="trade-btn">
+                    去交易
                   </router-link>
                 </div>
               </td>
@@ -97,7 +97,7 @@
       <el-row :gutter="20">
         <el-col :span="6" v-for="feature in features" :key="feature.title">
           <div class="feature-card">
-            <img :src="feature.image" alt="">
+            <img :src="feature.image" :alt="feature.title">
             <p class="title">{{ feature.title }}</p>
             <p class="desc">{{ feature.description }}</p>
           </div>
@@ -108,7 +108,7 @@
     <div class="ads-section" id="page4">
       <el-carousel v-if="picList.length > 0" height="400px">
         <el-carousel-item v-for="pic in picList" :key="pic.id">
-          <img :src="pic.image" style="width: 100%; height: 100%; object-fit: cover;" alt="">
+          <img :src="pic.image" class="banner-image" alt="banner">
         </el-carousel-item>
       </el-carousel>
     </div>
@@ -126,7 +126,7 @@
           <el-col :span="6">
             <div class="agent-item">
               <el-icon class="agent-icon"><Money /></el-icon>
-              <p>手续费分红</p>
+              <p>手续费分成</p>
             </div>
           </el-col>
           <el-col :span="6">
@@ -148,89 +148,200 @@
 </template>
 
 <script setup>
-/**
- * Vue 3 迁移 - 首页
- */
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { ElMessage, ElInput, ElTabs, ElTabPane, ElIcon, ElCarousel, ElCarouselItem, ElRow, ElCol } from 'element-plus'
-import { Star, StarFilled, Bell, Search, User, Money, TrendCharts, Service } from '@element-plus/icons-vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import {
+  ElCarousel,
+  ElCarouselItem,
+  ElCol,
+  ElIcon,
+  ElInput,
+  ElMessage,
+  ElRow,
+  ElTabPane,
+  ElTabs
+} from 'element-plus'
+import { Bell, Money, Search, Service, Star, StarFilled, TrendCharts, User } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useStore } from 'vue-router/composables'
+import io from 'socket.io-client'
+import { useRouter } from 'vue-router'
+import api from '@/config/api'
+import bannerBg from '@/assets/images/bannerbg.png'
+import featureChoose from '@/assets/images/feature_choose.png'
+import featureFast from '@/assets/images/feature_fast.png'
+import featureGlobal from '@/assets/images/feature_global.png'
+import featureSafe from '@/assets/images/feature_safe.png'
 
 const router = useRouter()
-const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
+const defaultAnnouncement = '欢迎来到 MSCON 交易平台！'
+const fallbackCoins = [
+  {
+    symbol: 'BTC/USDT',
+    name: 'BTC',
+    base: 'USDT',
+    href: 'btc_usdt',
+    price: 68234.12,
+    priceCNY: 493216.88,
+    rise: 2.36,
+    high: 68980.55,
+    low: 67112.4,
+    change24h: 2.36,
+    volume: 18452.23,
+    isFavor: false
+  },
+  {
+    symbol: 'ETH/USDT',
+    name: 'ETH',
+    base: 'USDT',
+    href: 'eth_usdt',
+    price: 3521.48,
+    priceCNY: 25472.9,
+    rise: 1.42,
+    high: 3588.66,
+    low: 3460.25,
+    change24h: 1.42,
+    volume: 92840.56,
+    isFavor: false
+  },
+  {
+    symbol: 'SOL/USDT',
+    name: 'SOL',
+    base: 'USDT',
+    href: 'sol_usdt',
+    price: 172.36,
+    priceCNY: 1246.58,
+    rise: -0.85,
+    high: 175.92,
+    low: 169.48,
+    change24h: -0.85,
+    volume: 265430.11,
+    isFavor: false
+  }
+]
+const fallbackAds = [
+  {
+    id: 'local-banner',
+    image: bannerBg
+  }
+]
 
 const searchText = ref('')
 const activeZone = ref('usdt')
-const announcement = ref('欢迎来到 MSCON 交易平台！')
+const announcement = ref(defaultAnnouncement)
 const coinList = ref([])
 const favorList = ref([])
 const picList = ref([])
 
 const features = [
   {
-    title: '极速交易',
-    description: '匹配速度快，交易延时低',
-    image: 'https://kicks.oss-cn-shanghai.aliyuncs.com/2019/feature1.png'
+    title: '极速撮合',
+    description: '撮合延迟更低，交易体验更稳定。',
+    image: featureFast
   },
   {
-    title: '安全无忧',
-    description: '冷热钱包隔离，多重签名',
-    image: 'https://kicks.oss-cn-shanghai.aliyuncs.com/2019/feature2.png'
+    title: '安全可靠',
+    description: '冷热钱包隔离，多重签名保护资产。',
+    image: featureSafe
   },
   {
     title: '全球服务',
-    description: '支持多个国家和地区',
-    image: 'https://kicks.oss-cn-shanghai.aliyuncs.com/2019/feature3.png'
+    description: '支持多地区用户访问与交易。',
+    image: featureGlobal
   },
   {
     title: '专业团队',
-    description: '来自全球顶尖金融机构',
-    image: 'https://kicks.oss-cn-shanghai.aliyuncs.com/2019/feature4.png'
+    description: '持续优化撮合、风控与服务体验。',
+    image: featureChoose
   }
 ]
 
-const lang = computed(() => store.state.lang)
-
 const allCoins = computed(() => {
   if (activeZone.value === 'favor') {
-    return coinList.value.filter(c => c.isFavor)
+    return coinList.value.filter((coin) => coin.isFavor)
   }
   const zoneMap = {
-    usdt: '_USDT',
-    btc: '_BTC',
-    eth: '_ETH'
+    usdt: 'USDT',
+    btc: 'BTC',
+    eth: 'ETH'
   }
-  const zone = zoneMap[activeZone.value]
-  return coinList.value.filter(c => c.symbol.endsWith(zone))
+  return coinList.value.filter((coin) => coin.base === zoneMap[activeZone.value])
 })
 
 const filteredCoins = computed(() => {
   if (!searchText.value) return allCoins.value
-  const text = searchText.value.toLowerCase()
-  return allCoins.value.filter(c =>
-    c.name.toLowerCase().includes(text) ||
-    c.symbol.toLowerCase().includes(text)
+  const keyword = searchText.value.toLowerCase()
+  return allCoins.value.filter((coin) =>
+    coin.name.toLowerCase().includes(keyword) ||
+    coin.symbol.toLowerCase().includes(keyword)
   )
 })
 
 const formatPrice = (price) => {
-  if (price === undefined || price === null) return '0.00'
-  const num = parseFloat(price)
+  if (price === undefined || price === null || Number.isNaN(Number(price))) return '0.00'
+  const num = Number(price)
   if (num >= 1000) return num.toFixed(2)
   if (num >= 1) return num.toFixed(4)
   if (num >= 0.01) return num.toFixed(6)
   return num.toFixed(8)
 }
 
-const formatVolume = (volume) => {
-  if (volume === undefined || volume === null) return '0'
-  return parseFloat(volume).toLocaleString()
+const formatPercent = (value) => {
+  if (value === undefined || value === null || Number.isNaN(Number(value))) return '0.00%'
+  return `${Number(value).toFixed(2)}%`
 }
 
-const toggleFavor = (coin) => {
+const formatVolume = (volume) => {
+  if (volume === undefined || volume === null || Number.isNaN(Number(volume))) return '0'
+  return Number(volume).toLocaleString()
+}
+
+const mapCoin = (coin) => {
+  const symbol = coin.symbol || ''
+  const [name = symbol, base = ''] = symbol.split('/')
+  const rawRise = Number(coin.chg ?? coin.rise ?? coin.change24h ?? 0)
+  const rise = Math.abs(rawRise) <= 1 ? rawRise * 100 : rawRise
+  const price = Number(coin.close ?? coin.price ?? 0)
+
+  return {
+    ...coin,
+    symbol,
+    name,
+    base,
+    href: `${name}_${base}`.toLowerCase(),
+    price,
+    close: price,
+    priceCNY: Number(coin.usdRate ?? coin.priceCNY ?? 0),
+    rise: Number(rise.toFixed(2)),
+    high: Number(coin.high ?? 0),
+    low: Number(coin.low ?? 0),
+    change24h: Number(rise.toFixed(2)),
+    volume: Number(coin.volume ?? coin.turnover ?? 0),
+    isFavor: favorList.value.includes(symbol)
+  }
+}
+
+const setFallbackCoinList = () => {
+  if (coinList.value.length > 0) return
+  coinList.value = fallbackCoins.map((coin) => ({
+    ...coin,
+    isFavor: favorList.value.includes(coin.symbol)
+  }))
+}
+
+const updateCoinFavorState = () => {
+  coinList.value = coinList.value.map((coin) => ({
+    ...coin,
+    isFavor: favorList.value.includes(coin.symbol)
+  }))
+}
+
+const authHeaders = () => {
+  const token = localStorage.getItem('TOKEN')
+  return token ? { 'x-auth-token': token } : {}
+}
+
+const toggleFavor = async (coin) => {
   const token = localStorage.getItem('TOKEN')
   if (!token) {
     ElMessage.warning('请先登录')
@@ -238,146 +349,164 @@ const toggleFavor = (coin) => {
     return
   }
 
-  const params = { symbol: coin.symbol }
-  axios.post(`${host}/uc/collect/coin`, params, {
-    headers: { 'x-auth-token': token }
-  }).then(res => {
-    if (res.data.code === 0) {
+  const request = coin.isFavor ? api.exchange.favorDelete : api.exchange.favorAdd
+
+  try {
+    const response = await axios.post(host + request, { symbol: coin.symbol }, {
+      headers: authHeaders()
+    })
+
+    if (response.data.code === 0) {
       coin.isFavor = !coin.isFavor
+      if (coin.isFavor) {
+        favorList.value = Array.from(new Set([...favorList.value, coin.symbol]))
+      } else {
+        favorList.value = favorList.value.filter((symbol) => symbol !== coin.symbol)
+      }
       ElMessage.success(coin.isFavor ? '已添加收藏' : '已取消收藏')
-    } else {
-      ElMessage.error(res.data.message)
+      updateCoinFavorState()
+      return
     }
-  }).catch(() => {})
+
+    ElMessage.error(response.data.message || '收藏操作失败')
+  } catch {
+    ElMessage.error('收藏操作失败')
+  }
 }
 
-const loadCoinList = () => {
-  axios.post(`${host}/market/coin/all`, {}, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      coinList.value = res.data.data.map(coin => ({
-        ...coin,
-        isFavor: favorList.value.includes(coin.symbol)
-      }))
-    }
-  }).catch(() => {})
-}
-
-const loadFavorList = () => {
+const loadFavorList = async () => {
   const token = localStorage.getItem('TOKEN')
   if (!token) return
 
-  axios.post(`${host}/uc/collect/list`, {}, {
-    headers: { 'x-auth-token': token }
-  }).then(res => {
-    if (res.data.code === 0) {
-      favorList.value = res.data.data || []
+  try {
+    const response = await axios.post(host + api.exchange.favorFind, {}, {
+      headers: authHeaders()
+    })
+    const payload = response.data?.data ?? response.data ?? []
+    if (Array.isArray(payload)) {
+      favorList.value = payload.map((item) => item.symbol ?? item).filter(Boolean)
+      updateCoinFavorState()
     }
-  }).catch(() => {})
+  } catch {
+    favorList.value = []
+  }
 }
 
-const loadAds = () => {
-  axios.post(`${host}/uc/ancillary/advertise/list`, { type: 1 }, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      picList.value = res.data.data || []
+const loadCoinList = async () => {
+  try {
+    const response = await axios.post(host + api.market.thumbTrend, {}, {
+      headers: authHeaders()
+    })
+    if (response.data.code === 0) {
+      coinList.value = (response.data.data || []).map(mapCoin)
+      return
     }
-  }).catch(() => {})
+  } catch {
+    if (import.meta.env.DEV) {
+      setFallbackCoinList()
+    }
+  }
 }
 
-const loadAnnouncement = () => {
-  axios.post(`${host}/uc/ancillary/help/list`, {
-    cateId: 4,
-    pageNo: 1,
-    pageSize: 1
-  }, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0 && res.data.data.content.length > 0) {
-      announcement.value = res.data.data.content[0].title
+const loadAds = async () => {
+  try {
+    const response = await axios.post(`${host}/uc/ancillary/system/advertise`, {
+      sysAdvertiseLocation: 1,
+      lang: 'CN'
+    }, {
+      headers: authHeaders()
+    })
+    if (response.data.code === 0) {
+      picList.value = (response.data.data || []).map((item) => ({
+        ...item,
+        image: item.url || item.image || bannerBg
+      }))
+      return
     }
-  }).catch(() => {})
+  } catch {
+    if (import.meta.env.DEV) {
+      picList.value = fallbackAds
+    }
+  }
+}
+
+const loadAnnouncement = async () => {
+  try {
+    const response = await axios.post(host + api.uc.announcement, {
+      pageNo: 1,
+      pageSize: 1,
+      lang: 'CN'
+    }, {
+      headers: authHeaders()
+    })
+    if (response.data.code === 0 && response.data.data.content?.length > 0) {
+      announcement.value = response.data.data.content[0].title
+      return
+    }
+  } catch {
+    announcement.value = defaultAnnouncement
+  }
 }
 
 let socket = null
-let heartbeatTimer = null
+let reconnectTimer = null
 
 const connectSocket = () => {
-  socket = new WebSocket('ws://localhost:9100/ws')
+  if (socket) return
 
-  socket.onopen = () => {
-    console.log('WebSocket connected')
-    startHeartbeat()
-  }
+  socket = io(window.location.origin, {
+    path: '/socket.io',
+    transports: ['websocket', 'polling'],
+    reconnection: false
+  })
 
-  socket.onmessage = (event) => {
+  socket.on('/topic/market/thumb', (message) => {
     try {
-      const data = JSON.parse(event.data)
-      if (data.type === 'price') {
-        updatePrice(data.data)
-      }
-    } catch (e) {
-      console.error('Socket message parse error:', e)
+      updatePrice(JSON.parse(message))
+    } catch (error) {
+      console.error('Socket message parse error:', error)
     }
-  }
+  })
 
-  socket.onclose = () => {
-    console.log('WebSocket closed')
-    stopHeartbeat()
-    setTimeout(() => {
-      connectSocket()
-    }, 5000)
-  }
-
-  socket.onerror = (error) => {
-    console.error('WebSocket error:', error)
-  }
-}
-
-const startHeartbeat = () => {
-  heartbeatTimer = setInterval(() => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: 'heartbeat' }))
+  socket.on('disconnect', () => {
+    socket = null
+    if (!reconnectTimer) {
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null
+        connectSocket()
+      }, 5000)
     }
-  }, 30000)
+  })
 }
 
-const stopHeartbeat = () => {
-  if (heartbeatTimer) {
-    clearInterval(heartbeatTimer)
-    heartbeatTimer = null
-  }
+const updatePrice = (payload) => {
+  const index = coinList.value.findIndex((coin) => coin.symbol === payload.symbol)
+  if (index === -1) return
+
+  const nextCoin = mapCoin({
+    ...coinList.value[index],
+    ...payload
+  })
+  coinList.value.splice(index, 1, nextCoin)
 }
 
-const updatePrice = (data) => {
-  const index = coinList.value.findIndex(c => c.symbol === data.symbol)
-  if (index !== -1) {
-    const coin = coinList.value[index]
-    coin.price = data.price
-    coin.priceCNY = data.priceCNY
-    coin.rise = data.rise
-    coin.high = data.high
-    coin.low = data.low
-    coin.change24h = data.change24h
-    coin.volume = data.volume
-  }
-}
-
-onMounted(() => {
+onMounted(async () => {
   window.scrollTo(0, 0)
-  loadCoinList()
-  loadFavorList()
-  loadAds()
-  loadAnnouncement()
+  await loadFavorList()
+  await loadCoinList()
+  await loadAds()
+  await loadAnnouncement()
   connectSocket()
 })
 
 onBeforeUnmount(() => {
-  stopHeartbeat()
   if (socket) {
     socket.close()
+    socket = null
+  }
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
   }
 })
 </script>
@@ -545,6 +674,7 @@ onBeforeUnmount(() => {
       width: 100px;
       height: 100px;
       margin-bottom: 20px;
+      object-fit: contain;
     }
 
     .title {
@@ -556,6 +686,7 @@ onBeforeUnmount(() => {
     .desc {
       color: #999;
       font-size: 14px;
+      line-height: 1.7;
     }
   }
 }
@@ -563,6 +694,12 @@ onBeforeUnmount(() => {
 .ads-section {
   padding: 40px 30px;
   background: #17212e;
+
+  .banner-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
   :deep(.el-carousel__container) {
     border-radius: 10px;

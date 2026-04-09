@@ -75,12 +75,13 @@ import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, ElButton, ElTable, ElTableColumn, ElPagination, ElAlert, ElIcon } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const loginmsg = ref('请先登录')
 const dataCount = ref(0)

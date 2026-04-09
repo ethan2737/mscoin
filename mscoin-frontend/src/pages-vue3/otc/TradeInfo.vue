@@ -134,12 +134,13 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElTabs, ElTabPane, ElButton, ElIcon } from 'element-plus'
 import axios from 'axios'
-import { useStore, useRouter } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const store = useStore()
 const router = useRouter()
 
-const host = 'http://localhost'
+const host = ''
 const api = {
   otc: {
     advertise: '/otc/advertise/list'

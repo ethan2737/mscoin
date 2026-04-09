@@ -189,7 +189,7 @@ import axios from 'axios'
 const store = inject('store')
 const router = inject('router')
 
-const host = 'http://localhost'
+const host = ''
 
 const codeIsSending = ref(false)
 const sendcodeValue = ref('发送验证码')

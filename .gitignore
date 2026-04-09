@@ -5,9 +5,6 @@
 *.swo
 *~
 
-# Claude Code
-CLAUDE.md
-.claude/
 
 # Go
 *.exe
@@ -40,6 +37,7 @@ build/dist/
 # Logs
 logs/
 *.log
+mscoin-frontend/.playwright-mcp/
 
 # OS
 .DS_Store

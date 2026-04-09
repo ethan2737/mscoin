@@ -3,9 +3,11 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/segmentio/kafka-go"
 	"github.com/zeromicro/go-zero/core/logx"
 	"log"
+	"strings"
 	"sync"
 	"time"
 )
@@ -115,10 +117,14 @@ func (w *KafkaClient) sendKafka() {
 }
 
 func (k *KafkaClient) StartRead(topic string) {
+	groupID := k.c.ConsumerGroup
+	if groupID != "" {
+		groupID = fmt.Sprintf("%s-%s", groupID, strings.ReplaceAll(topic, "_", "-"))
+	}
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  []string{k.c.Addr},
 		Topic:    topic,
-		GroupID:  k.c.ConsumerGroup,
+		GroupID:  groupID,
 		MinBytes: 10e3, // 10KB
 		MaxBytes: 10e6, // 10MB
 	})
@@ -128,10 +134,14 @@ func (k *KafkaClient) StartRead(topic string) {
 }
 
 func (k *KafkaClient) StartReadNew(topic string) *KafkaClient {
+	groupID := k.c.ConsumerGroup
+	if groupID != "" {
+		groupID = fmt.Sprintf("%s-%s", groupID, strings.ReplaceAll(topic, "_", "-"))
+	}
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  []string{k.c.Addr},
 		Topic:    topic,
-		GroupID:  k.c.ConsumerGroup,
+		GroupID:  groupID,
 		MinBytes: 10e3, // 10KB
 		MaxBytes: 10e6, // 10MB
 	})

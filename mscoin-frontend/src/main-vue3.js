@@ -5,17 +5,17 @@ import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import axios from 'axios'
 
-// Vue 2 兼容层 - 路由和状态管理
-import VueRouter from 'vue-router'
-import Vuex from 'vuex'
+// Vue 3 路由和状态管理
+import { createRouter, createWebHashHistory } from 'vue-router'
+import { createStore } from 'vuex'
 
 // Vue I18n for Vue 3
 import { createI18n } from 'vue-i18n'
 
 // 导入 Vue 3 路由配置
 import routes from './config/routes-vue3.js'
-import store from './config/store-vue3.js'
-import Api from './config/api'
+import storeConfig from './config/store-vue3.js'
+import { runtimeContract } from './config/runtime-vue3'
 
 // 导入语言包
 import zh from './assets/lang/zh.js'
@@ -35,10 +35,8 @@ const i18n = createI18n({
 // 导入全局样式
 import 'swiper/dist/css/swiper.css'
 import './assets/icons/iconfont.css'
-import './assets/icons/style.css'
+// import './assets/icons/style.css' - 文件不存在
 
-// 导入工具类
-import util from './assets/js/util.js'
 import moment from 'moment'
 import $ from 'jquery'
 
@@ -60,9 +58,10 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 // 配置全局属性
-app.config.globalProperties.host = 'http://localhost'
-app.config.globalProperties.wshost = 'ws://localhost'
-app.config.globalProperties.api = Api
+app.config.globalProperties.host = runtimeContract.host
+app.config.globalProperties.wshost = runtimeContract.wshost
+app.config.globalProperties.api = runtimeContract.api
+app.config.globalProperties.$runtime = runtimeContract
 app.config.globalProperties.$http = axios
 app.config.globalProperties.$moment = moment
 app.config.globalProperties.$ = $
@@ -99,30 +98,33 @@ app.config.globalProperties.$filters = {
   }
 }
 
-// 创建 Vue Router 3.x 实例（保持兼容）
-const router = new VueRouter({
-  mode: 'hash',
+// 创建 Vue Router 5.x 实例
+const router = createRouter({
+  history: createWebHashHistory(),
   routes
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
-  // 可以在这里添加加载条逻辑
-  next()
+router.beforeEach(() => {
+  return true
 })
 
 router.afterEach((to, from) => {
   window.scrollTo(0, 0)
 })
 
+// 创建 Vuex 4.x store
+const store = createStore(storeConfig)
+
 // 提供 store, router 和 i18n 给 Composition API 使用
 app.provide('store', store)
 app.provide('router', router)
 app.provide('i18n', i18n.global)
+app.provide('runtime', runtimeContract)
 
 // 挂载应用
 app.use(router)
-app.use(i18n)
+app.use(store)
 app.mount('#app')
 
-console.log('Vue 3 应用已启动')
+console.log('Vue 3 app bootstrapped')

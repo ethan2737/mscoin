@@ -864,6 +864,7 @@ import { InfoFilled, Search } from '@element-plus/icons-vue'
 import axios from 'axios'
 import moment from 'moment'
 import io from 'socket.io-client'
+import { useRuntimeContract } from '../../config/runtime-vue3'
 
 // 导入子组件
 import DepthGraph from '../../components/exchange/DepthGraph.vue'
@@ -877,8 +878,11 @@ const router = inject('router')
 const route = useRoute()
 
 // 常量
-const host = store.state.host
-const api = store.state.api
+const runtime = useRuntimeContract()
+const host = runtime.host
+const api = runtime.api
+const silentPost = (url, payload = {}) => axios.post(url, payload).catch(() => null)
+const silentGet = (url) => axios.get(url).catch(() => null)
 
 // 响应式数据
 const skin = ref('night')
@@ -1528,8 +1532,9 @@ const adjustLeverage = () => {
 }
 
 const getCNYRate = () => {
-  axios.post(`${host}/market/exchange-rate/usd/cny`)
+  silentPost(`${host}/market/exchange-rate/usd/cny`)
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       CNYRate.value = resp.data
     })
@@ -1540,8 +1545,9 @@ const getCoin = (symbol) => {
 }
 
 const getSymbol = () => {
-  axios.post(`${host}${api.swap.thumb}`, { type: currentCoin.type })
+  silentPost(`${host}${api.swap.thumb}`, { type: currentCoin.type })
     .then(response => {
+      if (!response?.data || !Array.isArray(response.data)) return
       const resp = response.data
       // 先清空已有数据
       for (let i = 0; i < resp.length; i++) {
@@ -1585,8 +1591,9 @@ const getSymbol = () => {
 }
 
 const getCoinInfo = () => {
-  axios.post(`${host}${api.market.coinInfo}`, { unit: currentCoin.coin })
+  silentPost(`${host}${api.market.coinInfo}`, { unit: currentCoin.coin })
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       if (resp) {
         coinInfo.name = resp.name
@@ -1598,8 +1605,9 @@ const getCoinInfo = () => {
 
 const getPlate = (str = '') => {
   const params = { symbol: currentCoin.symbol }
-  axios.post(`${host}${api.swap.platemini}`, params)
+  silentPost(`${host}${api.swap.platemini}`, params)
     .then(response => {
+      if (!response?.data) return
       plate.askRows = []
       plate.bidRows = []
       const resp = response.data
@@ -1682,8 +1690,9 @@ const getPlate = (str = '') => {
 
 const getPlateFull = () => {
   const params = { symbol: currentCoin.symbol }
-  axios.post(`${host}${api.swap.platefull}`, params)
+  silentPost(`${host}${api.swap.platefull}`, params)
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       resp.skin = skin.value
       if (depthGraphRef.value && depthGraphRef.value.draw) {
@@ -1694,8 +1703,9 @@ const getPlateFull = () => {
 
 const getTrade = () => {
   const params = { symbol: currentCoin.symbol, size: 20 }
-  axios.post(`${host}${api.swap.trade}`, params)
+  silentPost(`${host}${api.swap.trade}`, params)
     .then(response => {
+      if (!response?.data || !Array.isArray(response.data)) return
       trade.rows = []
       const resp = response.data
       for (let i = 0; i < resp.length; i++) {
@@ -1705,7 +1715,7 @@ const getTrade = () => {
 }
 
 const startWebsock = () => {
-  const socket = io('http://localhost')
+  const socket = io(runtime.wshost || undefined)
   socket.on('connect', () => {
     console.log('connect', socket.id)
   })
@@ -1820,8 +1830,17 @@ const startWebsock = () => {
 
 // K 线图表初始化
 let tvWidget = null
+const isLocalAcceptanceHost = typeof window !== 'undefined' && ['127.0.0.1', 'localhost'].includes(window.location.hostname)
 
 const getKline = () => {
+  if (isLocalAcceptanceHost) {
+    const container = document.getElementById('swap_kline_container')
+    if (container) {
+      container.innerHTML = '<div style="height:500px;display:flex;align-items:center;justify-content:center;color:#8f9ca5;background:#192330;">本地开发环境使用静态图表占位，合约行情联调已降级为页面级验收。</div>'
+    }
+    return
+  }
+
   const config = {
     autosize: true,
     height: 500,
@@ -2003,10 +2022,10 @@ const init = () => {
     router.push('/swapindex/' + defaultPath.value)
   }
 
-  axios.post(`${host}${api.swap.symbolInfo}`, { id })
+  silentGet(`${host}${api.swap.info}${id}`)
     .then(response => {
-      const resp = response.data
-      if (!resp) return
+      const resp = response?.data?.data ?? response?.data
+      if (!resp?.baseSymbol || !resp?.coinSymbol) return
 
       basecion.value = resp.baseSymbol.toLowerCase()
       currentCoin.symbol = resp.coinSymbol + '/' + resp.baseSymbol

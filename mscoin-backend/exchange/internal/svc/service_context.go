@@ -4,6 +4,7 @@ import (
 	"exchange/internal/config"
 	"exchange/internal/consumer"
 	"exchange/internal/database"
+	"exchange/internal/domain"
 	"exchange/internal/processor"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -21,6 +22,7 @@ type ServiceContext struct {
 	MarketRpc   mclient.Market
 	AssetRpc    ucclient.Asset
 	KafkaClient *database.KafkaClient
+	KafkaDomain *domain.KafkaDomain
 }
 
 func (sc *ServiceContext) init() {
@@ -50,6 +52,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		AssetRpc:    ucclient.NewAsset(client),
 		KafkaClient: kafkaClient,
 	}
+	s.KafkaDomain = domain.NewKafkaDomain(s.KafkaClient, domain.NewExchangeOrderDomain(s.Db))
 	s.init()
 	return s
 }

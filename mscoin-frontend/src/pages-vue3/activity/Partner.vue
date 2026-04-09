@@ -128,7 +128,7 @@
  * Vue 3 迁移 - 合作伙伴页面
  */
 import { onMounted } from 'vue'
-import { useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
 
 const store = useStore()
 

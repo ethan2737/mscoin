@@ -22,10 +22,24 @@ func (l *OrderLogic) History(req *types.ExchangeReq) (*pages.PageResult, error) 
 	defer cancel()
 	userId := l.ctx.Value("userId").(int64)
 	symbol := req.Symbol
+	pageNo := req.PageNo
+	pageSize := req.PageSize
+	if pageNo <= 0 {
+		pageNo = req.Page
+	}
+	if pageSize <= 0 {
+		pageSize = req.Size
+	}
+	if pageNo <= 0 {
+		pageNo = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
 	orderRes, err := l.svcCtx.OrderRpc.FindOrderHistory(ctx, &order.OrderReq{
 		Symbol:   symbol,
-		Page:     req.PageNo,
-		PageSize: req.PageSize,
+		Page:     pageNo,
+		PageSize: pageSize,
 		UserId:   userId,
 	})
 	if err != nil {
@@ -36,7 +50,7 @@ func (l *OrderLogic) History(req *types.ExchangeReq) (*pages.PageResult, error) 
 	for i := range list {
 		b[i] = list[i]
 	}
-	return pages.New(b, req.PageNo, req.PageSize, orderRes.Total), nil
+	return pages.New(b, pageNo, pageSize, orderRes.Total), nil
 }
 
 func (l *OrderLogic) Current(req *types.ExchangeReq) (*pages.PageResult, error) {
@@ -44,10 +58,24 @@ func (l *OrderLogic) Current(req *types.ExchangeReq) (*pages.PageResult, error) 
 	defer cancel()
 	userId := l.ctx.Value("userId").(int64)
 	symbol := req.Symbol
+	pageNo := req.PageNo
+	pageSize := req.PageSize
+	if pageNo <= 0 {
+		pageNo = req.Page
+	}
+	if pageSize <= 0 {
+		pageSize = req.Size
+	}
+	if pageNo <= 0 {
+		pageNo = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
 	orderRes, err := l.svcCtx.OrderRpc.FindOrderCurrent(ctx, &order.OrderReq{
 		Symbol:   symbol,
-		Page:     req.PageNo,
-		PageSize: req.PageSize,
+		Page:     pageNo,
+		PageSize: pageSize,
 		UserId:   userId,
 	})
 	if err != nil {
@@ -58,7 +86,7 @@ func (l *OrderLogic) Current(req *types.ExchangeReq) (*pages.PageResult, error) 
 	for i := range list {
 		b[i] = list[i]
 	}
-	return pages.New(b, req.PageNo, req.PageSize, orderRes.Total), nil
+	return pages.New(b, pageNo, pageSize, orderRes.Total), nil
 }
 
 func (l *OrderLogic) AddOrder(req *types.ExchangeReq) (string, error) {
@@ -79,6 +107,20 @@ func (l *OrderLogic) AddOrder(req *types.ExchangeReq) (string, error) {
 		return "", err
 	}
 	return orderRes.OrderId, nil
+}
+
+func (l *OrderLogic) Cancel(req *types.ExchangeReq) (string, error) {
+	if req.OrderId == "" {
+		return "", errors.New("订单编号不能为空")
+	}
+	_, err := l.svcCtx.OrderRpc.CancelOrder(l.ctx, &order.OrderReq{
+		OrderId: req.OrderId,
+		UserId:  l.ctx.Value("userId").(int64),
+	})
+	if err != nil {
+		return "", err
+	}
+	return req.OrderId, nil
 }
 
 func NewOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OrderLogic {

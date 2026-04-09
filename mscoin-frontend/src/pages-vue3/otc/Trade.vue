@@ -26,12 +26,12 @@
               <el-table-column :label="$t('otc.volume')" prop="transactions" width="100" align="center" />
               <el-table-column :label="$t('otc.paymethod')" prop="payMode" align="center" />
               <el-table-column :label="$t('otc.amount')" prop="remainAmount" align="center" />
-              <el-table-column :label="$t('otc.limit')" align="center">
+              <el-table-column label="限额" align="center">
                 <template #default="{ row }">
                   {{ row.minLimit }} - {{ row.maxLimit }} CNY
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('otc.price')" align="center">
+              <el-table-column label="价格" align="center">
                 <template #default="{ row }">
                   {{ row.price }} CNY
                 </template>
@@ -86,12 +86,12 @@
               <el-table-column :label="$t('otc.volume')" prop="transactions" width="100" align="center" />
               <el-table-column :label="$t('otc.paymethod')" prop="payMode" align="center" />
               <el-table-column :label="$t('otc.amount')" prop="remainAmount" align="center" />
-              <el-table-column :label="$t('otc.limit')" align="center">
+              <el-table-column label="限额" align="center">
                 <template #default="{ row }">
                   {{ row.minLimit }} - {{ row.maxLimit }} CNY
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('otc.price')" align="center">
+              <el-table-column label="价格" align="center">
                 <template #default="{ row }">
                   {{ row.price }} CNY
                 </template>
@@ -134,12 +134,13 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElTabs, ElTabPane, ElButton, ElPagination } from 'element-plus'
 import axios from 'axios'
-import { useStore, useRouter } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const store = useStore()
 const router = useRouter()
 
-const host = 'http://localhost'
+const host = ''
 const api = {
   otc: {
     advertise: '/otc/advertise/list'

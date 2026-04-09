@@ -367,15 +367,15 @@
  * Vue 3 迁移 - 活动首页
  */
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElTabs, ElTabPane, ElProgress, ElPagination, ElSpinner, ElIcon } from 'element-plus'
+import { ElMessage, ElTabs, ElTabPane, ElProgress, ElPagination, ElIcon } from 'element-plus'
 import { InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
 import moment from 'moment'
 
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const currentCate = ref('all')
 

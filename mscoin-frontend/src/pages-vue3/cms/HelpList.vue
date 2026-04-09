@@ -33,13 +33,14 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElPagination } from 'element-plus'
 import axios from 'axios'
-import { useStore, useRoute, useRouter } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRoute, useRouter } from 'vue-router'
 
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
 
-const host = 'http://localhost'
+const host = ''
 
 const cate = ref(0)
 const pageNo = ref(1)
@@ -94,8 +95,8 @@ const getData = () => {
   })
 }
 
-watch(() => route.query, (to) => {
-  const { cate: queryCate, cateTitle: queryTitle } = to.query
+watch(() => route.query, (query) => {
+  const { cate: queryCate, cateTitle: queryTitle } = query || {}
   cate.value = queryCate
   cateTitle.value = queryTitle
   getData()

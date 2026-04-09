@@ -107,7 +107,7 @@ const props = defineProps({
   }
 })
 
-const host = 'http://localhost'
+const host = ''
 let socket = null
 
 const audioSrc = ref('/assets/audio/notice.wav')
@@ -274,7 +274,7 @@ const getBefore = () => {
 }
 
 const initSocket = () => {
-  socket = io('http://localhost')
+  socket = io()
   socket.on('connect', () => {
     console.log('socket connected')
   })

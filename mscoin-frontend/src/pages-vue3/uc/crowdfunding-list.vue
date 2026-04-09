@@ -199,7 +199,7 @@ import { ElMessage, ElTable, ElTableColumn, ElTabs, ElTabPane, ElPagination, ElB
 import axios from 'axios'
 import dayjs from 'dayjs'
 
-const host = 'http://localhost'
+const host = ''
 const api = {
   crowdfunding: {
     myCrowdfundingYl: '/uc/crowdfunding/myYl',

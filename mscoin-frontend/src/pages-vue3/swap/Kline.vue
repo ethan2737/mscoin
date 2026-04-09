@@ -80,17 +80,19 @@ import { ElMessage } from 'element-plus'
 import { InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import moment from 'moment'
+import { useRuntimeContract } from '../../config/runtime-vue3'
 
 // 导入深度图组件
-import DepthGraph from './DepthGraph.vue'
+import DepthGraph from '../exchange/DepthGraph.vue'
 
 // 导入 TradingView datafeed
 import Datafeeds from '../../assets/js/charting_library/datafeed/swaptrade.js'
 
 const store = inject('store')
 const router = inject('router')
+const { api } = useRuntimeContract()
 
-const host = 'http://localhost'
+const host = ''
 
 // 响应式数据
 const skin = ref('night')
@@ -182,7 +184,7 @@ const getCNYRate = () => {
 
 // 获取币种列表
 const getSymbol = (type = 1) => {
-  axios.post(`${host}/api/swap/thumb`, { type })
+  axios.post(`${host}${api.swap.thumb}`, { type })
     .then(response => {
       const resp = response.data
       // 先清空已有数据
@@ -210,7 +212,7 @@ const getSymbol = (type = 1) => {
 
 // 获取币种信息
 const getCoinInfo = () => {
-  axios.post(`${host}/api/market/coin/info`, { unit: currentCoin.coin })
+  axios.post(`${host}${api.market.coinInfo}`, { unit: currentCoin.coin })
     .then(response => {
       const resp = response.data
       if (resp) {
@@ -222,7 +224,7 @@ const getCoinInfo = () => {
 
 // 获取币种详情
 const getSymbolInfo = () => {
-  axios.post(`${host}/api/swap/symbolInfo`, { id: currentCoin.id })
+  axios.post(`${host}${api.swap.symbolInfo}`, { id: currentCoin.id })
     .then(response => {
       const resp = response.data
       if (resp) {
@@ -452,7 +454,7 @@ const init = () => {
   getCoinInfo()
 
   // 初始化 datafeed
-  datafeed.value = new Datafeeds.UDF.UdfDatafeed('http://localhost:8081', {})
+  datafeed.value = new Datafeeds.UDF.UdfDatafeed('/market', {})
 
   // 延迟初始化图表，等待 DOM 渲染
   nextTick(() => {
