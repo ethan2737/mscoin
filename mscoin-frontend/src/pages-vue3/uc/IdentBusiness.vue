@@ -24,16 +24,16 @@
         <div class="ident-title" v-else-if="certStatus == 7">
           <h3>{{$t("uc.identity.shenhesuc")}}</h3>
         </div>
-        <Steps class="apply-step" :current="certStatus == 2 ? 3 : certStatus == 3 ? 2 : certStatus" :status="certStatus == 3 ? 'error' :'finish'" v-if="certStatus != 0 && certStatus != 5 && certStatus != 6 && certStatus != 7">
-          <Step :title="prepare"></Step>
-          <Step :title="review"></Step>
-          <Step :title="certStatus == 1 || certStatus == 0 ? result : certStatus == 2 ? certified : shenheshibai"></Step>
-        </Steps>
-        <Steps class="apply-step" :current="certStatus == 5 ? 1 : certStatus == 6 ? 2 : 3" :status="certStatus == 6 ? 'error':'finish'" v-if="certStatus == 5 || certStatus == 6 || certStatus == 7">
-          <Step :title="shangjiazhuxiao"></Step>
-          <Step :title="tijiaoshenqing"></Step>
-          <Step :title="certStatus == 5 ? result : certStatus == 6 ? shenheshibai : passed"></Step>
-        </Steps>
+        <ElSteps class="apply-step" :current="certStatus == 2 ? 3 : certStatus == 3 ? 2 : certStatus" :status="certStatus == 3 ? 'error' :'finish'" v-if="certStatus != 0 && certStatus != 5 && certStatus != 6 && certStatus != 7">
+          <ElStep :title="prepare"></ElStep>
+          <ElStep :title="review"></ElStep>
+          <ElStep :title="certStatus == 1 || certStatus == 0 ? result : certStatus == 2 ? certified : shenheshibai"></ElStep>
+        </ElSteps>
+        <ElSteps class="apply-step" :current="certStatus == 5 ? 1 : certStatus == 6 ? 2 : 3" :status="certStatus == 6 ? 'error':'finish'" v-if="certStatus == 5 || certStatus == 6 || certStatus == 7">
+          <ElStep :title="shangjiazhuxiao"></ElStep>
+          <ElStep :title="tijiaoshenqing"></ElStep>
+          <ElStep :title="certStatus == 5 ? result : certStatus == 6 ? shenheshibai : passed"></ElStep>
+        </ElSteps>
 
         <div v-if="certStatus == 6" style="width: 500px;margin: 0 auto;text-align: center;">
           <el-button type="warning" style="width: 120px;background:#f0ac19;border-color:#f0ac19" @click="modal_return=true" long size="large">{{$t("uc.identity.shenagain")}}</el-button>
@@ -153,7 +153,7 @@
             </el-col>
             <el-col :span="8">
               <el-form-item :label="shuliang">
-                <label v-model="apply_form.amount">{{apply_form.amount}}</label>
+                <span>{{ apply_form.amount }}</span>
               </el-form-item>
             </el-col>
           </el-row>
@@ -199,15 +199,16 @@
  * Vue 3 迁移 - 企业认证页面
  */
 import { ref, reactive, computed, watch, onMounted } from 'vue'
-import { ElMessage, ElNotification, ElButton, ElCheckbox, ElInput, ElSelect, ElOption, ElForm, ElFormItem, ElRow, ElCol, ElUpload, ElDialog, ElIcon, Steps, Step } from 'element-plus'
+import { ElMessage, ElNotification, ElButton, ElCheckbox, ElInput, ElSelect, ElOption, ElForm, ElFormItem, ElRow, ElCol, ElUpload, ElDialog, ElIcon, ElSteps, ElStep } from 'element-plus'
 import { InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const noEmpty = ref('必填')
 const review = ref('准备资料')

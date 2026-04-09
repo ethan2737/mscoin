@@ -31,12 +31,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElPagination } from 'element-plus'
 import axios from 'axios'
-import { useRouter, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const pageNo = ref(1)
 const pageSize = ref(10)

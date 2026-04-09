@@ -221,14 +221,15 @@ import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElTabs, ElTabPane, ElRow, ElCol, ElIcon } from 'element-plus'
 import { Document } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import Swiper from 'swiper'
 import moment from 'moment'
 
 const router = useRouter()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const activeTab = ref('name1')
 const uploadHeaders = computed(() => ({ 'x-auth-token': localStorage.getItem('TOKEN') }))
@@ -332,6 +333,11 @@ const dateFormat = (tick) => moment(tick).format('YYYY-MM-DD')
 
 const initSwiper = () => {
   nextTick(() => {
+    const slides = document.querySelectorAll('.swiper-slide')
+    if (slides.length === 0) {
+      return
+    }
+
     if (screenWidth.value > 1200) {
       new Swiper('.swiper-container', {
         autoplay: { delay: 3000, disableOnInteraction: false },
@@ -345,7 +351,9 @@ const initSwiper = () => {
           prevEl: '.swiper-button-prev'
         },
         onInit: (swiper) => {
-          swiper.slides[3].className = 'swiper-slide swiper-slide-active'
+          if (swiper.slides && swiper.slides[3]) {
+            swiper.slides[3].className = 'swiper-slide swiper-slide-active'
+          }
         },
         breakpoints: { 668: { slidesPerView: 3 } }
       })
@@ -362,7 +370,9 @@ const initSwiper = () => {
           prevEl: '.swiper-button-prev'
         },
         onInit: (swiper) => {
-          swiper.slides[1].className = 'swiper-slide swiper-slide-active'
+          if (swiper.slides && swiper.slides[1]) {
+            swiper.slides[1].className = 'swiper-slide swiper-slide-active'
+          }
         },
         breakpoints: { 668: { slidesPerView: 1 } }
       })

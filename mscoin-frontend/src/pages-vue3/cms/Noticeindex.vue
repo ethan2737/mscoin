@@ -38,11 +38,11 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElPagination } from 'element-plus'
 import axios from 'axios'
-import { useRouter } from 'vue-router/composables'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const host = 'http://localhost'
+const host = ''
 
 const sasa = ref(false)
 const tableData1 = ref([])

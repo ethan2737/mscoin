@@ -3,7 +3,7 @@
     <el-carousel autoplay loop :interval="3000" arrow="always" id="carousel">
       <el-carousel-item v-for="item in 3" :key="item">
         <div class="demo-carousel">
-          <img src="../../assets/img/banner.jpg" alt="">
+          <img :src="carouselBanner" alt="">
         </div>
       </el-carousel-item>
     </el-carousel>
@@ -15,6 +15,7 @@
  * Vue 3 迁移 - OTC 轮播组件
  */
 import { ElCarousel, ElCarouselItem } from 'element-plus'
+import carouselBanner from '../../assets/img/m1.png'
 </script>
 
 <style scoped>

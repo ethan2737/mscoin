@@ -35,9 +35,9 @@ mscoin/
 - Etcd 服务发现
 
 **前端**
-- Vue 2.5 + Vue Router + Vuex
-- iView 3.x UI 组件库
-- Webpack 3
+- Vue 3 + Vite
+- Vue Router 5 + Vuex 4
+- Element Plus
 - Socket.io/StompJS WebSocket 通信
 
 ## 快速开始
@@ -62,11 +62,19 @@ go run exchange/main.go -f exchange/etc/conf.yaml
 cd mscoin-frontend
 
 # 安装依赖
-npm install
+pnpm install
 
 # 开发服务器
-npm run dev
+pnpm run dev
+
+# 生产构建
+pnpm run build
 ```
+
+当前前端恢复基线和验收记录见：
+
+- `openspec/changes/archive/2026-04-09-unify-frontend-migration-path/frontend-migration-baseline.md`
+- `openspec/changes/archive/2026-04-09-frontend-migration-validation-and-cleanup/frontend-recovery-validation.md`
 
 ### 基础设施
 

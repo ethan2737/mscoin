@@ -1,22 +1,27 @@
-// Vuex 3.x 在 Vue 3 中使用 - 不使用 Vue.use()
-// Vuex 3.x 支持 Vue 3，只需要直接导出 store 实例即可
-import Vuex from 'vuex'
+// Vuex 4.x for Vue 3 runtime store contract
+import { runtimeContract } from './runtime-vue3'
 
-export default new Vuex.Store({
-    state: {
+export default {
+    state: () => ({
+        host: runtimeContract.host,
+        wshost: runtimeContract.wshost,
+        api: runtimeContract.api,
+        tokenKey: runtimeContract.tokenKey,
+        memberKey: runtimeContract.memberKey,
+        HeaderActiveName: '0',
         member: null,
         activeNav: '',
         lang: '',
-        exchangeSkin:'night',
+        exchangeSkin: 'night',
         loginTimes: null
-    },
+    }),
     mutations: {
         navigate(state, nav) {
             state.activeNav = nav;
         },
         removeMember(state) {
             state.member = null;
-            localStorage.removeItem("MEMBER");
+            localStorage.removeItem('MEMBER');
         },
         setMember(state, member) {
             state.member = member;
@@ -31,24 +36,24 @@ export default new Vuex.Store({
         },
         initLang(state) {
             if (localStorage.getItem('LANGUAGE') == null) {
-                state.lang = "简体中文";
+                state.lang = '简体中文';
             } else {
                 state.lang = JSON.parse(localStorage.getItem('LANGUAGE'));
             }
         },
-        initLoginTimes(state){
-            if(localStorage.getItem("LOGINTIMES") == null){
+        initLoginTimes(state) {
+            if (localStorage.getItem('LOGINTIMES') == null) {
                 state.loginTimes = 0;
-            }else{
+            } else {
                 state.loginTimes = JSON.parse(localStorage.getItem('LOGINTIMES'));
             }
         },
-        setLoginTimes(state, times){
+        setLoginTimes(state, times) {
             state.loginTimes = times;
             localStorage.setItem('LOGINTIMES', JSON.stringify(times));
         },
-        setSkin(state,skin){
-            state.exchangeSkin=skin;
+        setSkin(state, skin) {
+            state.exchangeSkin = skin;
         }
     },
     getters: {
@@ -65,4 +70,4 @@ export default new Vuex.Store({
             return state.loginTimes;
         }
     }
-});
+};

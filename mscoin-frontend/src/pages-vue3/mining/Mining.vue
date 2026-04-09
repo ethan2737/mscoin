@@ -9,7 +9,7 @@
               <img src="../../assets/images/emptydata.png" alt="">
             </div>
             <div class="tips-line" v-if="!mining.loaded">
-              <el-spinner />
+              <el-icon class="is-loading"><Loading /></el-icon>
             </div>
             <div class="activity-item" v-for="(item, index) in mining.items" :key="index">
               <div class="activity-type">{{item.miningName}}</div>
@@ -94,14 +94,16 @@
  * Vue 3 迁移 - 挖矿页面
  */
 import { ref, reactive, onMounted } from 'vue'
-import { ElTabs, ElTabPane, ElRow, ElCol, ElPagination, ElSpinner, ElButton } from 'element-plus'
+import { ElTabs, ElTabPane, ElRow, ElCol, ElPagination, ElButton, ElIcon } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const mining = reactive({
   loaded: false,

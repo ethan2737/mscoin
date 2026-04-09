@@ -94,7 +94,7 @@ import axios from 'axios'
 const store = inject('store')
 const router = inject('router')
 
-const host = 'http://localhost'
+const host = ''
 
 const loading = ref(false)
 const rangeDate = ref('')

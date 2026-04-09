@@ -119,16 +119,18 @@ import { ref, reactive, computed, inject, onMounted, watch } from 'vue'
 import expand from './expand.vue'
 import moment from 'moment'
 import axios from 'axios'
+import { getAuthHeaders, useRuntimeContract } from '../../config/runtime-vue3'
 
 // 注入 store 和 router (Vue 3 兼容模式)
 const store = inject('store')
 const router = inject('router')
+const { api } = useRuntimeContract()
 
 // 状态
 const loading = ref(false)
 const pageSize = ref(10)
 const pageNo = ref(1)
-const total = ref(10)
+const total = ref(0)
 const symbol = ref([])
 const orders = ref([])
 
@@ -182,6 +184,8 @@ const handleClear = () => {
   formItem.type = ''
   formItem.direction = ''
   formItem.date = ''
+  pageNo.value = 1
+  loadOrders()
 }
 
 const loadOrders = () => {
@@ -201,19 +205,18 @@ const loadOrders = () => {
 
   orders.value = []
 
-  const host = 'http://localhost'
-  axios.post(`${host}/exchange/order/personal/history`, params, {
+  axios.post(api.exchange.history, params, {
     withCredentials: true,
     headers: {
       'Content-Type': 'application/json',
-      'x-auth-token': localStorage.getItem('TOKEN')
+      ...getAuthHeaders()
     }
   })
   .then(response => {
-    const resp = response.data
+    const resp = response.data?.data || {}
+    total.value = resp.totalElements || 0
     let rows = []
     if (resp.content && resp.content.length > 0) {
-      total.value = resp.totalElements
       for (let i = 0; i < resp.content.length; i++) {
         let row = resp.content[i]
         row.price = row.type === 'MARKET_PRICE' ? '市价' : row.price
@@ -229,15 +232,22 @@ const loadOrders = () => {
 }
 
 const loadSymbol = () => {
-  const host = 'http://localhost'
-  axios.post(`${host}/api/market/thumb`, {}, {
+  axios.post(api.market.thumb, {}, {
     withCredentials: true
   })
   .then(response => {
-    const resp = response.data
+    const resp = response.data?.data || []
     if (resp && resp.length > 0) {
       symbol.value = resp
+      if (!formItem.symbol) {
+        const preferred = resp.find((item) => item.symbol === 'BTC/USDT')
+        formItem.symbol = (preferred || resp[0]).symbol
+        loadOrders()
+      }
     }
+  })
+  .catch(() => {
+    symbol.value = []
   })
 }
 

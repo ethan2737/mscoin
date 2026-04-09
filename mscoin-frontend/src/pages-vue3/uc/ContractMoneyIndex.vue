@@ -115,7 +115,7 @@ import { ElMessage } from 'element-plus'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import axios from 'axios'
 
-const host = 'http://localhost'
+const host = ''
 
 const direction = ref(true)
 const loading = ref(true)

@@ -171,7 +171,8 @@ import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElRow, ElCol, ElInput, ElButton, ElForm, ElFormItem, ElDialog, ElIcon } from 'element-plus'
 import { InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useRouter, useRoute, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter, useRoute } from 'vue-router'
 import QRCode from 'qrcode'
 import moment from 'moment'
 
@@ -179,7 +180,7 @@ const router = useRouter()
 const route = useRoute()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const isLogin = computed(() => store.getters.isLogin)
 const lang = computed(() => store.state.lang)

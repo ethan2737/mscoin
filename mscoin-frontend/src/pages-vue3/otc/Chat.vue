@@ -186,12 +186,12 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage, ElButton, ElDialog, ElForm, ElFormItem, ElSelect, ElOption, ElInput, ElPopover } from 'element-plus'
 import axios from 'axios'
-import { useRouter } from 'vue-router/composables'
+import { useRouter } from 'vue-router'
 import Chatline from './Chatline.vue'
 
 const router = useRouter()
 
-const host = 'http://localhost'
+const host = ''
 let socket = null
 
 const watching = ref(false)
@@ -474,7 +474,7 @@ const getDetail = () => {
 }
 
 const initSocket = () => {
-  socket = io('http://localhost')
+  socket = io()
 }
 
 onMounted(() => {

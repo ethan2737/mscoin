@@ -74,7 +74,7 @@ import axios from 'axios'
 const router = useRouter()
 const route = useRoute()
 
-const host = 'http://localhost'
+const host = ''
 const api = {
   otc: {
     coin: '/otc/coin'

@@ -124,7 +124,7 @@ import axios from 'axios'
 const store = inject('store')
 const router = inject('router')
 
-const host = 'http://localhost'
+const host = ''
 
 const GCCMatchAmount = ref(0)
 const matchAmount = ref(0)

@@ -40,7 +40,8 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { useStore, useRoute } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRoute } from 'vue-router'
 
 const store = useStore()
 const route = useRoute()

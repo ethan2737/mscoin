@@ -121,12 +121,12 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElRadioGroup, ElRadio, ElSwitch, ElButton } from 'element-plus'
 import axios from 'axios'
-import { useRouter, useRoute } from 'vue-router/composables'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
 
-const host = 'http://localhost'
+const host = ''
 
 const isSpinShow = ref(true)
 const isId = ref(false)

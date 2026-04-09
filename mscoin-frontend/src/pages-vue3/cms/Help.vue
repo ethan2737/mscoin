@@ -32,11 +32,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
 
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const helpData = ref([])
 

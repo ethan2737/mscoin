@@ -5,16 +5,17 @@
     "author": "mszlu",
     "private": true,
     "scripts": {
-        "dev": "vite",
-        "start": "npm run dev",
-        "dev:vue3": "vite --open index-vue3.html",
-        "build:vue3": "vite build --config vite.config.vue3.mjs",
-        "preview": "vite preview",
+        "dev": "vite --config vite.config.mjs",
+        "start": "pnpm run dev",
+        "build": "vite build --config vite.config.mjs",
+        "preview": "vite preview --config vite.config.mjs",
+        "check:asset-resolution": "node scripts/check-vue3-asset-resolution.mjs",
+        "dev:legacy-webpack": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
+        "build:legacy-webpack": "node build/build.js",
         "unit": "jest --config test/unit/jest.conf.js --coverage",
         "e2e": "node test/e2e/runner.js",
         "test": "npm run unit && npm run e2e",
-        "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs",
-        "build": "node build/build.js"
+        "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
     },
     "dependencies": {
         "@babel/runtime": "^7.21.0",
@@ -34,14 +35,14 @@
         "sockjs": "^0.3.24",
         "sockjs-client": "^1.6.1",
         "stompjs": "^2.3.3",
-        "vue": "^2.7.16",
+        "vue": "^3.5.32",
         "vue-clipboard2": "0.0.8",
-        "vue-i18n": "^8.28.2",
+        "vue-i18n": "^11.3.2",
         "vue-qart": "^2.1.1",
         "vue-qriously": "^1.1.1",
         "vue-resource": "^1.3.4",
-        "vue-router": "^3.6.5",
-        "vuex": "^3.6.2"
+        "vue-router": "^5.0.4",
+        "vuex": "^4.1.0"
     },
     "devDependencies": {
         "@babel/cli": "^7.21.0",
@@ -100,6 +101,7 @@
         "postcss-import": "^11.0.0",
         "postcss-loader": "^2.0.8",
         "rimraf": "^2.6.0",
+        "sass-embedded": "^1.99.0",
         "sass-loader": "^7.0.3",
         "sass-resources-loader": "^1.3.3",
         "selenium-server": "^3.0.1",

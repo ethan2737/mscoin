@@ -145,7 +145,7 @@
  * Vue 3 迁移 - BZB 页面
  */
 import { onMounted } from 'vue'
-import { useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
 
 const store = useStore()
 

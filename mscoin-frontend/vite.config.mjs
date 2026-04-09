@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue2'
+import vue from '@vitejs/plugin-vue'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { localAcceptanceMockPlugin } from './dev/localAcceptanceMocks.mjs'
 
 // Vite 中获取 __dirname 的替代方案
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -10,6 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [
     vue(),
+    localAcceptanceMockPlugin(),
   ],
   resolve: {
     alias: {
@@ -20,18 +22,47 @@ export default defineConfig({
       '@assets': resolve(__dirname, 'src/assets'),
       '@config': resolve(__dirname, 'src/config'),
       '@utils': resolve(__dirname, 'src/utils'),
-      '@js': resolve(__dirname, 'src/assets/js')
+      '@js': resolve(__dirname, 'src/assets/js'),
+      'vue': 'vue/dist/vue.esm-bundler.js'
     }
   },
   server: {
     port: 3000,
     host: true,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
+      '/uc': {
+        target: 'http://127.0.0.1:8888',
         changeOrigin: true
+      },
+      '/market': {
+        target: 'http://127.0.0.1:8889',
+        changeOrigin: true
+      },
+      '/otc': {
+        target: 'http://127.0.0.1:8888',
+        changeOrigin: true
+      },
+      '/crowd': {
+        target: 'http://127.0.0.1:8888',
+        changeOrigin: true
+      },
+      '/exchange': {
+        target: 'http://127.0.0.1:8890',
+        changeOrigin: true
+      },
+      '/swap': {
+        target: 'http://127.0.0.1:8890',
+        changeOrigin: true
+      },
+      '/socket.io': {
+        target: 'http://127.0.0.1:8889',
+        changeOrigin: true,
+        ws: true
       }
     }
+  },
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'vuex', 'axios', 'moment', 'jquery', 'element-plus']
   },
   build: {
     outDir: 'dist-vite',
@@ -42,8 +73,8 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
-          'vendor': ['vue', 'vue-router', 'vuex', 'vue-resource', 'vue-i18n', 'iview'],
-          'utils': ['axios', 'moment', 'socket.io-client', 'jquery']
+          'vendor': ['vue', 'vue-router', 'vuex', 'axios', 'element-plus', '@element-plus/icons-vue'],
+          'utils': ['moment', 'jquery']
         }
       }
     }
@@ -51,11 +82,12 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       less: {
-        javascriptEnabled: true,
-        modifyVars: {
-          hack: `true; @import '~iview/src/styles/index.less';`
-        }
+        javascriptEnabled: true
       }
     }
+  },
+  define: {
+    'process.env': {},
+    global: 'globalThis'
   }
 })

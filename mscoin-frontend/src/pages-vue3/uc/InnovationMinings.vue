@@ -56,6 +56,7 @@
                 </div>
                 <div style="width: 100%; padding: 5px 10px; background: #000; border-radius: 5px; margin-top: 10px;">
                   <table class="config-table" style="width: 100%;">
+                    <tbody>
                     <tr>
                       <td style="color: #828ea1; font-size: 12px; text-align: left;">{{ $t('uc.mining.miningUnit') }}</td>
                       <td style="color: #EEE; font-size: 12px; text-align: right; padding-right: 10px;">{{ item.miningUnit }}</td>
@@ -90,6 +91,7 @@
                         <span v-if="item.period === 3" style="color: #828ea1;">{{ $t('uc.mining.year') }}</span>
                       </td>
                     </tr>
+                    </tbody>
                   </table>
                 </div>
                 <div style="font-size: 12px; padding-top: 10px; text-align: left; color: #828ea1;" v-if="item.miningInvite > 0">
@@ -123,15 +125,15 @@ import { ref } from 'vue'
 import { ElMessage, ElCard, ElButton, ElIcon } from 'element-plus'
 import { InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
 
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 const api = {
   uc: {
-    myInnovationMinings: '/uc/activity/myMinings',
-    myMiningsFetchProfit: '/uc/activity/fetchProfit'
+    myInnovationMinings: '/uc/miningorder/my-minings',
+    myMiningsFetchProfit: '/uc/miningorder/fetch-profit'
   }
 }
 

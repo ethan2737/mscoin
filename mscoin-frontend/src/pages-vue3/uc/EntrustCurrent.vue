@@ -24,8 +24,8 @@
       </el-form-item>
       <el-form-item :label="$t('uc.finance.trade.direction')">
         <el-select v-model="formItem.direction" :placeholder="$t('common.pleaseselect')" style="width: 70px;">
-          <el-option value="0" :label="$t('uc.finance.trade.buy')" />
-          <el-option value="1" :label="$t('uc.finance.trade.sell')" />
+          <el-option value="BUY" :label="$t('uc.finance.trade.buy')" />
+          <el-option value="SELL" :label="$t('uc.finance.trade.sell')" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -111,34 +111,25 @@
 </template>
 
 <script setup>
-/**
- * Vue 3 迁移 - 当前委托组件
- * 迁移点:
- * 1. 使用 <script setup> 语法
- * 2. 使用 Composition API 替代 Options API
- * 3. iView Table 替换为 Element Plus Table
- * 4. h() render 函数改为 slot 语法
- * 5. 使用 inject 获取 store 和 router
- */
-import { ref, reactive, computed, inject, onMounted, watch } from 'vue'
+import { computed, inject, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import expand from './expand.vue'
 import moment from 'moment'
 import axios from 'axios'
 
-// 注入 store 和 router (Vue 3 兼容模式)
-const store = inject('store')
-const router = inject('router')
+import expand from './expand.vue'
+import { getAuthHeaders, useRuntimeContract } from '../../config/runtime-vue3'
 
-// 状态
+const store = inject('store')
+const { api } = useRuntimeContract()
+const host = ''
+
 const loading = ref(false)
 const pageSize = ref(10)
 const pageNo = ref(1)
-const total = ref(10)
+const total = ref(0)
 const symbol = ref([])
 const orders = ref([])
 
-// 表单数据
 const formItem = reactive({
   symbol: '',
   type: '',
@@ -146,31 +137,84 @@ const formItem = reactive({
   date: ''
 })
 
-// 监听 lang 变化
 const lang = computed(() => store?.state?.lang)
 
-// 方法
-const dateFormat = (tick) => {
-  return moment(tick).format('YYYY-MM-DD HH:mm:ss')
-}
+const dateFormat = (tick) => moment(tick).format('YYYY-MM-DD HH:mm:ss')
 
 const toFloor = (number, scale = 8) => {
-  if (new Number(number) == 0) {
+  if (Number(number) === 0) {
     return 0
   }
-  const __str = number + ''
-  if (__str.indexOf('e') > -1 || __str.indexOf('E') > -1) {
-    const __num = new Number(number).toFixed(scale + 1)
-    const __str2 = __num + ''
-    return __str2.substring(0, __str2.length - 1)
-  } else if (__str.indexOf('.') > -1) {
-    if (scale == 0) {
-      return __str.substring(0, __str.indexOf('.'))
-    }
-    return __str.substring(0, __str.indexOf('.') + scale + 1)
-  } else {
-    return __str
+  const raw = `${number}`
+  if (raw.includes('e') || raw.includes('E')) {
+    const fixed = Number(number).toFixed(scale + 1)
+    return fixed.substring(0, fixed.length - 1)
   }
+  if (!raw.includes('.')) {
+    return raw
+  }
+  if (scale === 0) {
+    return raw.substring(0, raw.indexOf('.'))
+  }
+  return raw.substring(0, raw.indexOf('.') + scale + 1)
+}
+
+const loadOrders = () => {
+  loading.value = true
+  const { symbol: symbolVal, type, direction, date: rangeDate } = formItem
+  const params = {
+    pageNo: pageNo.value,
+    pageSize: pageSize.value
+  }
+  if (symbolVal) params.symbol = symbolVal
+  if (direction) params.direction = direction
+  if (type) params.type = type
+  if (rangeDate?.[0]) params.startTime = new Date(rangeDate[0]).getTime()
+  if (rangeDate?.[1]) params.endTime = new Date(rangeDate[1]).getTime()
+
+  axios.post(`${host}${api.exchange.currentOrder}`, params, {
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
+    }
+  })
+    .then((response) => {
+      const resp = response.data
+      if (resp.code !== 0) {
+        ElMessage.error(resp.message || '加载当前委托失败')
+        return
+      }
+      const page = resp.data || {}
+      total.value = page.totalElements || 0
+      orders.value = (page.content || []).map((row) => ({
+        ...row,
+        price: row.type === 'MARKET_PRICE' ? '市价' : row.price
+      }))
+    })
+    .catch(() => {
+      ElMessage.error('加载当前委托失败')
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+const loadSymbol = () => {
+  axios.post(`${host}${api.market.thumb}`, {}, {
+    withCredentials: true
+  })
+    .then((response) => {
+      const resp = response.data
+      if (resp.code === 0 && Array.isArray(resp.data)) {
+        symbol.value = resp.data
+        if (!formItem.symbol && resp.data.length > 0) {
+          const preferred = resp.data.find((item) => item.symbol === 'BTC/USDT')
+          formItem.symbol = (preferred || resp.data[0]).symbol
+          loadOrders()
+        }
+      }
+    })
 }
 
 const handlePageChange = (page) => {
@@ -188,63 +232,8 @@ const handleClear = () => {
   formItem.type = ''
   formItem.direction = ''
   formItem.date = ''
-}
-
-const loadOrders = () => {
-  loading.value = true
-  const { symbol: symbolVal, type, direction, date: rangeDate } = formItem
-  const startTime = rangeDate && rangeDate[0] ? new Date(rangeDate[0]).getTime() : ''
-  const endTime = rangeDate && rangeDate[1] ? new Date(rangeDate[1]).getTime() : ''
-
-  let params = {}
-  if (symbolVal) params.symbol = symbolVal
-  if (direction) params.direction = direction
-  if (type) params.type = type
-  if (startTime) params.startTime = startTime
-  if (endTime) params.endTime = endTime
-  params.pageNo = pageNo.value
-  params.pageSize = pageSize.value
-
-  orders.value = []
-
-  const host = 'http://localhost'
-  axios.post(`${host}/exchange/order/personal/current`, params, {
-    withCredentials: true,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-auth-token': localStorage.getItem('TOKEN')
-    }
-  })
-  .then(response => {
-    const resp = response.data
-    let rows = []
-    if (resp.content && resp.content.length > 0) {
-      total.value = resp.totalElements
-      for (let i = 0; i < resp.content.length; i++) {
-        let row = resp.content[i]
-        row.price = row.type === 'MARKET_PRICE' ? '市价' : row.price
-        rows.push(row)
-      }
-      orders.value = rows
-    }
-    loading.value = false
-  })
-  .catch(() => {
-    loading.value = false
-  })
-}
-
-const loadSymbol = () => {
-  const host = 'http://localhost'
-  axios.post(`${host}/api/market/thumb`, {}, {
-    withCredentials: true
-  })
-  .then(response => {
-    const resp = response.data
-    if (resp && resp.length > 0) {
-      symbol.value = resp
-    }
-  })
+  pageNo.value = 1
+  loadOrders()
 }
 
 const handleCancel = (orderId) => {
@@ -253,39 +242,33 @@ const handleCancel = (orderId) => {
     cancelButtonText: '取消',
     type: 'warning'
   })
-  .then(() => {
-    const host = 'http://localhost'
-    axios.post(`${host}/api/exchange/order/cancel/${orderId}`, {}, {
-      withCredentials: true,
-      headers: {
-        'x-auth-token': localStorage.getItem('TOKEN')
-      }
+    .then(() => {
+      axios.post(`${host}${api.exchange.orderCancel}/${orderId}`, {}, {
+        withCredentials: true,
+        headers: getAuthHeaders()
+      })
+        .then((response) => {
+          const resp = response.data
+          if (resp.code === 0) {
+            ElMessage.success('撤单成功')
+            loadOrders()
+            return
+          }
+          ElMessage.error(resp.message || '撤单失败')
+        })
+        .catch(() => {
+          ElMessage.error('撤单失败')
+        })
     })
-    .then(response => {
-      const resp = response.data
-      if (resp.code === 0) {
-        ElMessage.success('撤单成功')
-        loadOrders()
-      } else {
-        ElMessage.error(resp.message || '撤单失败')
-      }
-    })
-    .catch(() => {
-      ElMessage.error('撤单失败')
-    })
-  })
-  .catch(() => {})
+    .catch(() => {})
 }
 
-// 生命周期
 onMounted(() => {
   loadOrders()
   loadSymbol()
 })
 
-// 监听语言变化
 watch(lang, () => {
-  // 语言变化时重新加载数据
   loadOrders()
 })
 </script>

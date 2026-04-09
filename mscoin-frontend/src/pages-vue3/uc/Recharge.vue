@@ -100,7 +100,7 @@ import axios from 'axios'
 const store = inject('store')
 const router = inject('router')
 
-const host = 'http://localhost'
+const host = ''
 
 const accountType = ref(0)
 const memoCode = ref('')

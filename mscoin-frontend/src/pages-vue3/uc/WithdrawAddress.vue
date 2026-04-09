@@ -130,7 +130,7 @@ import axios from 'axios'
 
 const router = inject('router')
 
-const host = 'http://localhost'
+const host = ''
 
 const modal2 = ref(false)
 const disbtn = ref(false)

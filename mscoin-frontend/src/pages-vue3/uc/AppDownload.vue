@@ -56,11 +56,11 @@ import { ref, computed, onMounted } from 'vue'
 import { ElIcon } from 'element-plus'
 import { Download } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
 
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
 
 const version = ref('1.0.0')
 const publishTime = ref('2020/11/05 12:32:00')

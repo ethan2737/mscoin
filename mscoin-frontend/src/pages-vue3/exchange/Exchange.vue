@@ -150,7 +150,11 @@
             <span @click="changeImgTable('s')" :class="{active: currentImgTable === 's'}">{{ $t("exchange.depth") }}</span>
           </div>
           <div id="kline_container" :class="{hidden: currentImgTable === 's'}"></div>
-          <DepthGraph ref="depthGraphRef" :class="{hidden: currentImgTable === 'k'}" />
+          <DepthGraph
+            ref="depthGraphRef"
+            :values="{ bid: { items: [] }, ask: { items: [] }, skin }"
+            :class="{hidden: currentImgTable === 'k'}"
+          />
         </div>
 
         <!-- 交易面板 -->
@@ -553,6 +557,7 @@ import { Star, InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import moment from 'moment'
 import io from 'socket.io-client'
+import { useRuntimeContract } from '../../config/runtime-vue3'
 
 // 导入子组件
 import DepthGraph from './DepthGraph.vue'
@@ -567,8 +572,9 @@ const store = inject('store')
 const router = inject('router')
 
 // 常量
-const host = store.state.host
-const api = store.state.api
+const runtime = useRuntimeContract()
+const host = runtime.host
+const api = runtime.api
 
 // 响应式数据
 const skin = ref('night')
@@ -634,11 +640,11 @@ const sliderBuyMarketPercent = ref(0)
 const sliderSellMarketPercent = ref(0)
 const sliderBuyDisabled = computed(() => {
   const min = 1 / Math.pow(10, baseCoinScale.value)
-  return wallet.value.base < min
+  return wallet.base < min
 })
 const sliderSellDisabled = computed(() => {
   const min = 1 / Math.pow(10, coinScale.value)
-  return wallet.value.coin < min
+  return wallet.coin < min
 })
 
 // 钱包
@@ -725,6 +731,7 @@ const depthGraphRef = ref(null)
 // 计算属性
 const rechargeUSDTUrl = computed(() => `/uc/recharge?name=${currentCoin.base}`)
 const rechargeCoinUrl = computed(() => `/uc/recharge?name=${currentCoin.coin}`)
+const silentPost = (url, payload = {}) => axios.post(url, payload).catch(() => null)
 
 // 方法实现
 const tipFormat = (val) => `${val}%`
@@ -906,8 +913,9 @@ const getCoin = (symbol) => {
 }
 
 const getSymbol = () => {
-  axios.post(host + api.market.thumb, {})
+  silentPost(host + api.market.thumb, {})
     .then(response => {
+      if (!response?.data?.data) return
       const resp = response.data.data
       // 清空已有数据
       coins.USDT = []
@@ -976,8 +984,9 @@ const getFavor = () => {
 }
 
 const getPlate = (str = '') => {
-  axios.post(host + api.market.platemini, { symbol: currentCoin.symbol })
+  silentPost(host + api.market.platemini, { symbol: currentCoin.symbol })
     .then(response => {
+      if (!response?.data) return
       plate.askRows = []
       plate.bidRows = []
       const resp = response.data
@@ -1057,8 +1066,9 @@ const getPlate = (str = '') => {
 }
 
 const getPlateFull = () => {
-  axios.post(host + api.market.platefull, { symbol: currentCoin.symbol })
+  silentPost(host + api.market.platefull, { symbol: currentCoin.symbol })
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       resp.skin = skin.value
       if (depthGraphRef.value && depthGraphRef.value.draw) {
@@ -1068,8 +1078,9 @@ const getPlateFull = () => {
 }
 
 const getTrade = () => {
-  axios.post(host + api.market.trade, { symbol: currentCoin.symbol, size: 20 })
+  silentPost(host + api.market.trade, { symbol: currentCoin.symbol, size: 20 })
     .then(response => {
+      if (!response?.data || !Array.isArray(response.data)) return
       trade.rows = []
       const resp = response.data
       for (let i = 0; i < resp.length; i++) {
@@ -1079,7 +1090,7 @@ const getTrade = () => {
 }
 
 const startWebsock = () => {
-  const socket = io('http://localhost')
+  const socket = io(runtime.wshost || undefined)
   datafeed.value = new Datafeeds.WebsockFeed(host + '/market', currentCoin, socket)
 
   socket.on('connect', () => {
@@ -1234,16 +1245,18 @@ const init = () => {
 }
 
 const getCNYRate = () => {
-  axios.post(host + '/market/exchange-rate/usd/cny')
+  silentPost(host + '/market/exchange-rate/usd/cny')
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       CNYRate.value = resp.data
     })
 }
 
 const getSymbolScale = () => {
-  axios.post(host + api.market.symbolInfo, { symbol: currentCoin.symbol })
+  silentPost(host + api.market.symbolInfo, { symbol: currentCoin.symbol })
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       if (resp) {
         baseCoinScale.value = resp.baseCoinScale
@@ -1273,18 +1286,20 @@ const getSymbolScale = () => {
 }
 
 const getCoinInfo = () => {
-  axios.post(host + api.market.coinInfo, { unit: currentCoin.coin })
+  silentPost(host + api.market.coinInfo, { unit: currentCoin.coin })
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       if (resp) {
-        coinInfo.value = resp
+        Object.assign(coinInfo, resp || {})
       }
     })
 }
 
 const getWallet = () => {
-  axios.post(host + api.ucenter.wallet, {})
+  silentPost(host + api.ucenter.wallet, {})
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       if (resp.code === 0) {
         const account = resp.data
@@ -1295,25 +1310,31 @@ const getWallet = () => {
 }
 
 const getCurrentOrder = () => {
-  axios.post(host + api.exchange.currentOrder, { symbol: currentCoin.symbol })
+  silentPost(host + api.exchange.currentOrder, {
+    symbol: currentCoin.symbol,
+    pageNo: 1,
+    pageSize: 20
+  })
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       if (resp.code === 0) {
-        currentOrder.rows = resp.data || []
+        currentOrder.rows = resp.data?.content || []
       }
     })
 }
 
 const getHistoryOrder = () => {
-  axios.post(host + api.exchange.historyOrder, {
+  silentPost(host + api.exchange.historyOrder, {
     symbol: currentCoin.symbol,
-    page: historyOrder.page,
-    size: historyOrder.pageSize
+    pageNo: historyOrder.page,
+    pageSize: historyOrder.pageSize
   })
     .then(response => {
+      if (!response?.data) return
       const resp = response.data
       if (resp.code === 0) {
-        historyOrder.rows = resp.data || []
+        historyOrder.rows = resp.data?.content || []
       }
     })
 }
@@ -1353,7 +1374,7 @@ const buyWithLimitPrice = () => {
     amount: form.buy.limitAmount,
     direction: 'BUY',
     type: 'LIMIT_PRICE',
-    useDiscount: '0'
+    useDiscount: 0
   }
 
   axios.post(host + api.exchange.order, params)

@@ -45,12 +45,13 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { useStore, useRouter } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const store = useStore()
 const router = useRouter()
 
-const host = 'http://localhost'
+const host = ''
 const api = {
   uc: {
     paydividends: '/uc/asset/dividend/list'

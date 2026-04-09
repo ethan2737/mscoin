@@ -2,10 +2,15 @@
   <div class="notice">
     <div class="notice-list" style="margin-top: 100px; color: #696969;">
       <div class="main">
-        <h2>{{$t("cms.noticecenter")}}</h2>
+        <h2>{{ $t('cms.noticecenter') }}</h2>
         <div class="list">
-          <div :class="item.id==queryId?'active' : 'item1'" v-for="item in FAQList" :key="item.id" @click="noticedeail(item.id)">
-            <span class="text">{{item.title}}</span>
+          <div
+            v-for="item in noticeList"
+            :key="item.id"
+            :class="item.id === currentNoticeId ? 'active' : 'item1'"
+            @click="openNotice(item.id)"
+          >
+            <span class="text">{{ item.title }}</span>
           </div>
         </div>
         <div class="page">
@@ -20,183 +25,198 @@
         </div>
       </div>
     </div>
+
     <div class="content-wrap">
-      <div v-show="hasContent">
+      <div v-if="isInitialLoading" class="loading-state">
+        <div class="loading-title">加载中...</div>
+      </div>
+
+      <template v-else-if="hasContent">
         <div class="header">
-          <h2>{{data.info.title}}</h2>
-          <span>{{data.info.createTime}}</span>
+          <h2>{{ noticeData.info.title }}</h2>
+          <span>{{ noticeData.info.createTime }}</span>
         </div>
         <div class="content">
-          <div class="content-text" v-html="data.info.content"></div>
-          <div class="show-qrcode" style="text-align: right;padding: 15px 10px;border-radius:10px;background:#FFF;margin-top: 30px;">
-            <div style="text-align: right;">{{$t("cms.scanforshare")}}</div>
+          <div class="content-text" v-html="noticeData.info.content"></div>
+          <div class="show-qrcode" style="text-align: right; padding: 15px 10px; border-radius: 10px; background: #FFF; margin-top: 30px;">
+            <div style="text-align: right;">{{ $t('cms.scanforshare') }}</div>
           </div>
         </div>
         <div class="nav-bottom">
-          <div class="left" v-if="data.back">
-            <router-link class="link" :to="'../announcement/'+data.back.id">
-              < {{$t("cms.prevnotice")}} <p style="color:#f0a70a;">{{data.back.title}}</p>
+          <div class="left" v-if="noticeData.back">
+            <router-link class="link" :to="`/notice/item/${noticeData.back.id}`">
+              &lt; {{ $t('cms.prevnotice') }}
+              <p style="color: #f0a70a;">{{ noticeData.back.title }}</p>
             </router-link>
           </div>
-          <div class="right" v-if="data.next">
-            <router-link class="link" :to="'../announcement/'+data.next.id">{{$t("cms.nextnotice")}} >
-              <p style="color:#f0a70a;">{{data.next.title}}</p>
+          <div class="right" v-if="noticeData.next">
+            <router-link class="link" :to="`/notice/item/${noticeData.next.id}`">
+              {{ $t('cms.nextnotice') }} &gt;
+              <p style="color: #f0a70a;">{{ noticeData.next.title }}</p>
             </router-link>
           </div>
         </div>
+      </template>
+
+      <div v-else>
+        <p style="font-size: 30px; text-align: center; margin-top: 15%;">暂无内容</p>
+        <p style="text-align: center; font-size: 12px; margin-top: 10px; color: #828ea1;">{{ $t('cms.notexist') }}</p>
       </div>
-      <div v-show="!hasContent">
-        <p style="font-size: 30px;text-align:center;margin-top: 15%;">暂无内容</p>
-        <p style="text-align:center;font-size: 12px;margin-top: 10px;color: #828ea1;">{{$t("cms.notexist")}}</p>
-      </div>
-      <div v-if="spinShow" class="loading-overlay">加载中...</div>
     </div>
+
     <div class="bottom-list">
-      <p style="font-size: 18px;margin: 15px 0;">最新公告</p>
-      <div class="notice-item" v-for="item in FAQList" :key="item.id" @click="noticedeail(item.id)">
-        <span class="text">[{{subTime(item.createTime)}}] {{item.title}}</span>
+      <p style="font-size: 18px; margin: 15px 0;">最新公告</p>
+      <div v-for="item in noticeList" :key="item.id" class="notice-item" @click="openNotice(item.id)">
+        <span class="text">[{{ subTime(item.createTime) }}] {{ item.title }}</span>
       </div>
     </div>
+
     <div class="app_bottom">
       <div class="left_logo">
-        <img style="float:left;" src="../../assets/images/applogo.png"></img>
-        <div style="float:left;height: 40px;line-height:40px;color:#000;">{{$t("cms.downloadslogan")}}</div>
+        <img style="float: left;" src="../../assets/images/applogo.png" alt="">
+        <div style="float: left; height: 40px; line-height: 40px; color: #000;">{{ $t('cms.downloadslogan') }}</div>
       </div>
-      <div class="right_btn_wrap"><router-link to="/app" class="right_btn">{{$t("cms.download")}}</router-link></div>
+      <div class="right_btn_wrap">
+        <router-link to="/app" class="right_btn">{{ $t('cms.download') }}</router-link>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-/**
- * Vue 3 迁移 - CMS 公告详情页面
- */
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElPagination } from 'element-plus'
 import axios from 'axios'
-import { useRouter, useRoute, useStore } from 'vue-router/composables'
+import { useStore } from 'vuex'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
 const store = useStore()
 
-const host = 'http://localhost'
+const host = ''
+const pageSize = 10
 
-const data = reactive({ info: {} })
-const queryId = ref('')
-const initLang = ref(store.state.lang)
-const hasContent = ref(true)
+const noticeData = reactive({ info: {} })
+const noticeList = ref([])
+const currentNoticeId = ref('')
 const pageNo = ref(1)
-const pageSize = ref(10)
 const totalNum = ref(0)
-const FAQList = ref([])
-const spinShow = ref(false)
+const hasContent = ref(true)
+const isInitialLoading = ref(true)
+const initLang = ref(store.state.lang)
 
-const lang = computed(() => {
-  if (store.state.lang !== initLang.value) {
-    router.back()
-  }
-  return store.state.lang
-})
+const langParam = computed(() => (store.state.lang === 'English' ? 'EN' : 'CN'))
 
-const langPram = computed(() => {
-  if (store.state.lang === '简体中文') {
-    return 'CN'
+watch(
+  () => store.state.lang,
+  (value) => {
+    if (value !== initLang.value) {
+      router.back()
+    }
   }
-  if (store.state.lang === 'English') {
-    return 'EN'
-  }
-  return 'CN'
-})
+)
 
-const subTime = (str) => {
-  if (!str) return ''
-  return str.substring(5, 10)
+watch(
+  () => route.params.id,
+  () => {
+    if (noticeList.value.length > 0) {
+      void loadNoticeInfo()
+    }
+  }
+)
+
+function subTime(str) {
+  return str ? str.substring(5, 10) : ''
 }
 
-const loadNoticeInfo = () => {
-  let id = route.params.id
-  if (id == null || id == '' || id == 0) {
-    if (FAQList.value.length > 0) {
-      id = FAQList.value[0].id
-    } else {
-      id = 0
-    }
-  }
-  queryId.value = id
-  spinShow.value = true
+function openNotice(id) {
+  router.push({ path: `/notice/item/${id}` })
+}
 
-  const param = { id: id, lang: langPram.value }
-  axios.post(`${host}/uc/announcement/more`, param, {
-    withCredentials: true,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-auth-token': localStorage.getItem('TOKEN')
-    }
-  }).then(response => {
+async function loadNoticeInfo() {
+  let id = route.params.id
+  if (!id || id === '0') {
+    id = noticeList.value[0]?.id || 0
+  }
+
+  currentNoticeId.value = id
+  hasContent.value = true
+
+  try {
+    const response = await axios.post(
+      `${host}/uc/announcement/more`,
+      { id, lang: langParam.value },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': localStorage.getItem('TOKEN')
+        }
+      }
+    )
     const result = response.data
-    if (result.code == 0) {
-      const responseData = result.data
-      Object.assign(data, responseData)
+    if (result.code === 0 && result.data?.info) {
+      Object.assign(noticeData, result.data)
       hasContent.value = true
-      spinShow.value = false
     } else {
       hasContent.value = false
-      spinShow.value = false
     }
-  }).catch(() => {
+  } catch {
     hasContent.value = false
-    spinShow.value = false
     ElMessage.error('请求失败')
-  })
-}
-
-const fetchData = () => {
-  const id = route.params.id
-  if (id == null || id == '') {
-    return
+  } finally {
+    isInitialLoading.value = false
   }
-  loadNoticeInfo()
 }
 
-const noticedeail = (id) => {
-  router.push({ path: '/announcement/' + id })
-}
+async function loadDataPage(pageIndex = 1) {
+  pageNo.value = pageIndex
+  isInitialLoading.value = noticeList.value.length === 0
 
-const loadDataPage = (pageIndex) => {
-  const param = {
-    pageNo: pageIndex,
-    pageSize: pageSize.value,
-    lang: langPram.value
-  }
-  axios.post(`${host}/uc/ancillary/announcement`, param, {
-    withCredentials: true,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-auth-token': localStorage.getItem('TOKEN')
+  try {
+    const response = await axios.post(
+      `${host}/uc/ancillary/announcement`,
+      {
+        pageNo: pageIndex,
+        pageSize,
+        lang: langParam.value
+      },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': localStorage.getItem('TOKEN')
+        }
+      }
+    )
+    const result = response.data
+    if (result.code === 0) {
+      noticeList.value = result.data?.content || []
+      totalNum.value = result.data?.totalElements || 0
+      if (noticeList.value.length > 0) {
+        await loadNoticeInfo()
+      } else {
+        hasContent.value = false
+        isInitialLoading.value = false
+      }
+      return
     }
-  }).then(response => {
-    const resp = response.data
-    if (resp.code == 0) {
-      if (resp.data.content.length == 0) return
-      FAQList.value = resp.data.content
-      totalNum.value = resp.data.totalElements
-      loadNoticeInfo()
-    } else {
-      ElMessage.error(resp.message)
-    }
-  }).catch(() => {
+    ElMessage.error(result.message || '请求失败')
+    hasContent.value = false
+  } catch {
+    hasContent.value = false
     ElMessage.error('请求失败')
-  })
+  } finally {
+    if (noticeList.value.length === 0) {
+      isInitialLoading.value = false
+    }
+  }
 }
-
-watch(() => route.params, () => {
-  fetchData()
-}, { immediate: true })
 
 onMounted(() => {
   store.commit('navigate', 'nav-service')
-  loadDataPage(pageNo.value)
+  void loadDataPage(1)
 })
 </script>
 
@@ -208,7 +228,7 @@ onMounted(() => {
 .notice {
   padding-bottom: 20px;
   overflow-x: hidden;
-  padding: 0px 180px;
+  padding: 0 180px;
   min-height: 800px;
   background: rgba(242, 246, 250, 1) !important;
 }
@@ -231,45 +251,31 @@ onMounted(() => {
   overflow: hidden;
 }
 
-@media screen and (max-width: 768px) {
-  .notice {
-    padding: 0px 0px;
-    position: relative;
-  }
-  .show-qrcode {
-    display: none;
-  }
-  .bottom-list {
-    display: block !important;
-  }
-  .notice .content-wrap {
-    margin-top: 45px;
-    padding: 30px 20px 50px 20px;
-    margin-bottom: 0px;
-  }
-  .notice-list {
-    display: none;
-  }
-  .notice .content-wrap .header h2 {
-    text-align: left;
-  }
-  .notice .content-wrap .content {
-    padding-bottom: 60px;
-  }
-  .notice .nav-bottom {
-    padding: 30px 0px 30px 0px;
-  }
-  .notice .nav-bottom .link > p {
-    display: none;
-  }
-  .app_bottom {
-    display: block !important;
-  }
-}
-
 .content-wrap {
   width: 1200px;
   margin: 0 auto;
+  text-align: left;
+  position: relative;
+  width: 100%;
+  min-height: 562px;
+  background-color: #FFF;
+  color: #000;
+  margin-top: 100px;
+  border-radius: 3px;
+  padding: 50px 50px 110px;
+  margin-bottom: 50px;
+}
+
+.loading-state {
+  min-height: 360px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-title {
+  font-size: 16px;
+  color: #696969;
 }
 
 .header {
@@ -289,20 +295,6 @@ onMounted(() => {
 .header span {
   padding: 0 10px;
   color: #999;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.82);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  color: #696969;
 }
 
 .app_bottom {
@@ -334,12 +326,57 @@ onMounted(() => {
 .app_bottom .right_btn {
   color: #FFF;
   border-radius: 3px;
-  padding: 0px 10px;
+  padding: 0 10px;
   line-height: 26px;
   height: 26px;
   display: block;
   margin-top: 7px;
   background: linear-gradient(200deg, #ff9900, #ffbe2b, #ffa500);
+}
+
+@media screen and (max-width: 768px) {
+  .notice {
+    padding: 0;
+    position: relative;
+  }
+
+  .show-qrcode {
+    display: none;
+  }
+
+  .bottom-list {
+    display: block !important;
+  }
+
+  .notice .content-wrap {
+    margin-top: 45px;
+    padding: 30px 20px 50px 20px;
+    margin-bottom: 0;
+  }
+
+  .notice-list {
+    display: none;
+  }
+
+  .notice .content-wrap .header h2 {
+    text-align: left;
+  }
+
+  .notice .content-wrap .content {
+    padding-bottom: 60px;
+  }
+
+  .notice .nav-bottom {
+    padding: 30px 0;
+  }
+
+  .notice .nav-bottom .link > p {
+    display: none;
+  }
+
+  .app_bottom {
+    display: block !important;
+  }
 }
 </style>
 
@@ -358,7 +395,7 @@ onMounted(() => {
       .item1 {
         width: 100%;
         text-align: left;
-        padding: 15px 15px;
+        padding: 15px;
         color: rgba(130, 142, 161, 1);
 
         &:hover {
@@ -372,7 +409,7 @@ onMounted(() => {
         color: #f0a70a;
         width: 100%;
         text-align: left;
-        padding: 15px 15px;
+        padding: 15px;
         border-radius: 3px;
 
         &:hover {
@@ -403,93 +440,64 @@ onMounted(() => {
     }
   }
 
-  .content-wrap {
-    text-align: left;
-    position: relative;
-    width: 100%;
-    min-height: 562px;
-    background-color: #FFF;
-    color: #000;
-    margin-top: 100px;
-    border-radius: 3px;
-    padding: 50px 50px;
-    margin-bottom: 50px;
-    padding-bottom: 110px;
+  .link {
+    font-size: 14px;
+    color: #f0a70a;
+  }
 
-    .link {
-      font-size: 14px;
-      color: #f0a70a;
+  .header {
+    margin-bottom: 40px;
+    padding-bottom: 10px;
+
+    h2 {
+      font-size: 20px;
     }
+  }
 
-    .header {
-      margin-bottom: 40px;
-      padding-bottom: 10px;
+  .content {
+    color: #74777a;
+    margin-bottom: 80px;
+    letter-spacing: 1px;
+    line-height: 25px;
 
-      h2 {
-        font-size: 20px;
-      }
-    }
+    .content-text {
+      p {
+        text-align: justify;
 
-    .content {
-      color: #74777a;
-      margin-bottom: 80px;
-      letter-spacing: 1px;
-      line-height: 25px;
-
-      .content-text {
-        p {
-          text-align: justify;
-
-          &::after {
-            width: 100%;
-            content: '';
-            height: 0;
-          }
-        }
-      }
-
-      span {
-        .MsoNormal {
-          font-weight: 100;
-          line-height: 30px;
-        }
-
-        .p1 {
-          .s1 {
-            b {
-              font-weight: 400;
-
-              span {
-                font-size: 18px !important;
-              }
-            }
-          }
-        }
-
-        .p2 {
-          span {
-            font-size: 12pt !important;
-            line-height: 30px;
-          }
-        }
-
-        .p3 {
-          span {
-            font-size: 12pt !important;
-            color: #fff !important;
-            line-height: 30px;
-          }
-        }
-      }
-
-      .image-desc {
-        .uploaded-img {
+        &::after {
           width: 100%;
+          content: '';
+          height: 0;
         }
+      }
+    }
 
-        .image-caption {
-          display: none !important;
-        }
+    span {
+      .MsoNormal {
+        font-weight: 100;
+        line-height: 30px;
+      }
+
+      .p1 .s1 b span,
+      .p2 span {
+        font-size: 12pt !important;
+        line-height: 30px;
+      }
+
+      .p3 span {
+        font-size: 12pt !important;
+        color: #fff !important;
+        line-height: 30px;
+      }
+    }
+
+    .image-desc {
+      .uploaded-img {
+        width: 100%;
+      }
+
+      .image-caption {
+        display: none !important;
       }
     }
   }
@@ -500,7 +508,7 @@ onMounted(() => {
     bottom: 0;
     width: 90%;
     margin-left: 5%;
-    padding: 50px 0px 50px 0px;
+    padding: 50px 0;
     border-top: 1px solid #ebebeb;
     border-bottom: 1px solid #ebebeb;
 

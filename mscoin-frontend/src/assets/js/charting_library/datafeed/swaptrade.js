@@ -1,4 +1,4 @@
-var $ = require('jquery');
+import $ from 'jquery';
 var WebsockFeed = function(url,coin,socket,scale){
     this._datafeedURL = url;
     this.coin = coin;
