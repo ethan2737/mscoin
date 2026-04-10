@@ -16,6 +16,7 @@ import { createI18n } from 'vue-i18n'
 import routes from './config/routes-vue3.js'
 import storeConfig from './config/store-vue3.js'
 import { runtimeContract } from './config/runtime-vue3'
+import { hasAuthenticatedSession } from './utils/auth-session'
 
 // 导入语言包
 import zh from './assets/lang/zh.js'
@@ -105,8 +106,26 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach(() => {
-  return true
+router.beforeEach((to) => {
+  if (!to.path.startsWith('/uc')) {
+    return true
+  }
+
+  store.commit('recoveryMember')
+
+  if (hasAuthenticatedSession({
+    storage: localStorage,
+    tokenKey: runtimeContract.tokenKey,
+    memberKey: runtimeContract.memberKey,
+    store
+  })) {
+    return true
+  }
+
+  return {
+    path: '/login',
+    query: { returnUrl: to.fullPath }
+  }
 })
 
 router.afterEach((to, from) => {

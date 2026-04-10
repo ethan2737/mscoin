@@ -1,3 +1,13 @@
-import Vue from 'vue'
+let VueLib = null
 
-Vue.config.productionTip = false
+try {
+  VueLib = require('vue')
+} catch (error) {
+  VueLib = null
+}
+
+const Vue = VueLib && (VueLib.default || VueLib)
+
+if (Vue && Vue.config) {
+  Vue.config.productionTip = false
+}

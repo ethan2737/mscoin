@@ -1,5 +1,15 @@
 const path = require('path')
 
+let snapshotSerializers = []
+
+try {
+  require.resolve('jest-serializer-vue')
+  require.resolve('pretty')
+  snapshotSerializers = ['<rootDir>/node_modules/jest-serializer-vue']
+} catch (error) {
+  snapshotSerializers = []
+}
+
 module.exports = {
   rootDir: path.resolve(__dirname, '../../'),
   moduleFileExtensions: [
@@ -17,7 +27,7 @@ module.exports = {
   testPathIgnorePatterns: [
     '<rootDir>/test/e2e'
   ],
-  snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],
+  snapshotSerializers,
   setupFiles: ['<rootDir>/test/unit/setup'],
   mapCoverage: true,
   coverageDirectory: '<rootDir>/test/unit/coverage',

@@ -1,6 +1,21 @@
 // Vuex 4.x for Vue 3 runtime store contract
 import { runtimeContract } from './runtime-vue3'
 
+const getStoredJson = (key) => {
+    const value = localStorage.getItem(key);
+
+    if (!value) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(value);
+    } catch (error) {
+        localStorage.removeItem(key);
+        return null;
+    }
+}
+
 export default {
     state: () => ({
         host: runtimeContract.host,
@@ -21,14 +36,18 @@ export default {
         },
         removeMember(state) {
             state.member = null;
-            localStorage.removeItem('MEMBER');
+            localStorage.removeItem(state.memberKey);
         },
         setMember(state, member) {
             state.member = member;
-            localStorage.setItem('MEMBER', JSON.stringify(member));
+            if (member == null) {
+                localStorage.removeItem(state.memberKey);
+                return;
+            }
+            localStorage.setItem(state.memberKey, JSON.stringify(member));
         },
         recoveryMember(state) {
-            state.member = JSON.parse(localStorage.getItem('MEMBER'));
+            state.member = getStoredJson(state.memberKey);
         },
         setlang(state, lang) {
             state.lang = lang;

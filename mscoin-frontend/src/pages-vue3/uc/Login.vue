@@ -7,7 +7,7 @@
       </div>
 
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
-        <el-form-item prop="user">
+        <el-form-item class="auth-form-item" prop="user">
           <el-input v-model="form.user" placeholder="手机号或邮箱">
             <template #prepend>
               <el-select v-model="countryCode" style="width: 84px">
@@ -22,7 +22,7 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item prop="password">
+        <el-form-item class="auth-form-item" prop="password">
           <el-input
             v-model="form.password"
             type="password"
@@ -68,10 +68,12 @@ import { reactive, ref, inject, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import { buildApiUrl, useRuntimeContract } from '../../config/runtime-vue3'
+import { establishAuthenticatedSession, hasAuthenticatedSession } from '../../utils/auth-session'
 
 const store = inject('store')
 const router = inject('router')
 const runtime = useRuntimeContract()
+const getReturnUrl = () => router.currentRoute.value.query.returnUrl || router.currentRoute.value.params.returnUrl || '/uc/safe'
 
 const formRef = ref(null)
 const countryCode = ref('+86')
@@ -150,10 +152,17 @@ const doLogin = async () => {
     const response = await axios.post(buildApiUrl(runtime.api.uc.login), params)
     const resp = response.data
     if (resp.code === 0) {
-      store.commit('setMember', resp.data)
-      localStorage.setItem(runtime.tokenKey, resp.data.token)
+      await establishAuthenticatedSession({
+        loginData: resp.data,
+        axiosInstance: axios,
+        memberInfoUrl: buildApiUrl(runtime.api.uc.memberInfo),
+        storage: localStorage,
+        tokenKey: runtime.tokenKey,
+        memberKey: runtime.memberKey,
+        store
+      })
       ElMessage.success('登录成功')
-      router.push('/uc/safe')
+      router.push(getReturnUrl())
       return
     }
     ElMessage.error(resp.message || '登录失败')
@@ -167,8 +176,14 @@ const doLogin = async () => {
 onMounted(() => {
   store.commit('navigate', 'nav-other')
   store.state.HeaderActiveName = '0'
-  if (store.getters.isLogin) {
-    router.push('/uc/safe')
+  store.commit('recoveryMember')
+  if (hasAuthenticatedSession({
+    storage: localStorage,
+    tokenKey: runtime.tokenKey,
+    memberKey: runtime.memberKey,
+    store
+  })) {
+    router.push(getReturnUrl())
   }
 })
 </script>
@@ -264,22 +279,72 @@ onMounted(() => {
   }
 }
 
-:deep(.el-input__wrapper),
-:deep(.el-select__wrapper) {
-  background: transparent;
-  box-shadow: none;
+.auth-form-item {
+  margin-bottom: 20px;
+}
+
+.auth-form-item :deep(.el-input__wrapper),
+.auth-form-item :deep(.el-select__wrapper) {
+  background: #101923;
+  box-shadow: inset 0 0 0 1px #314153;
+  border-radius: 6px;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.auth-form-item :deep(.el-input-group__prepend) {
+  background: #101923;
+  box-shadow: inset 0 0 0 1px #314153;
+  border: 0;
+  border-radius: 6px 0 0 6px;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.auth-form-item :deep(.el-input__wrapper:hover),
+.auth-form-item :deep(.el-select__wrapper:hover) {
+  box-shadow: inset 0 0 0 1px #4a627b;
+}
+
+.auth-form-item :deep(.el-input-group__prepend:hover) {
+  box-shadow: inset 0 0 0 1px #4a627b;
+}
+
+.auth-form-item :deep(.el-input__wrapper.is-focus),
+.auth-form-item :deep(.el-select__wrapper.is-focused),
+.auth-form-item :deep(.el-select__wrapper.is-focus) {
+  background: #132131;
+  box-shadow: inset 0 0 0 1px #f0ac19;
+}
+
+.auth-form-item :deep(.el-input-group__prepend:focus-within) {
+  background: #132131;
+  box-shadow: inset 0 0 0 1px #f0ac19;
+}
+
+.auth-form-item.is-error :deep(.el-input__wrapper),
+.auth-form-item.is-error :deep(.el-select__wrapper) {
+  box-shadow: inset 0 0 0 1px #f56c6c;
+}
+
+.auth-form-item.is-error :deep(.el-input-group__prepend) {
+  box-shadow: inset 0 0 0 1px #f56c6c;
 }
 
 :deep(.el-input-group__prepend) {
-  background: #17212e;
-  border: 0;
-  border-bottom: 1px solid #27313e;
   color: #fff;
+}
+
+.auth-form-item :deep(.el-input-group__prepend .el-select__wrapper) {
   box-shadow: none;
+  background: transparent;
+  border-radius: 0;
 }
 
 :deep(.el-input__inner) {
   color: #fff;
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: #70839a;
 }
 
 :deep(.el-form-item__label) {
