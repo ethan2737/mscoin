@@ -63,7 +63,9 @@ mscoin-backend/docker/*/conf/
 
 # Agent workspaces
 .codex/
+.claude/settings.local.json
 .openspec/
+.playwright-mcp/
 
 # OpenSpec archived changes (local-only storage)
 openspec/changes/archive/

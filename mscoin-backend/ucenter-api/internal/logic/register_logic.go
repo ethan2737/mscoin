@@ -34,6 +34,12 @@ func (l *RegisterLogic) Register(req *types.Request) (resp *types.Response, err 
 	if err := copier.Copy(regReq, req); err != nil {
 		return nil, err
 	}
+	if req.Captcha != nil && req.Captcha.Mode == localCaptchaMode && req.Captcha.Passed {
+		regReq.Captcha = &register.CaptchaReq{
+			Server: localCaptchaServer,
+			Token:  localCaptchaToken,
+		}
+	}
 	_, err = l.svcCtx.UCRegisterRpc.RegisterByPhone(ctx, regReq)
 	if err != nil {
 		return nil, err

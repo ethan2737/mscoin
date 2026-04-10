@@ -48,7 +48,7 @@ type Member struct {
 	Token                      string  `gorm:"column:token"`
 	TokenExpireTime            int64   `gorm:"column:token_expire_time"`
 	TransactionStatus          int64   `gorm:"column:transaction_status"`
-	TransactionTime            int64   `gorm:"column:transaction_time"`
+	TransactionTime            int64   `gorm:"-"`
 	Transactions               int64   `gorm:"column:transactions"`
 	Username                   string  `gorm:"column:username"`
 	QrWeCodeUrl                string  `gorm:"column:qr_we_code_url"`

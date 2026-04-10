@@ -143,8 +143,8 @@ const doLogin = async () => {
     username: form.user,
     password: form.password,
     captcha: {
-      mode: 'fallback',
-      passed: true
+      server: 'local-fallback',
+      token: 'passed'
     }
   }
 
