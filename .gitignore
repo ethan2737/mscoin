@@ -60,3 +60,10 @@ mscoin-backend/docker/*/data/
 mscoin-backend/docker/*/db/
 mscoin-backend/docker/*/logs/
 mscoin-backend/docker/*/conf/
+
+# Agent workspaces
+.codex/
+.openspec/
+
+# OpenSpec archived changes (local-only storage)
+openspec/changes/archive/
