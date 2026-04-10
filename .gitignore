@@ -36,6 +36,7 @@ build/dist/
 
 # Logs
 logs/
+.logs/
 *.log
 mscoin-frontend/.playwright-mcp/
 
