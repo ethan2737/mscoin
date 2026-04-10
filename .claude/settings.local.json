@@ -17,7 +17,10 @@
       "Read(//d E:/Project/web3/mscoin/**)",
       "Bash(cp src/App-vue3.vue src/App.vue)",
       "Bash(/d/SoftwareData/node_global/openspec status:*)",
-      "Bash(/d/SoftwareData/node_global/openspec instructions:*)"
+      "Bash(/d/SoftwareData/node_global/openspec instructions:*)",
+      "mcp__MiniMax__understand_image",
+      "Bash(openspec list:*)",
+      "Bash(openspec status:*)"
     ]
   }
 }

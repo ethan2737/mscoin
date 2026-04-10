@@ -42,6 +42,30 @@ mscoin/
 
 ## 快速开始
 
+### 默认本地启动方式
+
+在仓库根目录执行：
+
+```powershell
+.\dev-up.cmd
+```
+
+等价命令：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-up.ps1
+```
+
+这个命令会：
+
+- 启动 Docker 基础设施依赖
+- 自动应用本地认证与最小行情基线
+- 按依赖顺序启动 `ucenter`、`market`、`ucenter-api`、`market-api`、前端 Vite
+- 对前端可访问性和本地登录链路执行 smoke checks
+- 输出前端地址和本地测试账号；如需持久化启动日志可使用 `.\dev-up.cmd -WriteLogs`
+
+详细说明见 [docs/local-dev-startup.md](./docs/local-dev-startup.md)。
+
 ### 后端
 
 ```bash
@@ -50,7 +74,7 @@ cd mscoin-backend
 # 同步工作区
 go work sync
 
-# 运行服务
+# 运行服务（手工回退方式）
 go run ucenter/main.go -f ucenter/etc/conf.yaml
 go run market/main.go -f market/etc/conf.yaml
 go run exchange/main.go -f exchange/etc/conf.yaml
@@ -64,7 +88,7 @@ cd mscoin-frontend
 # 安装依赖
 pnpm install
 
-# 开发服务器
+# 开发服务器（手工回退方式）
 pnpm run dev
 
 # 生产构建
@@ -76,7 +100,7 @@ pnpm run build
 - `openspec/changes/archive/2026-04-09-unify-frontend-migration-path/frontend-migration-baseline.md`
 - `openspec/changes/archive/2026-04-09-frontend-migration-validation-and-cleanup/frontend-recovery-validation.md`
 
-### 基础设施
+### 基础设施（手工回退方式）
 
 ```bash
 cd mscoin-backend

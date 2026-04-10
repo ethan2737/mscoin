@@ -440,8 +440,8 @@
  * - <Icon> → <el-icon>
  */
 import { ref, reactive, inject, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
 import { Menu } from '@element-plus/icons-vue'
+import { hasAuthenticatedSession } from '../../utils/auth-session'
 
 // Vuex 3.x 和 Vue Router 3.x 兼容方案
 const store = inject('store')
@@ -547,11 +547,14 @@ onMounted(() => {
   store.commit('navigate', 'nav-other')
   store.state.HeaderActiveName = '0'
   store.state.HeaderActiveName = '1-6'
+  store.commit('recoveryMember')
 
   // 检查登录状态
-  if (!localStorage.TOKEN || !localStorage.MEMBER) {
-    ElMessage.success('请先登录')
-    router.push('/login')
+  if (!hasAuthenticatedSession({ storage: localStorage, store })) {
+    router.replace({
+      path: '/login',
+      query: { returnUrl: router.currentRoute.value.fullPath }
+    })
     return
   }
 

@@ -364,6 +364,8 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMenu, ElSubMenu, ElMenuItem, ElDropdown, ElDropdownMenu, ElDropdownItem, ElDrawer, ElPopover, ElBacktop, ElIcon } from 'element-plus'
 import { Clock, Menu, ArrowDown, User, Coin, Switch, SwitchButton } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { runtimeContract } from './config/runtime-vue3'
+import { establishAuthenticatedSession, clearAuthenticatedSession } from './utils/auth-session'
 
 // 使用 vue-i18n
 const { t: $t } = useI18n()
@@ -373,6 +375,7 @@ const store = inject('store')
 const router = inject('router')
 
 const host = ''
+const api = runtimeContract.api
 
 // 状态
 const isRouterAlive = ref(true)
@@ -449,23 +452,38 @@ const initialize = () => {
   checkLogin()
 }
 
+const redirectAfterLogout = () => {
+  const currentPath = router?.currentRoute?.value?.path || '/'
+
+  if (currentPath.startsWith('/uc')) {
+    router.replace({
+      path: '/login',
+      query: { returnUrl: currentPath }
+    })
+    return
+  }
+
+  reload()
+}
+
 // 退出登录
-const logout = () => {
+const logout = async () => {
   const token = localStorage.getItem('TOKEN')
-  axios.post(`${host}/uc/loginout`, {}, {
-    headers: { 'x-auth-token': token }
-  }).then(response => {
-    const resp = response.data
-    if (resp.code === 0) {
-      ElMessage.success(resp.message)
-      store?.commit('setMember', null)
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 1500)
-    } else {
-      ElMessage.error(resp.message)
+  clearAuthenticatedSession({ storage: localStorage, store })
+  navDrawerModal.value = false
+  redirectAfterLogout()
+
+  if (token) {
+    try {
+      await axios.post(`${host}/uc/loginout`, {}, {
+        headers: { 'x-auth-token': token }
+      })
+    } catch (error) {
+      console.warn('logout request failed', error)
     }
-  }).catch(() => {})
+  }
+
+  ElMessage.success($t('common.logout'))
 }
 
 // 检查登录状态
@@ -476,7 +494,7 @@ const checkLogin = () => {
   }).then(response => {
     const result = response.data
     if (result.code === 0 && result.data === false) {
-      store?.commit('setMember', null)
+      clearAuthenticatedSession({ storage: localStorage, store })
     }
   }).catch(() => {})
 }
@@ -485,16 +503,14 @@ const checkLogin = () => {
 const handleExternalToken = () => {
   const token = getQueryVariable('token')
   if (token && token !== 'null' && token !== '') {
-    localStorage.setItem('TOKEN', token)
-    axios.post(`${host}${api.uc.memberInfo}`, {}, {
-      headers: { 'x-auth-token': token }
-    }).then(response => {
-      const resp = response.data
-      if (resp.code === 0) {
-        store?.commit('setMember', resp.data)
-      } else {
-        ElMessage.error(resp.message)
-      }
+    establishAuthenticatedSession({
+      loginData: { token },
+      axiosInstance: axios,
+      memberInfoUrl: `${host}${api.uc.memberInfo}`,
+      storage: localStorage,
+      tokenKey: runtimeContract.tokenKey,
+      memberKey: runtimeContract.memberKey,
+      store
     }).catch(() => {})
   }
 }
