@@ -7,7 +7,7 @@ Describe 'Get-MscoinAppServiceDefinitions' {
     $services = Get-MscoinAppServiceDefinitions -RepoRoot $repoRoot
 
     It 'returns the minimum local stack in startup order' {
-        (($services | Select-Object -ExpandProperty Name) -join ',') | Should Be 'ucenter,market,jobcenter,ucenter-api,market-api,frontend'
+        (($services | Select-Object -ExpandProperty Name) -join ',') | Should Be 'ucenter,market,exchange,jobcenter,ucenter-api,market-api,exchange-api,frontend'
     }
 
     It 'defines the frontend dev service on port 3000' {
@@ -23,6 +23,14 @@ Describe 'Get-MscoinAppServiceDefinitions' {
         $jobcenter | Should Not BeNullOrEmpty
         $jobcenter.Command | Should Be 'go run jobcenter/main.go -f jobcenter/etc/conf.yaml'
     }
+
+    It 'includes exchange services in the local stack' {
+        $exchange = $services | Where-Object { $_.Name -eq 'exchange' }
+        $exchangeApi = $services | Where-Object { $_.Name -eq 'exchange-api' }
+
+        $exchange.Port | Should Be 8083
+        $exchangeApi.Port | Should Be 8890
+    }
 }
 
 Describe 'Resolve-MscoinValidationBaseline' {
@@ -34,6 +42,10 @@ Describe 'Resolve-MscoinValidationBaseline' {
 
     It 'returns the local market baseline sql path' {
         $baseline.MarketSqlPath | Should Exist
+    }
+
+    It 'returns the local exchange baseline sql path' {
+        $baseline.ExchangeSqlPath | Should Exist
     }
 
     It 'returns the documented local login account' {

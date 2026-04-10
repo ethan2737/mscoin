@@ -59,12 +59,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\dev-up.ps1
 这个命令会：
 
 - 启动 Docker 基础设施依赖
-- 自动应用本地认证与最小行情基线
-- 按依赖顺序启动 `ucenter`、`market`、`jobcenter`、`ucenter-api`、`market-api`、前端 Vite
-- 对前端可访问性、本地登录链路和行情快照链路执行 smoke checks
+- 自动应用本地认证、行情和交易验证基线
+- 按依赖顺序启动 `ucenter`、`market`、`exchange`、`jobcenter`、`ucenter-api`、`market-api`、`exchange-api`、前端 Vite
+- 对前端可访问性、本地登录链路、首页行情快照、交易页盘口、最新成交和当前委托链路执行 smoke checks
 - 输出前端地址和本地测试账号；如需持久化启动日志可使用 `.\dev-up.cmd -WriteLogs`
-
-详细说明见 [docs/local-dev-startup.md](./docs/local-dev-startup.md)。
 
 ### 后端
 
@@ -112,6 +110,25 @@ docker-compose up -d
 ## 项目文档
 
 详细文档请查看 `docs/` 目录。
+
+## 本地交易页验证
+
+默认启动完成后，可直接访问：
+
+- 前端首页：`http://127.0.0.1:3000`
+- 现货交易页：`http://127.0.0.1:3000/#/exchange/BTC_USDT`
+
+本地验证账号：
+
+- 手机号：`13800000000`
+- 密码：`123456`
+
+当前默认基线保证：
+
+- 首页行情列表可展示
+- 交易页 K 线可渲染
+- 盘口与最新成交接口有本地可验证数据
+- 当前委托列表可读取到最小验证数据
 
 ## 开发
 

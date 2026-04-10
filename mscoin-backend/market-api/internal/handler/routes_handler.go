@@ -9,16 +9,19 @@ func RegisterHandlers(r *Routers, serverCtx *svc.ServiceContext) {
 	//如果要有中间件 怎么办？
 	rate := NewExchangeRateHandler(serverCtx)
 	rateGroup := r.Group()
-	rateGroup.Post("/exchange-rate/usd/:unit",rate.UsdRate)
+	rateGroup.Post("/exchange-rate/usd/:unit", rate.UsdRate)
 	market := NewMarketHandler(serverCtx)
 	marketGroup := r.Group()
-	marketGroup.Post("/symbol-thumb-trend",market.SymbolThumbTrend)
+	marketGroup.Post("/symbol-thumb-trend", market.SymbolThumbTrend)
 	marketGroup.Post("/symbol-thumb", market.SymbolThumb)
 	marketGroup.Post("/symbol-info", market.SymbolInfo)
 	marketGroup.Post("/coin-info", market.CoinInfo)
+	marketGroup.Post("/exchange-plate-mini", market.ExchangePlateMini)
+	marketGroup.Post("/exchange-plate-full", market.ExchangePlateFull)
+	marketGroup.Post("/latest-trade", market.LatestTrade)
 	marketGroup.Get("/history", market.History)
 
 	wsGroup := r.Group()
-	wsGroup.GetNoPrefix("/socket.io",nil)
-	wsGroup.PostNoPrefix("/socket.io",nil)
+	wsGroup.GetNoPrefix("/socket.io", nil)
+	wsGroup.PostNoPrefix("/socket.io", nil)
 }

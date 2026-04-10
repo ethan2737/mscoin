@@ -44,7 +44,7 @@ func (h *MarketHandler) SymbolThumb(w http.ResponseWriter, r *http.Request) {
 
 func (h *MarketHandler) SymbolInfo(w http.ResponseWriter, r *http.Request) {
 	var req types.MarketReq
-	if err := httpx.ParseForm(r, &req); err != nil {
+	if err := httpx.Parse(r, &req); err != nil {
 		httpx.ErrorCtx(r.Context(), w, err)
 		return
 	}
@@ -58,7 +58,7 @@ func (h *MarketHandler) SymbolInfo(w http.ResponseWriter, r *http.Request) {
 
 func (h *MarketHandler) CoinInfo(w http.ResponseWriter, r *http.Request) {
 	var req types.MarketReq
-	if err := httpx.ParseForm(r, &req); err != nil {
+	if err := httpx.Parse(r, &req); err != nil {
 		httpx.ErrorCtx(r.Context(), w, err)
 		return
 	}
@@ -81,5 +81,44 @@ func (h *MarketHandler) History(w http.ResponseWriter, r *http.Request) {
 	l := logic.NewMarketLogic(r.Context(), h.svcCtx)
 	resp, err := l.History(&req)
 	result := common.NewResult().Deal(resp.List, err)
+	httpx.OkJsonCtx(r.Context(), w, result)
+}
+
+func (h *MarketHandler) ExchangePlateMini(w http.ResponseWriter, r *http.Request) {
+	var req types.MarketReq
+	if err := httpx.Parse(r, &req); err != nil {
+		httpx.ErrorCtx(r.Context(), w, err)
+		return
+	}
+	req.Ip = tools.GetRemoteClientIp(r)
+	l := logic.NewMarketLogic(r.Context(), h.svcCtx)
+	resp, err := l.ExchangePlateMini(&req)
+	result := common.NewResult().Deal(resp, err)
+	httpx.OkJsonCtx(r.Context(), w, result)
+}
+
+func (h *MarketHandler) ExchangePlateFull(w http.ResponseWriter, r *http.Request) {
+	var req types.MarketReq
+	if err := httpx.Parse(r, &req); err != nil {
+		httpx.ErrorCtx(r.Context(), w, err)
+		return
+	}
+	req.Ip = tools.GetRemoteClientIp(r)
+	l := logic.NewMarketLogic(r.Context(), h.svcCtx)
+	resp, err := l.ExchangePlateFull(&req)
+	result := common.NewResult().Deal(resp, err)
+	httpx.OkJsonCtx(r.Context(), w, result)
+}
+
+func (h *MarketHandler) LatestTrade(w http.ResponseWriter, r *http.Request) {
+	var req types.MarketReq
+	if err := httpx.Parse(r, &req); err != nil {
+		httpx.ErrorCtx(r.Context(), w, err)
+		return
+	}
+	req.Ip = tools.GetRemoteClientIp(r)
+	l := logic.NewMarketLogic(r.Context(), h.svcCtx)
+	resp, err := l.LatestTrade(&req)
+	result := common.NewResult().Deal(resp, err)
 	httpx.OkJsonCtx(r.Context(), w, result)
 }

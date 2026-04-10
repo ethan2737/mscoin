@@ -8,7 +8,8 @@ import (
 
 type Config struct {
 	rest.RestConf
-	Prefix    string
-	MarketRpc zrpc.RpcClientConf
-	Kafka     database.KafkaConfig
+	Prefix        string
+	MarketRpc     zrpc.RpcClientConf
+	Kafka         database.KafkaConfig
+	ExchangeMysql database.MysqlConfig
 }

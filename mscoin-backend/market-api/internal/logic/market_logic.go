@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/zeromicro/go-zero/core/logx"
 	"grpc-common/market/types/market"
+	marketmodel "market-api/internal/model"
 	"market-api/internal/svc"
 	"market-api/internal/types"
 	"time"
@@ -112,6 +113,60 @@ func (l *MarketLogic) History(req *types.MarketReq) (*types.HistoryKline, error)
 	return &types.HistoryKline{
 		List: list,
 	}, nil
+}
+
+func (l *MarketLogic) ExchangePlateMini(req *types.MarketReq) (*types.TradePlateResp, error) {
+	return l.loadTradePlate(req.Symbol, 10)
+}
+
+func (l *MarketLogic) ExchangePlateFull(req *types.MarketReq) (*types.TradePlateResp, error) {
+	return l.loadTradePlate(req.Symbol, 0)
+}
+
+func (l *MarketLogic) LatestTrade(req *types.MarketReq) ([]*types.LatestTradeResp, error) {
+	size := req.Size
+	if size <= 0 {
+		size = 20
+	}
+	trades := l.svcCtx.Processor.GetLatestTrade(req.Symbol, size)
+	if len(trades) == 0 && l.svcCtx.SnapshotStore != nil {
+		loadedTrades, err := l.svcCtx.SnapshotStore.LoadLatestTrade(l.ctx, req.Symbol, size)
+		if err != nil {
+			return nil, err
+		}
+		trades = loadedTrades
+	}
+	list := make([]*types.LatestTradeResp, 0, len(trades))
+	if err := copier.Copy(&list, trades); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (l *MarketLogic) loadTradePlate(symbol string, size int) (*types.TradePlateResp, error) {
+	plate := l.svcCtx.Processor.GetTradePlate(symbol, size)
+	if !hasTradePlateData(plate) && l.svcCtx.SnapshotStore != nil {
+		loadedPlate, err := l.svcCtx.SnapshotStore.LoadTradePlate(l.ctx, symbol, size)
+		if err != nil {
+			return nil, err
+		}
+		plate = loadedPlate
+	}
+	resp := &types.TradePlateResp{}
+	if err := copier.Copy(resp, plate); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func hasTradePlateData(plate *marketmodel.TradePlateGroup) bool {
+	if plate == nil {
+		return false
+	}
+	if plate.Ask != nil && len(plate.Ask.Items) > 0 {
+		return true
+	}
+	return plate.Bid != nil && len(plate.Bid.Items) > 0
 }
 
 func NewMarketLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MarketLogic {

@@ -7,10 +7,11 @@ function Resolve-MscoinValidationBaseline {
     )
 
     [pscustomobject]@{
-        AuthSqlPath  = Join-Path $RepoRoot 'scripts\sql\local-auth-baseline.sql'
-        MarketSqlPath = Join-Path $RepoRoot 'scripts\sql\local-market-baseline.sql'
-        LoginPhone   = '13800000000'
-        Password     = '123456'
+        AuthSqlPath     = Join-Path $RepoRoot 'scripts\sql\local-auth-baseline.sql'
+        MarketSqlPath   = Join-Path $RepoRoot 'scripts\sql\local-market-baseline.sql'
+        ExchangeSqlPath = Join-Path $RepoRoot 'scripts\sql\local-exchange-baseline.sql'
+        LoginPhone      = '13800000000'
+        Password        = '123456'
     }
 }
 
@@ -55,6 +56,13 @@ function Get-MscoinAppServiceDefinitions {
             DependsOn = @('mysql', 'redis', 'etcd', 'mongo', 'kafka')
         }
         [pscustomobject]@{
+            Name = 'exchange'
+            Port = 8083
+            WorkingDirectory = $backendRoot
+            Command = 'go run exchange/main.go -f exchange/etc/conf.yaml'
+            DependsOn = @('ucenter', 'market', 'mysql', 'redis', 'etcd', 'kafka')
+        }
+        [pscustomobject]@{
             Name = 'jobcenter'
             Port = 0
             WorkingDirectory = $backendRoot
@@ -77,11 +85,18 @@ function Get-MscoinAppServiceDefinitions {
             DependsOn = @('market', 'kafka')
         }
         [pscustomobject]@{
+            Name = 'exchange-api'
+            Port = 8890
+            WorkingDirectory = $backendRoot
+            Command = 'go run exchange-api/main.go -f exchange-api/etc/conf.yaml'
+            DependsOn = @('exchange')
+        }
+        [pscustomobject]@{
             Name = 'frontend'
             Port = 3000
             WorkingDirectory = $frontendRoot
             Command = 'pnpm run dev'
-            DependsOn = @('ucenter-api', 'market-api')
+            DependsOn = @('ucenter-api', 'market-api', 'exchange-api')
         }
     )
 }
@@ -323,9 +338,14 @@ function Ensure-MscoinValidationBaseline {
     if ($LASTEXITCODE -ne 0) {
         throw 'Failed to ensure market database exists.'
     }
+    docker exec -e MYSQL_PWD=root mysql8 mysql -uroot -e "CREATE DATABASE IF NOT EXISTS exchange CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;" | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Failed to ensure exchange database exists.'
+    }
 
     Invoke-MscoinSqlFile -SqlFilePath $Baseline.AuthSqlPath -Database 'mscoin'
     Invoke-MscoinSqlFile -SqlFilePath $Baseline.MarketSqlPath -Database 'market'
+    Invoke-MscoinSqlFile -SqlFilePath $Baseline.ExchangeSqlPath -Database 'exchange'
 }
 
 function Start-MscoinManagedProcess {
@@ -476,6 +496,83 @@ function Test-MscoinThumbTrendReady {
     }
 }
 
+function Invoke-MscoinLocalLogin {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseUrl,
+        [Parameter(Mandatory = $true)]
+        [pscustomobject]$Baseline
+    )
+
+    $body = @{
+        username = $Baseline.LoginPhone
+        password = $Baseline.Password
+        captcha  = @{
+            mode   = 'fallback'
+            passed = $true
+        }
+    } | ConvertTo-Json -Depth 4
+
+    Invoke-RestMethod -Uri "$BaseUrl/uc/login" -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 15
+}
+
+function Test-MscoinExchangePlateReady {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseUrl
+    )
+
+    try {
+        $response = Invoke-RestMethod -Uri "$BaseUrl/market/exchange-plate-mini" -Method Post -ContentType 'application/json' -Body '{"symbol":"BTC/USDT"}' -TimeoutSec 15
+        if ($response.code -ne 0 -or $null -eq $response.data) {
+            return $false
+        }
+        $askCount = @($response.data.ask.items).Count
+        $bidCount = @($response.data.bid.items).Count
+        return ($askCount -gt 0 -and $bidCount -gt 0)
+    }
+    catch {
+        return $false
+    }
+}
+
+function Test-MscoinLatestTradeReady {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseUrl
+    )
+
+    try {
+        $response = Invoke-RestMethod -Uri "$BaseUrl/market/latest-trade" -Method Post -ContentType 'application/json' -Body '{"symbol":"BTC/USDT","size":5}' -TimeoutSec 15
+        return ($response.code -eq 0 -and @($response.data).Count -gt 0)
+    }
+    catch {
+        return $false
+    }
+}
+
+function Test-MscoinExchangeOrderReady {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseUrl,
+        [Parameter(Mandatory = $true)]
+        [pscustomobject]$Baseline
+    )
+
+    try {
+        $loginResponse = Invoke-MscoinLocalLogin -BaseUrl $BaseUrl -Baseline $Baseline
+        if ($loginResponse.code -ne 0 -or $null -eq $loginResponse.data.token) {
+            return $false
+        }
+        $headers = @{ 'x-auth-token' = $loginResponse.data.token }
+        $response = Invoke-RestMethod -Uri "$BaseUrl/exchange/order/current" -Method Post -Headers $headers -ContentType 'application/json' -Body '{"symbol":"BTC/USDT","pageNo":1,"pageSize":10}' -TimeoutSec 15
+        return ($response.code -eq 0 -and $null -ne $response.data)
+    }
+    catch {
+        return $false
+    }
+}
+
 function Invoke-MscoinSmokeChecks {
     param(
         [Parameter(Mandatory = $true)]
@@ -490,7 +587,10 @@ function Invoke-MscoinSmokeChecks {
         if (
             (Test-MscoinFrontendReady -Url $BaseUrl) -and
             (Test-MscoinLoginReady -BaseUrl $BaseUrl -Baseline $Baseline) -and
-            (Test-MscoinThumbTrendReady -BaseUrl $BaseUrl)
+            (Test-MscoinThumbTrendReady -BaseUrl $BaseUrl) -and
+            (Test-MscoinExchangePlateReady -BaseUrl $BaseUrl) -and
+            (Test-MscoinLatestTradeReady -BaseUrl $BaseUrl) -and
+            (Test-MscoinExchangeOrderReady -BaseUrl $BaseUrl -Baseline $Baseline)
         ) {
             return
         }
@@ -504,8 +604,16 @@ function Invoke-MscoinSmokeChecks {
     if (-not (Test-MscoinLoginReady -BaseUrl $BaseUrl -Baseline $Baseline)) {
         throw "Local login smoke check failed for $BaseUrl/uc/login."
     }
-
-    throw "Market thumb smoke check failed for $BaseUrl/market/symbol-thumb-trend."
+    if (-not (Test-MscoinThumbTrendReady -BaseUrl $BaseUrl)) {
+        throw "Market thumb smoke check failed for $BaseUrl/market/symbol-thumb-trend."
+    }
+    if (-not (Test-MscoinExchangePlateReady -BaseUrl $BaseUrl)) {
+        throw "Exchange plate smoke check failed for $BaseUrl/market/exchange-plate-mini."
+    }
+    if (-not (Test-MscoinLatestTradeReady -BaseUrl $BaseUrl)) {
+        throw "Latest trade smoke check failed for $BaseUrl/market/latest-trade."
+    }
+    throw "Exchange order smoke check failed for $BaseUrl/exchange/order/current."
 }
 
 Export-ModuleMember -Function @(
@@ -525,5 +633,8 @@ Export-ModuleMember -Function @(
     'Ensure-MscoinValidationBaseline',
     'Ensure-MscoinServiceReady',
     'Test-MscoinThumbTrendReady',
+    'Test-MscoinExchangePlateReady',
+    'Test-MscoinLatestTradeReady',
+    'Test-MscoinExchangeOrderReady',
     'Invoke-MscoinSmokeChecks'
 )

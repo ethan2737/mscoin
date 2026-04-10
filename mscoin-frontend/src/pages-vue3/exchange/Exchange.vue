@@ -557,7 +557,7 @@ import { Star, InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import moment from 'moment'
 import io from 'socket.io-client'
-import { useRuntimeContract } from '../../config/runtime-vue3'
+import { getAuthHeaders, useRuntimeContract } from '../../config/runtime-vue3'
 
 // 导入子组件
 import DepthGraph from './DepthGraph.vue'
@@ -575,6 +575,13 @@ const router = inject('router')
 const runtime = useRuntimeContract()
 const host = runtime.host
 const api = runtime.api
+const isProd = import.meta.env.PROD
+const chartLibraryScript = isProd
+  ? '/assets/charting_library/charting_library.min.js'
+  : '/src/assets/js/charting_library/charting_library.min.js'
+const chartLibraryPath = isProd
+  ? '/assets/charting_library/'
+  : '/src/assets/js/charting_library/'
 
 // 响应式数据
 const skin = ref('night')
@@ -592,7 +599,7 @@ const memberId = ref(0)
 const dataIndex = ref([])
 const dataIndex2 = ref([])
 const searchKey = ref('')
-const coinInfo = ref({})
+const coinInfo = reactive({})
 const isLogin = ref(false)
 const lang = ref('zh')
 const member = ref(null)
@@ -727,11 +734,32 @@ const selling = ref(false)
 
 // 深度图引用
 const depthGraphRef = ref(null)
+const socketRef = ref(null)
+let tvWidget = null
+let tradingViewLoader = null
 
 // 计算属性
 const rechargeUSDTUrl = computed(() => `/uc/recharge?name=${currentCoin.base}`)
 const rechargeCoinUrl = computed(() => `/uc/recharge?name=${currentCoin.coin}`)
-const silentPost = (url, payload = {}) => axios.post(url, payload).catch(() => null)
+const buildAuthConfig = (config = {}) => ({
+  ...config,
+  headers: {
+    ...getAuthHeaders(),
+    ...(config.headers || {})
+  }
+})
+const post = (url, payload = {}, config = {}) => axios.post(url, payload, buildAuthConfig(config))
+const silentPost = (url, payload = {}, config = {}) => post(url, payload, config).catch(() => null)
+const unwrapPayload = (response) => {
+  const payload = response?.data
+  if (!payload) {
+    return null
+  }
+  if (typeof payload === 'object' && payload !== null && Object.prototype.hasOwnProperty.call(payload, 'code')) {
+    return payload.code === 0 ? payload.data : null
+  }
+  return payload
+}
 
 // 方法实现
 const tipFormat = (val) => `${val}%`
@@ -787,6 +815,13 @@ const changePlate = (str) => {
 
 const changeImgTable = (str) => {
   currentImgTable.value = str
+  if (str === 's') {
+    getPlateFull()
+    return
+  }
+  if (!tvWidget) {
+    initKline()
+  }
 }
 
 const changeOrder = (str) => {
@@ -835,7 +870,7 @@ const currentCoinFavorChange = () => {
   collecRequesting.value = true
   if (currentCoinIsFavor.value) {
     // 取消收藏
-    axios.post(host + api.exchange.favorDelete, { symbol: currentCoin.symbol })
+    post(host + api.exchange.favorDelete, { symbol: currentCoin.symbol })
       .then(response => {
         const resp = response.data
         if (resp.code === 0) {
@@ -850,7 +885,7 @@ const currentCoinFavorChange = () => {
       })
   } else {
     // 添加收藏
-    axios.post(host + api.exchange.favorAdd, { symbol: currentCoin.symbol })
+    post(host + api.exchange.favorAdd, { symbol: currentCoin.symbol })
       .then(response => {
         const resp = response.data
         if (resp.code === 0) {
@@ -871,7 +906,7 @@ const collect = (index, row) => {
     ElMessage.info('请先登录')
     return
   }
-  axios.post(host + api.exchange.favorAdd, { symbol: row.symbol })
+  post(host + api.exchange.favorAdd, { symbol: row.symbol })
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
@@ -892,7 +927,7 @@ const cancelCollect = (index, row) => {
     ElMessage.info('请先登录')
     return
   }
-  axios.post(host + api.exchange.favorDelete, { symbol: row.symbol })
+  post(host + api.exchange.favorDelete, { symbol: row.symbol })
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
@@ -912,11 +947,181 @@ const getCoin = (symbol) => {
   return coins._map[symbol]
 }
 
+const getLocale = () => (lang.value === 'English' ? 'en' : 'zh')
+
+const destroyKline = () => {
+  if (tvWidget) {
+    tvWidget.remove()
+    tvWidget = null
+    window.tvWidget = null
+  }
+  const container = document.getElementById('kline_container')
+  if (container) {
+    container.innerHTML = ''
+  }
+}
+
+const disconnectSocket = () => {
+  if (socketRef.value) {
+    socketRef.value.removeAllListeners()
+    socketRef.value.disconnect()
+    socketRef.value = null
+  }
+}
+
+const loadTradingView = () => {
+  if (window.TradingView) {
+    return Promise.resolve(window.TradingView)
+  }
+  if (tradingViewLoader) {
+    return tradingViewLoader
+  }
+  tradingViewLoader = new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[data-charting-library="${chartLibraryScript}"]`)
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.TradingView), { once: true })
+      existing.addEventListener('error', reject, { once: true })
+      return
+    }
+    const script = document.createElement('script')
+    script.src = chartLibraryScript
+    script.async = true
+    script.dataset.chartingLibrary = chartLibraryScript
+    script.onload = () => resolve(window.TradingView)
+    script.onerror = reject
+    document.head.appendChild(script)
+  }).catch((error) => {
+    tradingViewLoader = null
+    throw error
+  })
+  return tradingViewLoader
+}
+
+const createPeriodButtons = (widget) => {
+  const periods = [
+    { title: 'realtime', text: '分时', resolution: '1', chartType: 3 },
+    { title: 'M1', text: 'M1', resolution: '1', chartType: 1 },
+    { title: 'M5', text: 'M5', resolution: '5', chartType: 1 },
+    { title: 'M15', text: 'M15', resolution: '15', chartType: 1 },
+    { title: 'M30', text: 'M30', resolution: '30', chartType: 1 },
+    { title: 'H1', text: 'H1', resolution: '60', chartType: 1 },
+    { title: 'D1', text: 'D1', resolution: '1D', chartType: 1 },
+    { title: 'W1', text: 'W1', resolution: '1W', chartType: 1 }
+  ]
+
+  periods.forEach((period) => {
+    widget.createButton()
+      .attr('title', period.title)
+      .on('click', function() {
+        if ($(this).hasClass('selected')) return
+        $(this)
+          .addClass('selected')
+          .parent('.group')
+          .siblings('.group')
+          .find('.button.selected')
+          .removeClass('selected')
+        widget.chart().setChartType(period.chartType)
+        widget.setSymbol(currentCoin.symbol, period.resolution)
+      })
+      .append(`<span>${period.text}</span>`)
+  })
+}
+
+const initKline = async () => {
+  if (!datafeed.value) {
+    return
+  }
+  destroyKline()
+  try {
+    await loadTradingView()
+  } catch (error) {
+    ElMessage.error('K线图加载失败')
+    return
+  }
+
+  const config = {
+    autosize: true,
+    height: 350,
+    fullscreen: false,
+    symbol: currentCoin.symbol,
+    interval: '60',
+    timezone: 'Asia/Shanghai',
+    toolbar_bg: '#192330',
+    container_id: 'kline_container',
+    datafeed: datafeed.value,
+    library_path: chartLibraryPath,
+    locale: getLocale(),
+    debug: false,
+    drawings_access: {
+      type: 'black',
+      tools: [{ name: 'Regression Trend' }]
+    },
+    disabled_features: [
+      'header_resolutions',
+      'timeframes_toolbar',
+      'header_symbol_search',
+      'header_chart_type',
+      'header_compare',
+      'header_undo_redo',
+      'header_screenshot',
+      'header_saveload',
+      'use_localstorage_for_settings',
+      'left_toolbar',
+      'volume_force_overlay'
+    ],
+    enabled_features: [
+      'hide_last_na_study_output',
+      'move_logo_to_main_pane'
+    ],
+    custom_css_url: 'bundles/common.css',
+    supported_resolutions: ['1', '5', '15', '30', '60', '1D', '1W', '1M'],
+    charts_storage_url: 'http://saveload.tradingview.com',
+    charts_storage_api_version: '1.1',
+    client_id: 'tradingview.com',
+    user_id: 'public_user_id',
+    overrides: {
+      'paneProperties.background': '#192330',
+      'paneProperties.vertGridProperties.color': 'rgba(0,0,0,.1)',
+      'paneProperties.horzGridProperties.color': 'rgba(0,0,0,.1)',
+      'scalesProperties.textColor': '#61688A',
+      'mainSeriesProperties.candleStyle.upColor': '#00b275',
+      'mainSeriesProperties.candleStyle.downColor': '#f15057',
+      'mainSeriesProperties.candleStyle.drawBorder': false,
+      'mainSeriesProperties.candleStyle.wickUpColor': '#589065',
+      'mainSeriesProperties.candleStyle.wickDownColor': '#AE4E54',
+      'paneProperties.legendProperties.showLegend': false,
+      'mainSeriesProperties.areaStyle.color1': 'rgba(71, 78, 112, 0.5)',
+      'mainSeriesProperties.areaStyle.color2': 'rgba(71, 78, 112, 0.5)',
+      'mainSeriesProperties.areaStyle.linecolor': '#9194a4',
+      volumePaneSize: 'small'
+    }
+  }
+
+  if (skin.value === 'day') {
+    config.toolbar_bg = '#fff'
+    config.custom_css_url = 'bundles/common_day.css'
+    config.overrides['paneProperties.background'] = '#fff'
+    config.overrides['mainSeriesProperties.candleStyle.upColor'] = '#a6d3a5'
+    config.overrides['mainSeriesProperties.candleStyle.downColor'] = '#ffa5a6'
+  }
+
+  await nextTick()
+  tvWidget = window.tvWidget = new window.TradingView.widget(config)
+  tvWidget.onChartReady(() => {
+    tvWidget.chart().executeActionById('drawingToolbarAction')
+    tvWidget.chart().createStudy('Moving Average', false, false, [5], null, { 'plot.color': '#EDEDED' })
+    tvWidget.chart().createStudy('Moving Average', false, false, [10], null, { 'plot.color': '#ffe000' })
+    tvWidget.chart().createStudy('Moving Average', false, false, [30], null, { 'plot.color': '#ce00ff' })
+    tvWidget.chart().createStudy('Moving Average', false, false, [60], null, { 'plot.color': '#00adff' })
+    createPeriodButtons(tvWidget)
+  })
+}
+
 const getSymbol = () => {
   silentPost(host + api.market.thumb, {})
     .then(response => {
-      if (!response?.data?.data) return
-      const resp = response.data.data
+      const resp = unwrapPayload(response)
+      if (!Array.isArray(resp)) return
       // 清空已有数据
       coins.USDT = []
       coins.BTC = []
@@ -946,6 +1151,8 @@ const getSymbol = () => {
         if (coin.symbol === currentCoin.symbol) {
           currentCoin.close = coin.close
           currentCoin.price = coin.price
+          currentCoin.rose = coin.rose
+          currentCoin.change = coin.change
           currentCoin.high = coin.high
           currentCoin.low = coin.low
           currentCoin.volume = coin.volume
@@ -960,16 +1167,17 @@ const getSymbol = () => {
       }
 
       startWebsock()
+      initKline()
       changeBaseCion(basecion.value)
     })
 }
 
 const getFavor = () => {
-  axios.post(host + api.exchange.favorFind, {})
+  post(host + api.exchange.favorFind, {})
     .then(response => {
       coins.favor = []
       currentCoinIsFavor.value = false
-      const resp = response.data
+      const resp = unwrapPayload(response) || []
       for (let i = 0; i < resp.length; i++) {
         const coin = getCoin(resp[i].symbol)
         if (coin) {
@@ -986,10 +1194,10 @@ const getFavor = () => {
 const getPlate = (str = '') => {
   silentPost(host + api.market.platemini, { symbol: currentCoin.symbol })
     .then(response => {
-      if (!response?.data) return
+      const resp = unwrapPayload(response)
+      if (!resp) return
       plate.askRows = []
       plate.bidRows = []
-      const resp = response.data
 
       if (resp.ask && resp.ask.items) {
         for (let i = 0; i < resp.ask.items.length; i++) {
@@ -1068,8 +1276,8 @@ const getPlate = (str = '') => {
 const getPlateFull = () => {
   silentPost(host + api.market.platefull, { symbol: currentCoin.symbol })
     .then(response => {
-      if (!response?.data) return
-      const resp = response.data
+      const resp = unwrapPayload(response)
+      if (!resp) return
       resp.skin = skin.value
       if (depthGraphRef.value && depthGraphRef.value.draw) {
         depthGraphRef.value.draw(resp)
@@ -1080,9 +1288,9 @@ const getPlateFull = () => {
 const getTrade = () => {
   silentPost(host + api.market.trade, { symbol: currentCoin.symbol, size: 20 })
     .then(response => {
-      if (!response?.data || !Array.isArray(response.data)) return
+      const resp = unwrapPayload(response)
+      if (!Array.isArray(resp)) return
       trade.rows = []
-      const resp = response.data
       for (let i = 0; i < resp.length; i++) {
         trade.rows.push(resp[i])
       }
@@ -1090,7 +1298,9 @@ const getTrade = () => {
 }
 
 const startWebsock = () => {
+  disconnectSocket()
   const socket = io(runtime.wshost || undefined)
+  socketRef.value = socket
   datafeed.value = new Datafeeds.WebsockFeed(host + '/market', currentCoin, socket)
 
   socket.on('connect', () => {
@@ -1116,6 +1326,17 @@ const startWebsock = () => {
       coin.turnover = parseInt(resp.volume)
       coin.volume = resp.volume
       coin.usdRate = resp.usdRate
+    }
+    if (resp.symbol === currentCoin.symbol) {
+      currentCoin.price = resp.close
+      currentCoin.close = resp.close
+      currentCoin.rose = resp.chg > 0 ? `+${(resp.chg * 100).toFixed(2)}%` : `${(resp.chg * 100).toFixed(2)}%`
+      currentCoin.change = resp.change || 0
+      currentCoin.high = resp.high
+      currentCoin.low = resp.low
+      currentCoin.volume = resp.volume
+      currentCoin.turnover = resp.turnover || parseInt(resp.volume)
+      currentCoin.usdRate = resp.usdRate
     }
   })
 
@@ -1206,6 +1427,8 @@ const toFloor = (value, scale = 6) => {
 }
 
 const init = () => {
+  disconnectSocket()
+  destroyKline()
   const params = router.currentRoute.value.params.pair || defaultPath.value
   if (!router.currentRoute.value.params.pair) {
     router.push(`/exchange/${defaultPath.value}`)
@@ -1247,17 +1470,16 @@ const init = () => {
 const getCNYRate = () => {
   silentPost(host + '/market/exchange-rate/usd/cny')
     .then(response => {
-      if (!response?.data) return
-      const resp = response.data
-      CNYRate.value = resp.data
+      const resp = unwrapPayload(response)
+      if (resp === null || resp === undefined) return
+      CNYRate.value = resp
     })
 }
 
 const getSymbolScale = () => {
   silentPost(host + api.market.symbolInfo, { symbol: currentCoin.symbol })
     .then(response => {
-      if (!response?.data) return
-      const resp = response.data
+      const resp = unwrapPayload(response)
       if (resp) {
         baseCoinScale.value = resp.baseCoinScale
         coinScale.value = resp.coinScale
@@ -1288,8 +1510,7 @@ const getSymbolScale = () => {
 const getCoinInfo = () => {
   silentPost(host + api.market.coinInfo, { unit: currentCoin.coin })
     .then(response => {
-      if (!response?.data) return
-      const resp = response.data
+      const resp = unwrapPayload(response)
       if (resp) {
         Object.assign(coinInfo, resp || {})
       }
@@ -1299,10 +1520,8 @@ const getCoinInfo = () => {
 const getWallet = () => {
   silentPost(host + api.ucenter.wallet, {})
     .then(response => {
-      if (!response?.data) return
-      const resp = response.data
-      if (resp.code === 0) {
-        const account = resp.data
+      const account = unwrapPayload(response)
+      if (account) {
         wallet.base = account.usd || 0
         wallet.coin = account.coin || 0
       }
@@ -1316,11 +1535,8 @@ const getCurrentOrder = () => {
     pageSize: 20
   })
     .then(response => {
-      if (!response?.data) return
-      const resp = response.data
-      if (resp.code === 0) {
-        currentOrder.rows = resp.data?.content || []
-      }
+      const resp = unwrapPayload(response)
+      currentOrder.rows = resp?.content || []
     })
 }
 
@@ -1331,17 +1547,14 @@ const getHistoryOrder = () => {
     pageSize: historyOrder.pageSize
   })
     .then(response => {
-      if (!response?.data) return
-      const resp = response.data
-      if (resp.code === 0) {
-        historyOrder.rows = resp.data?.content || []
-      }
+      const resp = unwrapPayload(response)
+      historyOrder.rows = resp?.content || []
     })
 }
 
 const cancel = (index) => {
   const order = currentOrder.rows[index]
-  axios.post(host + api.exchange.cancel, { orderId: order.id })
+  post(host + api.exchange.cancel, { orderId: order.orderId || order.id })
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
@@ -1377,7 +1590,7 @@ const buyWithLimitPrice = () => {
     useDiscount: 0
   }
 
-  axios.post(host + api.exchange.order, params)
+  post(host + api.exchange.order, params)
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
@@ -1414,7 +1627,7 @@ const buyWithMarketPrice = () => {
     type: 'MARKET_PRICE'
   }
 
-  axios.post(host + api.exchange.order, params)
+  post(host + api.exchange.order, params)
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
@@ -1452,7 +1665,7 @@ const sellLimitPrice = () => {
     type: 'LIMIT_PRICE'
   }
 
-  axios.post(host + api.exchange.order, params)
+  post(host + api.exchange.order, params)
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
@@ -1489,7 +1702,7 @@ const sellMarketPrice = () => {
     type: 'MARKET_PRICE'
   }
 
-  axios.post(host + api.exchange.order, params)
+  post(host + api.exchange.order, params)
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
@@ -1582,6 +1795,16 @@ watch(sliderSellMarketPercent, () => {
 // 监听语言变化
 watch(() => store.state.lang, (newLang) => {
   lang.value = newLang
+  if (tvWidget) {
+    initKline()
+  }
+})
+
+watch(() => router.currentRoute.value.params.pair, (pair, previousPair) => {
+  if (!pair || pair === previousPair) {
+    return
+  }
+  init()
 })
 
 // 生命周期
@@ -1598,7 +1821,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  // 清理 WebSocket 等
+  disconnectSocket()
+  destroyKline()
 })
 </script>
 
@@ -1614,11 +1838,33 @@ $night-color: #fff;
   color: #fff;
   background-color: #0b1520;
   min-height: calc(100vh - 200px);
+  --el-bg-color: #192330;
+  --el-bg-color-overlay: #192330;
+  --el-fill-color-blank: #192330;
+  --el-fill-color-light: #27313e;
+  --el-fill-color-lighter: #243041;
+  --el-border-color: #324158;
+  --el-border-color-lighter: #243041;
+  --el-text-color-regular: #d7deea;
+  --el-text-color-primary: #ffffff;
+  --el-text-color-placeholder: #8f9ca5;
+  --el-table-bg-color: #192330;
+  --el-table-tr-bg-color: #192330;
+  --el-table-row-hover-bg-color: #243041;
+  --el-table-header-bg-color: #27313e;
+  --el-table-border-color: #324158;
+  --el-table-text-color: #d7deea;
+  --el-table-header-text-color: #aeb9d0;
+  --el-input-bg-color: #27313e;
+  --el-input-border-color: #324158;
+  --el-input-hover-border-color: #4a5a73;
+  --el-input-focus-border-color: #f0a70a;
 
   .main {
     width: 99%;
     margin-left: 0.5%;
     display: flex;
+    align-items: flex-start;
     margin-top: 5px;
 
     .left {
@@ -1717,6 +1963,7 @@ $night-color: #fff;
       }
 
       .trade_wrap {
+        background-color: #192330;
         .trade_menu {
           position: relative;
           background-color: #192330;
@@ -1818,6 +2065,7 @@ $night-color: #fff;
     margin-left: 0.5%;
     min-height: 227px;
     margin-bottom: 10px;
+    margin-top: 10px;
 
     .order-handler {
       background-color: #192330;
@@ -1837,6 +2085,10 @@ $night-color: #fff;
           background-color: #27313e;
         }
       }
+    }
+
+    .table {
+      background-color: #192330;
     }
   }
 }
@@ -1916,6 +2168,90 @@ $night-color: #fff;
 
 .hidden {
   display: none !important;
+}
+
+.exchange :deep(.el-input__wrapper) {
+  background-color: #27313e;
+  box-shadow: 0 0 0 1px #324158 inset !important;
+}
+
+.exchange :deep(.el-input__inner) {
+  color: #fff;
+}
+
+.exchange :deep(.el-input.is-disabled .el-input__wrapper) {
+  background-color: #243041 !important;
+  box-shadow: 0 0 0 1px #324158 inset !important;
+}
+
+.exchange :deep(.el-table) {
+  background-color: #192330 !important;
+  color: #d7deea !important;
+}
+
+.exchange :deep(.el-table__inner-wrapper),
+.exchange :deep(.el-table__header-wrapper),
+.exchange :deep(.el-table__body-wrapper),
+.exchange :deep(.el-scrollbar__view),
+.exchange :deep(.el-scrollbar__wrap) {
+  background-color: #192330 !important;
+}
+
+.exchange :deep(.el-table__header),
+.exchange :deep(.el-table__body) {
+  background-color: #192330 !important;
+}
+
+.exchange :deep(.el-table th.el-table__cell),
+.exchange :deep(.el-table tr),
+.exchange :deep(.el-table td.el-table__cell),
+.exchange :deep(.el-table__inner-wrapper::before) {
+  background-color: #192330 !important;
+}
+
+.exchange :deep(.el-table th.el-table__cell) {
+  background-color: #27313e !important;
+  color: #aeb9d0 !important;
+  border-bottom-color: #324158 !important;
+}
+
+.exchange :deep(.el-table td.el-table__cell) {
+  color: #d7deea !important;
+  border-bottom-color: #243041 !important;
+}
+
+.exchange :deep(.el-table__row:hover > td.el-table__cell) {
+  background-color: #243041 !important;
+}
+
+.exchange :deep(.el-table__expanded-cell) {
+  background-color: #192330 !important;
+  color: #d7deea !important;
+}
+
+.exchange :deep(.el-table__empty-block),
+.exchange :deep(.el-table__empty-text) {
+  background-color: #192330 !important;
+  color: #8f9ca5;
+}
+
+.exchange :deep(.el-button) {
+  border-radius: 4px;
+}
+
+.exchange :deep(.plate-wrap .el-table__body-wrapper) {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.exchange :deep(.right .el-table__body-wrapper) {
+  max-height: 585px;
+  overflow-y: auto;
+}
+
+.exchange :deep(.order .el-table__body-wrapper) {
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .coin-info {

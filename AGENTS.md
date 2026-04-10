@@ -82,16 +82,16 @@ powershell -ExecutionPolicy Bypass -File .\scripts\dev-up.ps1
 默认启动脚本会统一完成以下工作：
 
 - 启动 Docker 基础设施依赖。
-- 应用本地登录验证所需的最小数据基线。
-- 按依赖顺序启动 `ucenter`、`market`、`jobcenter`、`ucenter-api`、`market-api` 和前端开发服务器。
-- 执行前端可访问性、登录链路与行情快照链路 smoke checks。
+- 应用本地登录、行情和交易验证所需的最小数据基线。
+- 按依赖顺序启动 `ucenter`、`market`、`exchange`、`jobcenter`、`ucenter-api`、`market-api`、`exchange-api` 和前端开发服务器。
+- 执行前端可访问性、登录链路、行情快照、交易页盘口、最新成交和当前委托链路 smoke checks。
 
 补充说明：
 
 - 前端默认地址为 `http://127.0.0.1:3000`。
 - 本地验证账号为 `13800000000 / 123456`。
 - 默认不会在仓库内创建日志文件；如需持久化启动日志，使用 `.\dev-up.cmd -WriteLogs`。
-- 更完整说明见 `docs/local-dev-startup.md`。
+- 交易页本地验证入口为 `http://127.0.0.1:3000/#/exchange/BTC_USDT`。
 
 ### 后端（手工排障/兜底）
 

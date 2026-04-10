@@ -12,3 +12,5 @@ Kafka:
   WriteCap: 100
   ReadCap: 100
   ConsumerGroup: "kline1m-thumb-consumer"
+ExchangeMysql:
+  DataSource: root:root@tcp(127.0.0.1:33306)/exchange?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
