@@ -42,7 +42,7 @@ func (r *Rate) CnyUsdRate() {
 	header["OK-ACCESS-SIGN"] = sign
 	header["OK-ACCESS-TIMESTAMP"] = timestamp
 	header["OK-ACCESS-PASSPHRASE"] = r.c.Pass
-	resp, err := tools.GetWithHeader(api, header, r.c.Proxy)
+	resp, err := getWithProxyFallback(tools.GetWithHeader, api, header, r.c.Proxy)
 	if err != nil {
 		log.Println(err)
 		r.wg.Done()

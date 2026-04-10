@@ -36,8 +36,13 @@ func (k *Kline) ToCoinThumb(symbol string, ct *market.CoinThumb) *market.CoinThu
 		ct.Zone = 0
 		ct.Volume = op.AddN(k.Volume, ct.Volume, 8)
 		ct.Turnover = op.AddN(k.Turnover, ct.Turnover, 8)
-		ct.Change = k.LowestPrice - ct.Close
-		ct.Chg = op.MulN(op.DivN(ct.Change, ct.Close, 5), 100, 3)
+		if ct.LastDayClose > 0 {
+			ct.Change = k.ClosePrice - ct.LastDayClose
+			ct.Chg = op.DivN(ct.Change, ct.LastDayClose, 8)
+		} else {
+			ct.Change = 0
+			ct.Chg = 0
+		}
 		ct.UsdRate = k.ClosePrice
 		ct.BaseUsdRate = 1
 		ct.Trend = append(ct.Trend, k.ClosePrice)

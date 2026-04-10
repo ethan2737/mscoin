@@ -72,7 +72,7 @@
               <td>{{ formatPrice(coin.low) }}</td>
               <td>
                 <span :class="coin.change24h >= 0 ? 'rise' : 'fall'">
-                  {{ coin.change24h >= 0 ? '+' : '' }}{{ formatPercent(coin.change24h) }}
+                  {{ formatSignedPrice(coin.change24h) }}
                 </span>
               </td>
               <td>{{ formatVolume(coin.volume) }}</td>
@@ -165,6 +165,7 @@ import axios from 'axios'
 import io from 'socket.io-client'
 import { useRouter } from 'vue-router'
 import api from '@/config/api'
+import { mapThumbToCoinViewModel, mergeRealtimeThumb } from '@/pages-vue3/index/market'
 import bannerBg from '@/assets/images/bannerbg.png'
 import featureChoose from '@/assets/images/feature_choose.png'
 import featureFast from '@/assets/images/feature_fast.png'
@@ -186,7 +187,7 @@ const fallbackCoins = [
     rise: 2.36,
     high: 68980.55,
     low: 67112.4,
-    change24h: 2.36,
+    change24h: 1575.88,
     volume: 18452.23,
     isFavor: false
   },
@@ -200,7 +201,7 @@ const fallbackCoins = [
     rise: 1.42,
     high: 3588.66,
     low: 3460.25,
-    change24h: 1.42,
+    change24h: 49.28,
     volume: 92840.56,
     isFavor: false
   },
@@ -214,7 +215,7 @@ const fallbackCoins = [
     rise: -0.85,
     high: 175.92,
     low: 169.48,
-    change24h: -0.85,
+    change24h: -1.47,
     volume: 265430.11,
     isFavor: false
   }
@@ -296,29 +297,15 @@ const formatVolume = (volume) => {
   return Number(volume).toLocaleString()
 }
 
-const mapCoin = (coin) => {
-  const symbol = coin.symbol || ''
-  const [name = symbol, base = ''] = symbol.split('/')
-  const rawRise = Number(coin.chg ?? coin.rise ?? coin.change24h ?? 0)
-  const rise = Math.abs(rawRise) <= 1 ? rawRise * 100 : rawRise
-  const price = Number(coin.close ?? coin.price ?? 0)
+const formatSignedPrice = (value) => {
+  if (value === undefined || value === null || Number.isNaN(Number(value))) return '0.00'
+  const amount = Number(value)
+  const sign = amount > 0 ? '+' : amount < 0 ? '-' : ''
+  return `${sign}${formatPrice(Math.abs(amount))}`
+}
 
-  return {
-    ...coin,
-    symbol,
-    name,
-    base,
-    href: `${name}_${base}`.toLowerCase(),
-    price,
-    close: price,
-    priceCNY: Number(coin.usdRate ?? coin.priceCNY ?? 0),
-    rise: Number(rise.toFixed(2)),
-    high: Number(coin.high ?? 0),
-    low: Number(coin.low ?? 0),
-    change24h: Number(rise.toFixed(2)),
-    volume: Number(coin.volume ?? coin.turnover ?? 0),
-    isFavor: favorList.value.includes(symbol)
-  }
+const mapCoin = (coin) => {
+  return mapThumbToCoinViewModel(coin, favorList.value)
 }
 
 const setFallbackCoinList = () => {
@@ -483,10 +470,7 @@ const updatePrice = (payload) => {
   const index = coinList.value.findIndex((coin) => coin.symbol === payload.symbol)
   if (index === -1) return
 
-  const nextCoin = mapCoin({
-    ...coinList.value[index],
-    ...payload
-  })
+  const nextCoin = mapCoin(mergeRealtimeThumb(coinList.value[index], payload))
   coinList.value.splice(index, 1, nextCoin)
 }
 

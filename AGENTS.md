@@ -83,8 +83,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\dev-up.ps1
 
 - 启动 Docker 基础设施依赖。
 - 应用本地登录验证所需的最小数据基线。
-- 按依赖顺序启动 `ucenter`、`market`、`ucenter-api`、`market-api` 和前端开发服务器。
-- 执行前端可访问性与登录链路 smoke checks。
+- 按依赖顺序启动 `ucenter`、`market`、`jobcenter`、`ucenter-api`、`market-api` 和前端开发服务器。
+- 执行前端可访问性、登录链路与行情快照链路 smoke checks。
 
 补充说明：
 

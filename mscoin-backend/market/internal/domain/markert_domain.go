@@ -8,7 +8,6 @@ import (
 	"market/internal/model"
 	"market/internal/repo"
 	"mscoin-common/op"
-	"mscoin-common/tools"
 	"time"
 )
 
@@ -26,8 +25,9 @@ func (d *MarketDomain) SymbolThumbTrend(coins []*model.ExchangeCoin) []*market.C
 	//业务模型 == rpc传输模型
 	coinThumbs := make([]*market.CoinThumb, len(coins))
 	for i, v := range coins {
-		from := tools.ZeroTime()
-		end := time.Now().UnixMilli()
+		now := time.Now()
+		from := now.Add(-24 * time.Hour).UnixMilli()
+		end := now.UnixMilli()
 		klines, err := d.klineRepo.FindBySymbolTime(context.Background(), v.Symbol, "1H", from, end, "")
 		if err != nil {
 			coinThumbs[i] = model.DefaultCoinThumb(v.Symbol)

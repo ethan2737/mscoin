@@ -66,6 +66,9 @@ CREATE TABLE IF NOT EXISTS exchange_coin (
   KEY idx_exchange_coin_visible (visible)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+DELETE FROM exchange_coin
+WHERE symbol IN ('SOL/ETH');
+
 INSERT INTO coin (
   name,
   can_recharge,
@@ -112,10 +115,29 @@ INSERT INTO exchange_coin (
 VALUES
   ('BTC/USDT', 2, 'USDT', 4, 'BTC', 1, 0.001, 1, 1, 1, 1, 1, 0),
   ('ETH/USDT', 2, 'USDT', 4, 'ETH', 1, 0.001, 2, 1, 1, 1, 1, 0),
-  ('SOL/USDT', 2, 'USDT', 4, 'SOL', 1, 0.001, 3, 1, 1, 1, 1, 0),
-  ('ETH/BTC', 8, 'BTC', 6, 'ETH', 1, 0.001, 4, 1, 1, 1, 1, 1),
-  ('SOL/BTC', 8, 'BTC', 6, 'SOL', 1, 0.001, 5, 1, 1, 1, 1, 1),
-  ('SOL/ETH', 8, 'ETH', 6, 'SOL', 1, 0.001, 6, 1, 1, 1, 1, 2)
+  ('OKB/USDT', 2, 'USDT', 4, 'OKB', 1, 0.001, 3, 1, 1, 1, 1, 0),
+  ('SOL/USDT', 2, 'USDT', 4, 'SOL', 1, 0.001, 4, 1, 1, 1, 1, 0),
+  ('DOGE/USDT', 4, 'USDT', 6, 'DOGE', 1, 0.001, 5, 1, 1, 1, 1, 0),
+  ('XRP/USDT', 4, 'USDT', 6, 'XRP', 1, 0.001, 6, 1, 1, 1, 1, 0),
+  ('BCH/USDT', 2, 'USDT', 4, 'BCH', 1, 0.001, 7, 1, 1, 1, 1, 0),
+  ('1INCH/USDT', 4, 'USDT', 6, '1INCH', 1, 0.001, 8, 1, 1, 1, 1, 0),
+  ('AAVE/USDT', 2, 'USDT', 4, 'AAVE', 1, 0.001, 9, 1, 1, 1, 1, 0),
+  ('ACH/USDT', 4, 'USDT', 6, 'ACH', 1, 0.001, 10, 1, 1, 1, 1, 0),
+  ('ADA/USDT', 4, 'USDT', 6, 'ADA', 1, 0.001, 11, 1, 1, 1, 1, 0),
+  ('AEVO/USDT', 4, 'USDT', 6, 'AEVO', 1, 0.001, 12, 1, 1, 1, 1, 0),
+  ('AGLD/USDT', 4, 'USDT', 6, 'AGLD', 1, 0.001, 13, 1, 1, 1, 1, 0),
+  ('ALGO/USDT', 4, 'USDT', 6, 'ALGO', 1, 0.001, 14, 1, 1, 1, 1, 0),
+  ('APE/USDT', 4, 'USDT', 6, 'APE', 1, 0.001, 15, 1, 1, 1, 1, 0),
+  ('API3/USDT', 4, 'USDT', 6, 'API3', 1, 0.001, 16, 1, 1, 1, 1, 0),
+  ('APT/USDT', 2, 'USDT', 4, 'APT', 1, 0.001, 17, 1, 1, 1, 1, 0),
+  ('AR/USDT', 2, 'USDT', 4, 'AR', 1, 0.001, 18, 1, 1, 1, 1, 0),
+  ('ARB/USDT', 4, 'USDT', 6, 'ARB', 1, 0.001, 19, 1, 1, 1, 1, 0),
+  ('ATOM/USDT', 2, 'USDT', 4, 'ATOM', 1, 0.001, 20, 1, 1, 1, 1, 0),
+  ('ETH/BTC', 8, 'BTC', 6, 'ETH', 1, 0.001, 21, 1, 1, 1, 1, 1),
+  ('OKB/BTC', 8, 'BTC', 6, 'OKB', 1, 0.001, 22, 1, 1, 1, 1, 1),
+  ('SOL/BTC', 8, 'BTC', 6, 'SOL', 1, 0.001, 23, 1, 1, 1, 1, 1),
+  ('BETH/ETH', 8, 'ETH', 6, 'BETH', 1, 0.001, 24, 1, 1, 1, 1, 2),
+  ('STETH/ETH', 8, 'ETH', 6, 'STETH', 1, 0.001, 25, 1, 1, 1, 1, 2)
 ON DUPLICATE KEY UPDATE
   base_coin_scale = VALUES(base_coin_scale),
   base_symbol = VALUES(base_symbol),

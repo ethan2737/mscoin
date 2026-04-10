@@ -55,6 +55,14 @@ function Get-MscoinAppServiceDefinitions {
             DependsOn = @('mysql', 'redis', 'etcd', 'mongo', 'kafka')
         }
         [pscustomobject]@{
+            Name = 'jobcenter'
+            Port = 0
+            WorkingDirectory = $backendRoot
+            Command = 'go run jobcenter/main.go -f jobcenter/etc/conf.yaml'
+            DependsOn = @('ucenter', 'market', 'mongo', 'redis', 'kafka')
+            ReuseMatch = 'jobcenter/main.go -f jobcenter/etc/conf.yaml'
+        }
+        [pscustomobject]@{
             Name = 'ucenter-api'
             Port = 8888
             WorkingDirectory = $backendRoot
@@ -104,7 +112,12 @@ function Format-MscoinStartupSummary {
     $lines.Add('Service status:')
 
     foreach ($service in $ServiceStatuses) {
-        $lines.Add("- $($service.Name): $($service.Status) (port $($service.Port))")
+        if ($service.Port -and $service.Port -gt 0) {
+            $lines.Add("- $($service.Name): $($service.Status) (port $($service.Port))")
+        }
+        else {
+            $lines.Add("- $($service.Name): $($service.Status) (worker)")
+        }
     }
 
     $lines.Add('')
@@ -209,6 +222,19 @@ function Wait-MscoinTcpPort {
     }
 
     return $false
+}
+
+function Test-MscoinProcessRunning {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Match
+    )
+
+    $processes = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+        $_.CommandLine -and $_.CommandLine -like "*$Match*"
+    }
+
+    return ($processes | Measure-Object).Count -gt 0
 }
 
 function Resolve-MscoinLogDirectory {
@@ -360,7 +386,17 @@ function Ensure-MscoinServiceReady {
         [int]$TimeoutSeconds = 90
     )
 
-    if (Test-MscoinTcpPortOpen -Port $Service.Port) {
+    if ($Service.Port -and $Service.Port -gt 0 -and (Test-MscoinTcpPortOpen -Port $Service.Port)) {
+        return [pscustomobject]@{
+            Name = $Service.Name
+            Port = $Service.Port
+            Status = 'reused'
+            StdOut = $null
+            StdErr = $null
+        }
+    }
+
+    if ((-not $Service.Port -or $Service.Port -le 0) -and $Service.PSObject.Properties.Name -contains 'ReuseMatch' -and (Test-MscoinProcessRunning -Match $Service.ReuseMatch)) {
         return [pscustomobject]@{
             Name = $Service.Name
             Port = $Service.Port
@@ -371,6 +407,29 @@ function Ensure-MscoinServiceReady {
     }
 
     $processInfo = Start-MscoinManagedProcess -Service $Service -LogDirectory $LogDirectory
+    if (-not $Service.Port -or $Service.Port -le 0) {
+        Start-Sleep -Seconds 5
+        if ($processInfo.Process.HasExited) {
+            $diagnostic = ''
+            if ($processInfo.StdErr -and (Test-Path $processInfo.StdErr)) {
+                $diagnostic = Get-Content -Path $processInfo.StdErr -Tail 40 | Out-String
+            }
+            else {
+                $diagnostic = "Process exited with code $($processInfo.Process.ExitCode). Re-run with -WriteLogs for persisted stderr."
+            }
+
+            throw "Worker '$($Service.Name)' exited during startup.`n$diagnostic"
+        }
+
+        return [pscustomobject]@{
+            Name = $Service.Name
+            Port = $Service.Port
+            Status = 'started'
+            StdOut = $processInfo.StdOut
+            StdErr = $processInfo.StdErr
+        }
+    }
+
     if (-not (Wait-MscoinTcpPort -Port $Service.Port -TimeoutSeconds $TimeoutSeconds)) {
         $diagnostic = ''
         if ($processInfo.StdErr -and (Test-Path $processInfo.StdErr)) {
@@ -395,13 +454,48 @@ function Ensure-MscoinServiceReady {
     }
 }
 
+function Test-MscoinThumbTrendReady {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseUrl
+    )
+
+    try {
+        $response = Invoke-RestMethod -Uri "$BaseUrl/market/symbol-thumb-trend" -Method Post -ContentType 'application/json' -Body '{}' -TimeoutSec 15
+        if ($response.code -ne 0 -or $null -eq $response.data) {
+            return $false
+        }
+
+        $readyItems = @($response.data | Where-Object {
+            [double]($_.close) -gt 0 -or [double]($_.high) -gt 0 -or [double]($_.low) -gt 0
+        })
+        return $readyItems.Count -gt 0
+    }
+    catch {
+        return $false
+    }
+}
+
 function Invoke-MscoinSmokeChecks {
     param(
         [Parameter(Mandatory = $true)]
         [string]$BaseUrl,
         [Parameter(Mandatory = $true)]
-        [pscustomobject]$Baseline
+        [pscustomobject]$Baseline,
+        [int]$TimeoutSeconds = 90
     )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        if (
+            (Test-MscoinFrontendReady -Url $BaseUrl) -and
+            (Test-MscoinLoginReady -BaseUrl $BaseUrl -Baseline $Baseline) -and
+            (Test-MscoinThumbTrendReady -BaseUrl $BaseUrl)
+        ) {
+            return
+        }
+        Start-Sleep -Seconds 2
+    }
 
     if (-not (Test-MscoinFrontendReady -Url $BaseUrl)) {
         throw "Frontend smoke check failed for $BaseUrl."
@@ -410,6 +504,8 @@ function Invoke-MscoinSmokeChecks {
     if (-not (Test-MscoinLoginReady -BaseUrl $BaseUrl -Baseline $Baseline)) {
         throw "Local login smoke check failed for $BaseUrl/uc/login."
     }
+
+    throw "Market thumb smoke check failed for $BaseUrl/market/symbol-thumb-trend."
 }
 
 Export-ModuleMember -Function @(
@@ -423,9 +519,11 @@ Export-ModuleMember -Function @(
     'Assert-MscoinCommandAvailable',
     'Test-MscoinTcpPortOpen',
     'Wait-MscoinTcpPort',
+    'Test-MscoinProcessRunning',
     'Ensure-MscoinLogDirectory',
     'Start-MscoinDockerInfrastructure',
     'Ensure-MscoinValidationBaseline',
     'Ensure-MscoinServiceReady',
+    'Test-MscoinThumbTrendReady',
     'Invoke-MscoinSmokeChecks'
 )

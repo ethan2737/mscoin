@@ -7,7 +7,7 @@ Describe 'Get-MscoinAppServiceDefinitions' {
     $services = Get-MscoinAppServiceDefinitions -RepoRoot $repoRoot
 
     It 'returns the minimum local stack in startup order' {
-        (($services | Select-Object -ExpandProperty Name) -join ',') | Should Be 'ucenter,market,ucenter-api,market-api,frontend'
+        (($services | Select-Object -ExpandProperty Name) -join ',') | Should Be 'ucenter,market,jobcenter,ucenter-api,market-api,frontend'
     }
 
     It 'defines the frontend dev service on port 3000' {
@@ -15,6 +15,13 @@ Describe 'Get-MscoinAppServiceDefinitions' {
 
         $frontend.Port | Should Be 3000
         $frontend.Command | Should Be 'pnpm run dev'
+    }
+
+    It 'includes the jobcenter worker in the local stack' {
+        $jobcenter = $services | Where-Object { $_.Name -eq 'jobcenter' }
+
+        $jobcenter | Should Not BeNullOrEmpty
+        $jobcenter.Command | Should Be 'go run jobcenter/main.go -f jobcenter/etc/conf.yaml'
     }
 }
 
@@ -87,18 +94,18 @@ Describe 'Format-MscoinStartupSummary' {
 
 Describe 'Startup smoke checks' {
     It 'treats a 200 frontend response as ready' {
-        Mock Invoke-WebRequest { [pscustomobject]@{ StatusCode = 200; Content = '<!DOCTYPE html>' } }
+        Mock Invoke-WebRequest -ModuleName DevStartup { [pscustomobject]@{ StatusCode = 200; Content = '<!DOCTYPE html>' } }
 
         (Test-MscoinFrontendReady -Url 'http://127.0.0.1:3000') | Should Be $true
     }
 
     It 'treats a successful local login response as ready' {
-        Mock Invoke-RestMethod {
+        Mock Invoke-RestMethod -ModuleName DevStartup {
             @{
                 code = 0
                 message = 'success'
                 data = @{
-                    username = 'local-tester'
+                    token = 'local-token'
                 }
             }
         }

@@ -21,5 +21,10 @@ UCenterRpc:
     Hosts:
       - 127.0.0.1:32379
     Key: ucenter.rpc
+MarketRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:32379
+    Key: market.rpc
 Bitcoin:
   Address: http://127.0.0.1:18332

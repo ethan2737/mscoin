@@ -60,8 +60,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\dev-up.ps1
 
 - 启动 Docker 基础设施依赖
 - 自动应用本地认证与最小行情基线
-- 按依赖顺序启动 `ucenter`、`market`、`ucenter-api`、`market-api`、前端 Vite
-- 对前端可访问性和本地登录链路执行 smoke checks
+- 按依赖顺序启动 `ucenter`、`market`、`jobcenter`、`ucenter-api`、`market-api`、前端 Vite
+- 对前端可访问性、本地登录链路和行情快照链路执行 smoke checks
 - 输出前端地址和本地测试账号；如需持久化启动日志可使用 `.\dev-up.cmd -WriteLogs`
 
 详细说明见 [docs/local-dev-startup.md](./docs/local-dev-startup.md)。

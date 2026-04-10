@@ -18,10 +18,6 @@ type MarketLogic struct {
 }
 
 func (l *MarketLogic) loadThumbs(req *types.MarketReq) ([]*market.CoinThumb, error) {
-	thumb := l.svcCtx.Processor.GetThumb()
-	if thumbs, ok := thumb.([]*market.CoinThumb); ok && len(thumbs) > 0 {
-		return thumbs, nil
-	}
 	ctx, cancelFunc := context.WithTimeout(l.ctx, 10*time.Second)
 	defer cancelFunc()
 	symbolThumbRes, err := l.svcCtx.MarketRpc.FindSymbolThumbTrend(ctx, &market.MarketReq{

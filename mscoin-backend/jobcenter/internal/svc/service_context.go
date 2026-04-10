@@ -3,6 +3,7 @@ package svc
 import (
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/zrpc"
+	"grpc-common/market/mclient"
 	"grpc-common/ucenter/ucclient"
 	"jobcenter/internal/config"
 	"jobcenter/internal/database"
@@ -14,6 +15,7 @@ type ServiceContext struct {
 	KafkaClient    *database.KafkaClient
 	Cache          cache.Cache
 	AssetRpc       ucclient.Asset
+	MarketRpc      mclient.Market
 	BitCoinAddress string
 }
 
@@ -32,6 +34,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		KafkaClient:    client,
 		Cache:          redisCache,
 		AssetRpc:       ucclient.NewAsset(zrpc.MustNewClient(c.UCenterRpc)),
+		MarketRpc:      mclient.NewMarket(zrpc.MustNewClient(c.MarketRpc)),
 		BitCoinAddress: c.Bitcoin.Address,
 	}
 }

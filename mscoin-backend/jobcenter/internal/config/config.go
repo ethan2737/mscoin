@@ -13,5 +13,6 @@ type Config struct {
 	Kafka      database.KafkaConfig
 	CacheRedis cache.CacheConf
 	UCenterRpc zrpc.RpcClientConf
+	MarketRpc  zrpc.RpcClientConf
 	Bitcoin    logic.BitCoinConfig
 }

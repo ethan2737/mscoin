@@ -14,6 +14,10 @@ type KlineDomain struct {
 }
 
 func (d *KlineDomain) SaveBatch(data [][]string, symbol string, period string) {
+	if len(data) == 0 {
+		return
+	}
+
 	klines := make([]*model.Kline, len(data))
 	for i, v := range data {
 		klines[i] = model.NewKline(v, period)

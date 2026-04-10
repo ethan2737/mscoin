@@ -1,11 +1,14 @@
 package task
 
 import (
+	"time"
+
 	"github.com/go-co-op/gocron"
 	"jobcenter/internal/logic"
 	"jobcenter/internal/svc"
-	"time"
 )
+
+var klinePeriods = []string{"1m", "3m", "5m", "15m", "30m", "1H", "2H", "4H", "1D", "1W", "1M"}
 
 type Task struct {
 	s   *gocron.Scheduler
@@ -20,46 +23,54 @@ func NewTask(ctx *svc.ServiceContext) *Task {
 }
 
 func (t *Task) Run() {
+	t.runInitialMarketWarmup()
+
 	t.s.Every(1).Minute().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1m")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1m")
 	})
 	t.s.Every(3).Minute().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("3m")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("3m")
 	})
 	t.s.Every(5).Minute().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("5m")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("5m")
 	})
 	t.s.Every(15).Minute().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("15m")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("15m")
 	})
 	t.s.Every(30).Minute().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("30m")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("30m")
 	})
 	t.s.Every(1).Hour().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1H")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1H")
 	})
 	t.s.Every(2).Hour().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("2H")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("2H")
 	})
 	t.s.Every(4).Hour().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("4H")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("4H")
 	})
 	t.s.Every(1).Day().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1D")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1D")
 	})
 	t.s.Every(1).Week().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1W")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1W")
 	})
 	t.s.Every(1).Month().Do(func() {
-		logic.NewKline(t.ctx.Config.Okx, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1M")
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1M")
 	})
 	t.s.Every(1).Minute().Do(func() {
 		logic.NewRate(t.ctx.Config.Okx, t.ctx.Cache).Do()
 	})
-	//十分钟生成一个区块
 	t.s.Every(10).Minute().Do(func() {
 		logic.NewBitCoin(t.ctx.Cache, t.ctx.AssetRpc, t.ctx.MongoClient, t.ctx.KafkaClient).Do(t.ctx.BitCoinAddress)
 	})
+}
+
+func (t *Task) runInitialMarketWarmup() {
+	logic.NewRate(t.ctx.Config.Okx, t.ctx.Cache).Do()
+	for _, period := range klinePeriods {
+		logic.NewKline(t.ctx.Config.Okx, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do(period)
+	}
 }
 
 func (t *Task) StartBlocking() {
