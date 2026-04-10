@@ -1,5 +1,8 @@
-## ADDED Requirements
+# exchange-trading-page-experience Specification
 
+## Purpose
+TBD - created by archiving change repair-exchange-page-data-and-ui. Update Purpose after archive.
+## Requirements
 ### Requirement: 交易页必须渲染可用的 K 线图
 系统必须在交易页加载后初始化图表实例，并基于当前币对拉取历史 K 线数据进行渲染。币对切换后，图表必须切换到新币对并刷新数据。
 
@@ -66,3 +69,4 @@
 #### Scenario: 交易面板不遮挡委托列表
 - **WHEN** 页面在桌面宽度下完整渲染交易页
 - **THEN** 交易表单区域、盘口区域和当前委托/历史委托列表必须保持独立布局，不得发生遮挡或重叠
+
