@@ -30,9 +30,10 @@
                 <div style="display: flex; align-items: center;">
                   <el-icon
                     style="margin-right: 5px; cursor: pointer;"
+                    :class="{ 'favor-icon-active': row.isFavor }"
                     @click.stop="toggleFavor(row)"
                   >
-                    <Star v-if="row.isFavor" />
+                    <StarFilled v-if="row.isFavor" />
                     <Star v-else />
                   </el-icon>
                   <span>{{ row.symbol }}</span>
@@ -54,7 +55,21 @@
             highlight-row
             @current-change="gohref"
           >
-            <el-table-column prop="coin" :label="$t('exchange.coin')" width="120" />
+            <el-table-column prop="coin" :label="$t('exchange.coin')" width="120">
+              <template #default="{ row }">
+                <div style="display: flex; align-items: center;">
+                  <el-icon
+                    style="margin-right: 5px; cursor: pointer;"
+                    :class="{ 'favor-icon-active': row.isFavor }"
+                    @click.stop="toggleFavor(row)"
+                  >
+                    <StarFilled v-if="row.isFavor" />
+                    <Star v-else />
+                  </el-icon>
+                  <span>{{ row.symbol }}</span>
+                </div>
+              </template>
+            </el-table-column>
             <el-table-column prop="close" :label="$t('exchange.lastprice')" sortable />
             <el-table-column prop="rose" :label="$t('exchange.daychange')" sortable>
               <template #default="{ row }">
@@ -69,7 +84,21 @@
             highlight-row
             @current-change="gohref"
           >
-            <el-table-column prop="coin" :label="$t('exchange.coin')" width="120" />
+            <el-table-column prop="coin" :label="$t('exchange.coin')" width="120">
+              <template #default="{ row }">
+                <div style="display: flex; align-items: center;">
+                  <el-icon
+                    style="margin-right: 5px; cursor: pointer;"
+                    :class="{ 'favor-icon-active': row.isFavor }"
+                    @click.stop="toggleFavor(row)"
+                  >
+                    <StarFilled v-if="row.isFavor" />
+                    <Star v-else />
+                  </el-icon>
+                  <span>{{ row.symbol }}</span>
+                </div>
+              </template>
+            </el-table-column>
             <el-table-column prop="close" :label="$t('exchange.lastprice')" sortable />
             <el-table-column prop="rose" :label="$t('exchange.daychange')" sortable>
               <template #default="{ row }">
@@ -101,8 +130,8 @@
         <!-- 币种信息 -->
         <div class="symbol">
           <div class="item" @click="currentCoinFavorChange">
-            <el-icon :size="24" color="#f0a70a">
-              <Star v-if="currentCoinIsFavor" />
+            <el-icon :size="24" :class="{ 'favor-icon-active': currentCoinIsFavor }">
+              <StarFilled v-if="currentCoinIsFavor" />
               <Star v-else />
             </el-icon>
           </div>
@@ -145,16 +174,18 @@
 
         <!-- K 线图和深度图 -->
         <div class="imgtable">
+          <div class="chart-panel">
+            <div id="kline_container" :class="{hidden: currentImgTable === 's'}"></div>
+            <DepthGraph
+              ref="depthGraphRef"
+              :values="depthPlate"
+              :class="{hidden: currentImgTable === 'k'}"
+            />
+          </div>
           <div class="handler">
             <span @click="changeImgTable('k')" :class="{active: currentImgTable === 'k'}">{{ $t("exchange.kline") }}</span>
             <span @click="changeImgTable('s')" :class="{active: currentImgTable === 's'}">{{ $t("exchange.depth") }}</span>
           </div>
-          <div id="kline_container" :class="{hidden: currentImgTable === 's'}"></div>
-          <DepthGraph
-            ref="depthGraphRef"
-            :values="{ bid: { items: [] }, ask: { items: [] }, skin }"
-            :class="{hidden: currentImgTable === 'k'}"
-          />
         </div>
 
         <!-- 交易面板 -->
@@ -553,7 +584,7 @@
 
 import { ref, reactive, computed, inject, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
-import { Star, InfoFilled } from '@element-plus/icons-vue'
+import { Star, StarFilled, InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import moment from 'moment'
 import io from 'socket.io-client'
@@ -566,6 +597,8 @@ import expandRow from './expand.vue'
 
 // 导入 TradingView datafeed
 import Datafeeds from '../../assets/js/charting_library/datafeed/bitrade.js'
+import { shouldUseAreaChartForSymbol } from './chart-preferences'
+import { applyFavorState, getFavorSuccessMessage } from './favor'
 
 // Vuex 3.x 和 Vue Router 3.x 兼容
 const store = inject('store')
@@ -696,6 +729,17 @@ const plate = reactive({
   bidTotle: 0
 })
 
+const depthPlate = reactive({
+  bid: { items: [], highestPrice: 0, lowestPrice: 0 },
+  ask: { items: [], highestPrice: 0, lowestPrice: 0 },
+  skin: 'night',
+  priceUnit: '',
+  amountUnit: '',
+  priceScale: 4,
+  amountScale: 4,
+  symbol: ''
+})
+
 // 当前委托
 const currentOrder = reactive({
   columns: [],
@@ -737,10 +781,16 @@ const depthGraphRef = ref(null)
 const socketRef = ref(null)
 let tvWidget = null
 let tradingViewLoader = null
+let depthPlateRequestSeq = 0
 
 // 计算属性
 const rechargeUSDTUrl = computed(() => `/uc/recharge?name=${currentCoin.base}`)
 const rechargeCoinUrl = computed(() => `/uc/recharge?name=${currentCoin.coin}`)
+const preferAreaChart = computed(() => shouldUseAreaChartForSymbol({
+  base: currentCoin.base,
+  baseCoinScale: baseCoinScale.value,
+  close: currentCoin.close
+}))
 const buildAuthConfig = (config = {}) => ({
   ...config,
   headers: {
@@ -763,6 +813,47 @@ const unwrapPayload = (response) => {
 
 // 方法实现
 const tipFormat = (val) => `${val}%`
+
+const cloneDepthItems = (items) => (
+  Array.isArray(items)
+    ? items
+      .filter(item => item && item.price !== undefined && item.amount !== undefined)
+      .map(item => ({
+        price: Number(item.price) || 0,
+        amount: Number(item.amount) || 0
+      }))
+    : []
+)
+
+const resetDepthPlate = (symbol = currentCoin.symbol) => {
+  depthPlate.bid = { items: [], highestPrice: 0, lowestPrice: 0 }
+  depthPlate.ask = { items: [], highestPrice: 0, lowestPrice: 0 }
+  depthPlate.skin = skin.value
+  depthPlate.priceUnit = currentCoin.base || ''
+  depthPlate.amountUnit = currentCoin.coin || ''
+  depthPlate.priceScale = baseCoinScale.value
+  depthPlate.amountScale = coinScale.value
+  depthPlate.symbol = symbol || ''
+}
+
+const syncDepthPlate = (payload, symbol = currentCoin.symbol) => {
+  depthPlate.bid = {
+    highestPrice: Number(payload?.bid?.highestPrice) || 0,
+    lowestPrice: Number(payload?.bid?.lowestPrice) || 0,
+    items: cloneDepthItems(payload?.bid?.items)
+  }
+  depthPlate.ask = {
+    highestPrice: Number(payload?.ask?.highestPrice) || 0,
+    lowestPrice: Number(payload?.ask?.lowestPrice) || 0,
+    items: cloneDepthItems(payload?.ask?.items)
+  }
+  depthPlate.skin = skin.value
+  depthPlate.priceUnit = currentCoin.base || ''
+  depthPlate.amountUnit = currentCoin.coin || ''
+  depthPlate.priceScale = baseCoinScale.value
+  depthPlate.amountScale = coinScale.value
+  depthPlate.symbol = symbol || currentCoin.symbol
+}
 
 const keyEvent = () => {
   // 键盘事件处理
@@ -868,37 +959,33 @@ const currentCoinFavorChange = () => {
   if (collecRequesting.value) return
 
   collecRequesting.value = true
-  if (currentCoinIsFavor.value) {
-    // 取消收藏
-    post(host + api.exchange.favorDelete, { symbol: currentCoin.symbol })
-      .then(response => {
-        const resp = response.data
-        if (resp.code === 0) {
-          ElMessage.info('取消收藏成功')
-          getSymbol()
-          currentCoinIsFavor.value = false
-        }
-        collecRequesting.value = false
-      })
-      .catch(() => {
-        collecRequesting.value = false
-      })
-  } else {
-    // 添加收藏
-    post(host + api.exchange.favorAdd, { symbol: currentCoin.symbol })
-      .then(response => {
-        const resp = response.data
-        if (resp.code === 0) {
-          ElMessage.info('添加收藏成功')
-          getSymbol()
-          currentCoinIsFavor.value = true
-        }
-        collecRequesting.value = false
-      })
-      .catch(() => {
-        collecRequesting.value = false
-      })
-  }
+  const nextFavorState = !currentCoinIsFavor.value
+  const requestUrl = nextFavorState ? api.exchange.favorAdd : api.exchange.favorDelete
+
+  post(host + requestUrl, { symbol: currentCoin.symbol })
+    .then(response => {
+      const resp = response.data
+      if (resp.code === 0) {
+        const updated = applyFavorState({
+          coins,
+          symbol: currentCoin.symbol,
+          isFavor: nextFavorState,
+          currentCoinSymbol: currentCoin.symbol
+        })
+
+        currentCoin.isFavor = nextFavorState
+        currentCoinIsFavor.value = updated.currentCoinIsFavor ?? currentCoinIsFavor.value
+        ElMessage.success(getFavorSuccessMessage(nextFavorState))
+      } else {
+        ElMessage.error(resp.message || '自选操作失败')
+      }
+    })
+    .catch(() => {
+      ElMessage.error('自选操作失败')
+    })
+    .finally(() => {
+      collecRequesting.value = false
+    })
 }
 
 const collect = (index, row) => {
@@ -910,15 +997,28 @@ const collect = (index, row) => {
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
-        ElMessage.info('添加收藏成功')
-        const coin = coins._map[row.symbol]
-        if (coin) coin.isFavor = true
-        row.isFavor = true
-        coins.favor.push(row)
+        const updated = applyFavorState({
+          coins,
+          row,
+          symbol: row.symbol,
+          isFavor: true,
+          currentCoinSymbol: currentCoin.symbol
+        })
+
         if (currentCoin.symbol === row.symbol) {
-          currentCoinIsFavor.value = true
+          currentCoin.isFavor = true
+          currentCoinIsFavor.value = updated.currentCoinIsFavor ?? true
         }
+        ElMessage.success(getFavorSuccessMessage(true))
+      } else {
+        ElMessage.error(resp.message || '自选操作失败')
       }
+    })
+    .catch(() => {
+      ElMessage.error('自选操作失败')
+    })
+    .finally(() => {
+      collecRequesting.value = false
     })
 }
 
@@ -931,15 +1031,28 @@ const cancelCollect = (index, row) => {
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
-        ElMessage.info('取消收藏成功')
-        const coin = coins._map[row.symbol]
-        if (coin) coin.isFavor = false
-        const idx = coins.favor.findIndex(f => f.symbol === row.symbol)
-        if (idx !== -1) coins.favor.splice(idx, 1)
+        const updated = applyFavorState({
+          coins,
+          row,
+          symbol: row.symbol,
+          isFavor: false,
+          currentCoinSymbol: currentCoin.symbol
+        })
+
         if (currentCoin.symbol === row.symbol) {
-          currentCoinIsFavor.value = false
+          currentCoin.isFavor = false
+          currentCoinIsFavor.value = updated.currentCoinIsFavor ?? false
         }
+        ElMessage.success(getFavorSuccessMessage(false))
+      } else {
+        ElMessage.error(resp.message || '自选操作失败')
       }
+    })
+    .catch(() => {
+      ElMessage.error('自选操作失败')
+    })
+    .finally(() => {
+      collecRequesting.value = false
     })
 }
 
@@ -1000,13 +1113,13 @@ const loadTradingView = () => {
 const createPeriodButtons = (widget) => {
   const periods = [
     { title: 'realtime', text: '分时', resolution: '1', chartType: 3 },
-    { title: 'M1', text: 'M1', resolution: '1', chartType: 1 },
-    { title: 'M5', text: 'M5', resolution: '5', chartType: 1 },
-    { title: 'M15', text: 'M15', resolution: '15', chartType: 1 },
-    { title: 'M30', text: 'M30', resolution: '30', chartType: 1 },
-    { title: 'H1', text: 'H1', resolution: '60', chartType: 1 },
-    { title: 'D1', text: 'D1', resolution: '1D', chartType: 1 },
-    { title: 'W1', text: 'W1', resolution: '1W', chartType: 1 }
+    { title: 'M1', text: 'M1', resolution: '1', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'M5', text: 'M5', resolution: '5', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'M15', text: 'M15', resolution: '15', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'M30', text: 'M30', resolution: '30', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'H1', text: 'H1', resolution: '60', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'D1', text: 'D1', resolution: '1D', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'W1', text: 'W1', resolution: '1W', chartType: preferAreaChart.value ? 3 : 1 }
   ]
 
   periods.forEach((period) => {
@@ -1108,6 +1221,9 @@ const initKline = async () => {
   await nextTick()
   tvWidget = window.tvWidget = new window.TradingView.widget(config)
   tvWidget.onChartReady(() => {
+    if (preferAreaChart.value) {
+      tvWidget.chart().setChartType(3)
+    }
     tvWidget.chart().executeActionById('drawingToolbarAction')
     tvWidget.chart().createStudy('Moving Average', false, false, [5], null, { 'plot.color': '#EDEDED' })
     tvWidget.chart().createStudy('Moving Average', false, false, [10], null, { 'plot.color': '#ffe000' })
@@ -1118,7 +1234,7 @@ const initKline = async () => {
 }
 
 const getSymbol = () => {
-  silentPost(host + api.market.thumb, {})
+  return silentPost(host + api.market.thumb, {})
     .then(response => {
       const resp = unwrapPayload(response)
       if (!Array.isArray(resp)) return
@@ -1274,14 +1390,15 @@ const getPlate = (str = '') => {
 }
 
 const getPlateFull = () => {
-  silentPost(host + api.market.platefull, { symbol: currentCoin.symbol })
+  const requestSymbol = currentCoin.symbol
+  const requestSeq = ++depthPlateRequestSeq
+
+  silentPost(host + api.market.platefull, { symbol: requestSymbol })
     .then(response => {
       const resp = unwrapPayload(response)
       if (!resp) return
-      resp.skin = skin.value
-      if (depthGraphRef.value && depthGraphRef.value.draw) {
-        depthGraphRef.value.draw(resp)
-      }
+      if (requestSeq !== depthPlateRequestSeq || requestSymbol !== currentCoin.symbol) return
+      syncDepthPlate(resp, requestSymbol)
     })
 }
 
@@ -1301,7 +1418,16 @@ const startWebsock = () => {
   disconnectSocket()
   const socket = io(runtime.wshost || undefined)
   socketRef.value = socket
-  datafeed.value = new Datafeeds.WebsockFeed(host + '/market', currentCoin, socket)
+  datafeed.value = new Datafeeds.WebsockFeed(
+    host + '/market',
+    {
+      ...currentCoin,
+      baseCoinScale: baseCoinScale.value,
+      coinScale: coinScale.value
+    },
+    socket,
+    baseCoinScale.value
+  )
 
   socket.on('connect', () => {
     console.log('connect', socket.id)
@@ -1426,7 +1552,7 @@ const toFloor = (value, scale = 6) => {
   return Math.floor(value * Math.pow(10, scale)) / Math.pow(10, scale)
 }
 
-const init = () => {
+const init = async () => {
   disconnectSocket()
   destroyKline()
   const params = router.currentRoute.value.params.pair || defaultPath.value
@@ -1444,14 +1570,15 @@ const init = () => {
   currentCoin.symbol = `${coin}/${baseCoin}`
   currentCoin.coin = coin
   currentCoin.base = baseCoin
+  resetDepthPlate(currentCoin.symbol)
 
   store.commit('navigate', '/exchange')
   store.commit('setSkin', skin.value)
 
   getCNYRate()
-  getSymbolScale()
+  await getSymbolScale()
   getCoinInfo()
-  getSymbol()
+  await getSymbol()
   getPlate()
   getPlateFull()
   getTrade()
@@ -1477,7 +1604,7 @@ const getCNYRate = () => {
 }
 
 const getSymbolScale = () => {
-  silentPost(host + api.market.symbolInfo, { symbol: currentCoin.symbol })
+  return silentPost(host + api.market.symbolInfo, { symbol: currentCoin.symbol })
     .then(response => {
       const resp = unwrapPayload(response)
       if (resp) {
@@ -1947,22 +2074,40 @@ $night-color: #fff;
         overflow: hidden;
         margin-bottom: 5px;
 
+        .chart-panel {
+          height: calc(100% - 40px);
+        }
+
         .handler {
-          position: absolute;
-          top: 10px;
-          right: 40px;
-          z-index: 1000;
+          height: 40px;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          padding: 6px 16px;
+          background-color: #192330;
+          border-top: 1px solid #223047;
+          position: relative;
+          z-index: 2;
 
           > span {
             background-color: #2c3b59;
             color: #c7cce6;
-            padding: 4px 8px;
+            padding: 5px 10px;
             cursor: pointer;
             font-size: 13px;
-            opacity: 0.5;
+            opacity: 1;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            line-height: 1;
+
+            & + span {
+              margin-left: 8px;
+            }
 
             &.active {
-              opacity: 1;
+              color: #fff;
+              background-color: #3a4a6a;
+              border-color: #66789d;
             }
           }
         }
@@ -2271,6 +2416,10 @@ $night-color: #fff;
   -webkit-line-clamp: 5;
   overflow: hidden;
   padding-top: 15px;
+}
+
+.favor-icon-active {
+  color: #f0a70a;
 }
 
 // 买卖盘样式
