@@ -1,11 +1,17 @@
-import Vue from 'vue'
-import HelloWorld from '@/components/HelloWorld'
+const fs = require('fs')
+const path = require('path')
+const test = require('node:test')
+const assert = require('node:assert/strict')
 
-describe('HelloWorld.vue', () => {
-  it('should render correct contents', () => {
-    const Constructor = Vue.extend(HelloWorld)
-    const vm = new Constructor().$mount()
-    expect(vm.$el.querySelector('.hello h1').textContent)
-    .toEqual('Welcome to Your Vue.js App')
-  })
+function readSource(relativePath) {
+  return fs.readFileSync(path.resolve(__dirname, relativePath), 'utf8')
+}
+
+test('app shell navigation uses route paths as active menu keys', () => {
+  const appSource = readSource('../../../src/App.vue')
+
+  assert.match(appSource, /:default-active="activeNav"/)
+  assert.match(appSource, /@select="handleNavSelect"/)
+  assert.match(appSource, /store\?\.commit\('navigate', menuPath\)/)
+  assert.match(appSource, /'\/exchange': '\/exchange'/)
 })

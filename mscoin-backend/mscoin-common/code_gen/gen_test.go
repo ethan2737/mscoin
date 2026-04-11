@@ -1,8 +1,25 @@
 package code_gen
 
-import "testing"
+import (
+	"net"
+	"testing"
+	"time"
+)
+
+func requireLocalCodegenMysql(t *testing.T) {
+	t.Helper()
+
+	conn, err := net.DialTimeout("tcp", "127.0.0.1:3309", time.Second)
+	if err != nil {
+		t.Skipf("skip code_gen database test: %v", err)
+		return
+	}
+
+	_ = conn.Close()
+}
 
 func TestGenStruct(t *testing.T) {
+	requireLocalCodegenMysql(t)
 	GenModel("member", "Member")
 }
 func TestGenRpc(t *testing.T) {
