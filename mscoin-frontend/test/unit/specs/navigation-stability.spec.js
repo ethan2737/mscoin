@@ -24,3 +24,11 @@ test('swap page reacts to pair changes and disposes realtime resources on leave'
   assert.match(swapSource, /watch\(\(\) => route\.params\.pair, \(pair, previousPair\) => \{/)
   assert.match(swapSource, /onBeforeUnmount\(\(\) => \{/)
 })
+
+test('exchange page loads symbol scale before recreating kline widgets for a new pair', () => {
+  const exchangeSource = readSource('../../../src/pages-vue3/exchange/Exchange.vue')
+
+  assert.match(exchangeSource, /const init = async \(\) => \{/)
+  assert.match(exchangeSource, /await getSymbolScale\(\)/)
+  assert.match(exchangeSource, /await getSymbol\(\)/)
+})
