@@ -22,38 +22,33 @@
                 text-color="#828ea1"
                 active-text-color="#f0a70a"
               >
-                <el-sub-menu index="1">
-                  <template #title>
-                    <span>{{ $t("header.index") }}</span>
-                  </template>
-                  <router-link to="/">
-                    <el-menu-item index="nav-index">{{ $t("header.index") }}</el-menu-item>
-                  </router-link>
-                  <router-link to="/exchange">
-                    <el-menu-item index="nav-exchange">{{ $t("header.exchange") }}</el-menu-item>
-                  </router-link>
-                  <router-link to="/ctc">
-                    <el-menu-item index="nav-ctc">{{ $t("header.ctc") }}</el-menu-item>
-                  </router-link>
-                  <router-link to="/otc/trade/usdt">
-                    <el-menu-item index="nav-otc">{{ $t("header.otc") }}</el-menu-item>
-                  </router-link>
-                  <router-link to="/swapindex/1">
-                    <el-menu-item index="nav-swapindex">{{ $t("header.swap") }}</el-menu-item>
-                  </router-link>
-                  <router-link to="/swapindex/2">
-                    <el-menu-item index="nav-secswap">{{ $t("header.secswap") }}</el-menu-item>
-                  </router-link>
-                  <router-link to="/activity">
-                    <el-menu-item index="nav-lab">{{ $t("header.lab") }}</el-menu-item>
-                  </router-link>
-                  <router-link to="/mining">
-                    <el-menu-item index="nav-mining">{{ $t("header.mining") }}</el-menu-item>
-                  </router-link>
-                  <router-link to="/crowdfunding">
-                    <el-menu-item index="nav-crowdfunding">{{ $t("header.crowdfunding") }}</el-menu-item>
-                  </router-link>
-                </el-sub-menu>
+                <router-link to="/">
+                  <el-menu-item index="nav-index">{{ $t("header.index") }}</el-menu-item>
+                </router-link>
+                <router-link to="/exchange">
+                  <el-menu-item index="nav-exchange">{{ $t("header.exchange") }}</el-menu-item>
+                </router-link>
+                <router-link to="/ctc">
+                  <el-menu-item index="nav-ctc">{{ $t("header.ctc") }}</el-menu-item>
+                </router-link>
+                <router-link to="/otc/trade/usdt">
+                  <el-menu-item index="nav-otc">{{ $t("header.otc") }}</el-menu-item>
+                </router-link>
+                <router-link to="/swapindex/1">
+                  <el-menu-item index="nav-swapindex">{{ $t("header.swap") }}</el-menu-item>
+                </router-link>
+                <router-link to="/swapindex/2">
+                  <el-menu-item index="nav-secswap">{{ $t("header.secswap") }}</el-menu-item>
+                </router-link>
+                <router-link to="/activity">
+                  <el-menu-item index="nav-lab">{{ $t("header.lab") }}</el-menu-item>
+                </router-link>
+                <router-link to="/mining">
+                  <el-menu-item index="nav-mining">{{ $t("header.mining") }}</el-menu-item>
+                </router-link>
+                <router-link to="/crowdfunding">
+                  <el-menu-item index="nav-crowdfunding">{{ $t("header.crowdfunding") }}</el-menu-item>
+                </router-link>
               </el-menu>
             </div>
             <div class="header_nav_mobile_triggle" @click="toggleMemu()">
@@ -61,17 +56,17 @@
             </div>
             <div class="header_nav" style="float:right;margin-left: 10px;">
               <el-dropdown @command="changelanguage" trigger="click">
-                <div class="lang-title" style="display: flex; align-items: center; cursor: pointer;">
+                <div class="lang-title" style="display: flex; align-items: center; cursor: pointer; height: 50px; line-height: 50px;">
                   <img v-if="lang === '简体中文'" class="lang-img" src="./assets/images/lang-zh.png" alt="中文">
-                  <img v-if="lang === 'English'" class="lang-img" src="./assets/images/lang-en.png" alt="English">
+                  <img v-else-if="lang === 'English'" class="lang-img" src="./assets/images/lang-en.png" alt="English">
                 </div>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="zh">
-                      <img src="./assets/images/lang-zh.png" style="width: 20px; margin-right: 5px; vertical-align: middle;">简体中文
-                    </el-dropdown-item>
                     <el-dropdown-item command="en">
                       <img src="./assets/images/lang-en.png" style="width: 20px; margin-right: 5px; vertical-align: middle;">ENGLISH
+                    </el-dropdown-item>
+                    <el-dropdown-item command="zh">
+                      <img src="./assets/images/lang-zh.png" style="width: 20px; margin-right: 5px; vertical-align: middle;">简体中文
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
@@ -83,37 +78,42 @@
                 <div class="mymsg">
                   <router-link to="/uc/safe">{{ $t("header.usercenter") }}</router-link>
                 </div>
-                <el-dropdown>
-                  <div style="display: flex; align-items: center; cursor: pointer; color: #828ea1;">
-                    <el-icon style="margin-right: 4px;"><User /></el-icon>
-                    <span style="margin-right: 8px;">{{ strpo(member.username) }}</span>
-                    <el-icon><ArrowDown /></el-icon>
+                <el-dropdown trigger="click">
+                  <div class="user-dropdown-trigger">
+                    <el-icon class="user-icon"><User /></el-icon>
+                    <span class="username-text">{{ member.username }}</span>
+                    <el-icon class="arrow-icon"><ArrowDown /></el-icon>
                   </div>
                   <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item>
-                        <router-link to="/uc/money" style="color: inherit; display: flex; align-items: center;">
-                          <el-icon><Coin /></el-icon> &nbsp;{{ $t("header.assetmanage") }}
+                    <el-dropdown-menu class="user-dropdown-menu">
+                      <el-dropdown-item class="dropdown-item">
+                        <router-link to="/uc/money" class="dropdown-item-link">
+                          <el-icon><Coin /></el-icon>
+                          <span>{{ $t("header.assetmanage") }}</span>
                         </router-link>
                       </el-dropdown-item>
-                      <el-dropdown-item>
-                        <router-link to="/uc/entrust/current" style="color: inherit; display: flex; align-items: center;">
-                          <el-icon><Switch /></el-icon> &nbsp;{{ $t("header.trademanage") }}
+                      <el-dropdown-item class="dropdown-item">
+                        <router-link to="/uc/entrust/current" class="dropdown-item-link">
+                          <el-icon><Switch /></el-icon>
+                          <span>{{ $t("header.trademanage") }}</span>
                         </router-link>
                       </el-dropdown-item>
-                      <el-dropdown-item>
-                        <router-link to="/uc/contract/entrust/current" style="color: inherit; display: flex; align-items: center;">
-                          <el-icon><Switch /></el-icon> &nbsp;{{ $t("header.contractmanage") }}
+                      <el-dropdown-item class="dropdown-item">
+                        <router-link to="/uc/contract/entrust/current" class="dropdown-item-link">
+                          <el-icon><Switch /></el-icon>
+                          <span>{{ $t("header.contractmanage") }}</span>
                         </router-link>
                       </el-dropdown-item>
-                      <el-dropdown-item>
-                        <router-link to="/uc/innovation/orders" style="color: inherit; display: flex; align-items: center;">
-                          <el-icon><Switch /></el-icon> &nbsp;{{ $t("header.innovationmanage") }}
+                      <el-dropdown-item class="dropdown-item">
+                        <router-link to="/uc/innovation/orders" class="dropdown-item-link">
+                          <el-icon><Switch /></el-icon>
+                          <span>{{ $t("header.innovationmanage") }}</span>
                         </router-link>
                       </el-dropdown-item>
-                      <el-dropdown-item divided>
-                        <div @click="logout" style="display: flex; align-items: center;">
-                          <el-icon><SwitchButton /></el-icon> &nbsp;{{ $t("common.logout") }}
+                      <el-dropdown-item divided class="dropdown-divider">
+                        <div @click="logout" class="dropdown-item-link">
+                          <el-icon><SwitchButton /></el-icon>
+                          <span>{{ $t("common.logout") }}</span>
                         </div>
                       </el-dropdown-item>
                     </el-dropdown-menu>
@@ -368,7 +368,7 @@ import { runtimeContract } from './config/runtime-vue3'
 import { establishAuthenticatedSession, clearAuthenticatedSession } from './utils/auth-session'
 
 // 使用 vue-i18n
-const { t: $t } = useI18n()
+const { t: $t, locale } = useI18n()
 
 // 注入 store, router 和 i18n
 const store = inject('store')
@@ -435,10 +435,12 @@ const getQueryVariable = (key) => {
 const changelanguage = (name) => {
   if (name === 'en') {
     store?.commit('setlang', 'English')
+    locale.value = 'en'
     reload()
   }
   if (name === 'zh') {
     store?.commit('setlang', '简体中文')
+    locale.value = 'zh'
     reload()
   }
 }
@@ -449,6 +451,11 @@ const initialize = () => {
   store?.commit('recoveryMember')
   store?.commit('initLang')
   store?.commit('initLoginTimes')
+
+  // 同步 i18n locale
+  const currentLang = store?.state.lang || '简体中文'
+  locale.value = currentLang === 'English' ? 'en' : 'zh'
+
   checkLogin()
 }
 
@@ -707,6 +714,11 @@ onBeforeUnmount(() => {
           margin-left: 218px;
 
           .header_nav {
+            // 移除 router-link 默认下划线
+            & :deep(a) {
+              text-decoration: none !important;
+            }
+
             & :deep(.el-menu) {
               background: transparent;
               border-bottom: none;
@@ -722,14 +734,33 @@ onBeforeUnmount(() => {
               }
 
               .el-menu-item {
+                font-size: 16px;
+                font-weight: 500;
+                color: #e0e0e0 !important;
+                text-decoration: none !important;
+                border-bottom: none !important;
+
                 &:hover {
                   background: transparent !important;
+                  color: #fff !important;
+                  text-decoration: none !important;
+                  border-bottom: none !important;
                 }
 
                 &.is-active {
                   color: #f0a70a !important;
-                  border-bottom: 3px solid #ffa800;
                 }
+              }
+
+              // 激活项的容器边框下划线（非文字下划线）
+              .el-menu-item.is-active::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: #ffa800;
               }
             }
           }
@@ -743,13 +774,20 @@ onBeforeUnmount(() => {
               padding-right: 20px;
 
               a {
-                color: #828ea1;
-                display: inline;
+                color: #e0e0e0 !important;
+                font-size: 16px !important;
+                font-weight: 500;
+                text-decoration: none !important;
+                display: inline-block;
                 padding-right: 20px;
                 border-right: 1px solid #828ea1;
+                line-height: 50px;
+                height: 50px;
+                vertical-align: top;
 
                 &:hover {
-                  color: #fff;
+                  color: #fff !important;
+                  text-decoration: none !important;
                 }
               }
             }
@@ -813,6 +851,95 @@ onBeforeUnmount(() => {
 
                   &:hover {
                     color: #fff;
+                  }
+                }
+              }
+
+              // 用户下拉触发器样式 - 修复对齐问题
+              .user-dropdown-trigger {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                color: #e0e0e0;
+                font-size: 16px;
+                font-weight: 500;
+                height: 50px;
+                line-height: 50px;
+
+                .user-icon,
+                .arrow-icon {
+                  vertical-align: middle;
+                  display: inline-flex;
+                  align-items: center;
+                }
+
+                .username-text {
+                  margin: 0 6px;
+                  white-space: nowrap;
+                  text-decoration: none;
+                }
+              }
+
+              // 用户下拉菜单样式
+              .user-dropdown-menu {
+                background-color: #27313e;
+                border: 1px solid #394559;
+                border-radius: 4px;
+                padding: 8px 0;
+                min-width: 180px;
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+
+                .dropdown-item {
+                  padding: 0;
+
+                  .dropdown-item-link {
+                    display: flex;
+                    align-items: center;
+                    padding: 10px 16px;
+                    color: #ccc;
+                    text-decoration: none;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                      background-color: #2f3e51;
+                      color: #f0ac19;
+
+                      .el-icon {
+                        color: #f0ac19;
+                      }
+                    }
+
+                    .el-icon {
+                      margin-right: 8px;
+                      font-size: 16px;
+                      color: #828ea1;
+                    }
+
+                    span {
+                      white-space: nowrap;
+                    }
+                  }
+                }
+
+                .dropdown-divider {
+                  border-top: 1px solid #394559;
+                  margin-top: 4px;
+                  padding-top: 4px;
+
+                  .dropdown-item-link {
+                    color: #ccc;
+
+                    &:hover {
+                      color: #f0ac19;
+                    }
+
+                    .el-icon {
+                      color: #828ea1;
+
+                      &:hover {
+                        color: #f0ac19;
+                      }
+                    }
                   }
                 }
               }
