@@ -635,7 +635,7 @@ const cancelOrder = () => {
 }
 
 const init = () => {
-  store.commit('navigate', 'nav-ctc')
+  store.commit('navigate', '/ctc')
   getC2cPrice()
   if (isLogin.value) {
     getOrderList()

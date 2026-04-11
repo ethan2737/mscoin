@@ -1445,7 +1445,7 @@ const init = () => {
   currentCoin.coin = coin
   currentCoin.base = baseCoin
 
-  store.commit('navigate', 'nav-exchange')
+  store.commit('navigate', '/exchange')
   store.commit('setSkin', skin.value)
 
   getCNYRate()
@@ -1809,7 +1809,7 @@ watch(() => router.currentRoute.value.params.pair, (pair, previousPair) => {
 
 // 生命周期
 onMounted(() => {
-  store.commit('navigate', 'nav-exchange')
+  store.commit('navigate', '/exchange')
 
   // 检查登录状态
   isLogin.value = store.getters?.isLogin || !!localStorage.getItem('TOKEN')

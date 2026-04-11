@@ -414,7 +414,7 @@ const generateQrcode = async () => {
 
 // 方法
 const init = () => {
-  store.commit('navigate', 'nav-activity')
+    store.commit('navigate', '/activity')
   getData()
 }
 

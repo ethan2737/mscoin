@@ -404,7 +404,7 @@ const fixedScale = (value, scale) => {
 }
 
 const init = () => {
-  store.commit('navigate', 'nav-lab')
+    store.commit('navigate', '/activity')
 }
 
 const detail = (aId) => {

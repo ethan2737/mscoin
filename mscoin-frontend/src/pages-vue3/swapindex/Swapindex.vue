@@ -857,7 +857,7 @@
  * 5. 使用辅助函数替代 Vue 2 filters
  * 6. 使用 table column slots 替代 render functions
  */
-import { ref, reactive, computed, inject, onMounted, watch } from 'vue'
+import { ref, reactive, computed, inject, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
 import { InfoFilled, Search } from '@element-plus/icons-vue'
@@ -1024,6 +1024,7 @@ const coins = reactive({
 
 // 深度图引用
 const depthGraphRef = ref(null)
+const socketRef = ref(null)
 
 // 计算属性
 const positionNum = computed(() => {
@@ -1715,7 +1716,9 @@ const getTrade = () => {
 }
 
 const startWebsock = () => {
+  disconnectSocket()
   const socket = io(runtime.wshost || undefined)
+  socketRef.value = socket
   socket.on('connect', () => {
     console.log('connect', socket.id)
   })
@@ -1831,8 +1834,65 @@ const startWebsock = () => {
 // K 线图表初始化
 let tvWidget = null
 const isLocalAcceptanceHost = typeof window !== 'undefined' && ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+const chartLibraryScript = process.env.NODE_ENV === 'production'
+  ? '/assets/charting_library/charting_library.min.js'
+  : '/src/assets/js/charting_library/charting_library.min.js'
+let tradingViewLoader = null
 
-const getKline = () => {
+const destroyKline = () => {
+  if (tvWidget) {
+    tvWidget.remove()
+    tvWidget = null
+    window.tvWidget = null
+  }
+
+  const container = document.getElementById('swap_kline_container')
+  if (container) {
+    container.innerHTML = ''
+  }
+}
+
+const disconnectSocket = () => {
+  if (socketRef.value) {
+    socketRef.value.removeAllListeners()
+    socketRef.value.disconnect()
+    socketRef.value = null
+  }
+}
+
+const loadTradingView = () => {
+  if (window.TradingView) {
+    return Promise.resolve(window.TradingView)
+  }
+
+  if (tradingViewLoader) {
+    return tradingViewLoader
+  }
+
+  tradingViewLoader = new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[data-charting-library="${chartLibraryScript}"]`)
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.TradingView), { once: true })
+      existing.addEventListener('error', reject, { once: true })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = chartLibraryScript
+    script.async = true
+    script.dataset.chartingLibrary = chartLibraryScript
+    script.onload = () => resolve(window.TradingView)
+    script.onerror = reject
+    document.head.appendChild(script)
+  }).catch((error) => {
+    tradingViewLoader = null
+    throw error
+  })
+
+  return tradingViewLoader
+}
+
+const getKline = async () => {
   if (isLocalAcceptanceHost) {
     const container = document.getElementById('swap_kline_container')
     if (container) {
@@ -1906,12 +1966,9 @@ const getKline = () => {
     config.overrides['mainSeriesProperties.candleStyle.downColor'] = '#ffa5a6'
   }
 
-  // 动态加载 TradingView
-  const script = document.createElement('script')
-  script.src = process.env.NODE_ENV === 'production'
-    ? '/assets/charting_library/charting_library.min.js'
-    : '/src/assets/js/charting_library/charting_library.min.js'
-  script.onload = () => {
+  try {
+    const TradingView = await loadTradingView()
+    destroyKline()
     tvWidget = window.tvWidget = new TradingView.widget(config)
     tvWidget.onChartReady(() => {
       tvWidget.chart().executeActionById('drawingToolbarAction')
@@ -1921,8 +1978,9 @@ const getKline = () => {
       tvWidget.chart().createStudy('Moving Average', false, false, [60], null, { 'plot.color': '#00adff' })
       createPeriodButtons(tvWidget)
     })
+  } catch (error) {
+    console.error('TradingView load failed:', error)
   }
-  document.head.appendChild(script)
 }
 
 const createPeriodButtons = (widget) => {
@@ -2017,6 +2075,9 @@ const createPeriodButtons = (widget) => {
 }
 
 const init = () => {
+  disconnectSocket()
+  destroyKline()
+
   const id = route.params.pair
   if (id === undefined) {
     router.push('/swapindex/' + defaultPath.value)
@@ -2035,11 +2096,11 @@ const init = () => {
       currentCoin.base = resp.baseSymbol
       currentCoin.name = resp.coinSymbol
 
-      if (currentCoin.type === 'ALWAYS') {
-        store.commit('navigate', 'nav-swapindex')
-      } else {
-        store.commit('navigate', 'nav-secswap')
-      }
+        if (currentCoin.type === 'ALWAYS') {
+          store.commit('navigate', '/swapindex/1')
+        } else {
+          store.commit('navigate', '/swapindex/2')
+        }
       store.commit('setSkin', skin.value)
 
       currentCoin.coinScale = resp.coinScale
@@ -2077,6 +2138,13 @@ watch(() => store.state.lang, () => {
   // 更新语言数据
 })
 
+watch(() => route.params.pair, (pair, previousPair) => {
+  if (!pair || pair === previousPair) {
+    return
+  }
+  init()
+})
+
 // 监听当前币种价格变化
 watch(() => currentCoin.close, (p) => {
   let profit = 0.0
@@ -2097,6 +2165,11 @@ onMounted(() => {
   memberId.value = store.getters.member?.id || 0
   lang.value = store.state.lang || 'zh'
   init()
+})
+
+onBeforeUnmount(() => {
+  disconnectSocket()
+  destroyKline()
 })
 </script>
 

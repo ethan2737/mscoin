@@ -551,7 +551,7 @@ const donateList = (itemData) => {
 }
 
 const init = () => {
-  store.commit('navigate', 'nav-crowdfunding')
+    store.commit('navigate', '/crowdfunding')
 }
 
 onMounted(() => {

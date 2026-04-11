@@ -142,7 +142,7 @@ const getData = () => {
 }
 
 const init = () => {
-  store.commit('navigate', 'nav-mining')
+    store.commit('navigate', '/mining')
 }
 
 onMounted(() => {

@@ -16,7 +16,7 @@
             <div class="header_nav">
               <el-menu
                 :default-active="activeNav"
-                :router="true"
+                @select="handleNavSelect"
                 mode="horizontal"
                 :ellipsis="false"
                 background-color="#172636"
@@ -24,31 +24,31 @@
                 active-text-color="#f0a70a"
               >
                 <el-menu-item index="/">
-                  <router-link to="/">{{ $t("header.index") }}</router-link>
+                  {{ $t("header.index") }}
                 </el-menu-item>
                 <el-menu-item index="/exchange">
-                  <router-link to="/exchange">{{ $t("header.exchange") }}</router-link>
+                  {{ $t("header.exchange") }}
                 </el-menu-item>
                 <el-menu-item index="/ctc">
-                  <router-link to="/ctc">{{ $t("header.ctc") }}</router-link>
+                  {{ $t("header.ctc") }}
                 </el-menu-item>
                 <el-menu-item index="/otc/trade/usdt">
-                  <router-link to="/otc/trade/usdt">{{ $t("header.otc") }}</router-link>
+                  {{ $t("header.otc") }}
                 </el-menu-item>
                 <el-menu-item index="/swapindex/1">
-                  <router-link to="/swapindex/1">{{ $t("header.swap") }}</router-link>
+                  {{ $t("header.swap") }}
                 </el-menu-item>
                 <el-menu-item index="/swapindex/2">
-                  <router-link to="/swapindex/2">{{ $t("header.secswap") }}</router-link>
+                  {{ $t("header.secswap") }}
                 </el-menu-item>
                 <el-menu-item index="/activity">
-                  <router-link to="/activity">{{ $t("header.lab") }}</router-link>
+                  {{ $t("header.lab") }}
                 </el-menu-item>
                 <el-menu-item index="/mining">
-                  <router-link to="/mining">{{ $t("header.mining") }}</router-link>
+                  {{ $t("header.mining") }}
                 </el-menu-item>
                 <el-menu-item index="/crowdfunding">
-                  <router-link to="/crowdfunding">{{ $t("header.crowdfunding") }}</router-link>
+                  {{ $t("header.crowdfunding") }}
                 </el-menu-item>
               </el-menu>
             </div>
@@ -146,7 +146,7 @@
           </div>
         </div>
       </div>
-      <router-view v-if="isRouterAlive"></router-view>
+      <router-view v-if="isRouterAlive" :key="routeViewKey"></router-view>
     </div>
     <el-drawer v-model="navDrawerModal" size="40%" direction="rtl" class="header_nav_mobile">
       <el-menu
@@ -393,6 +393,10 @@ const isLogin = computed(() => store?.getters.isLogin || false)
 const member = computed(() => store?.getters.member || { username: '' })
 const lang = computed(() => store?.state.lang || '简体中文')
 const languageValue = computed(() => store?.getters.lang || '简体中文')
+const routeViewKey = computed(() => {
+  const currentRoute = router?.currentRoute?.value
+  return currentRoute?.fullPath || currentRoute?.path || 'default-route-view'
+})
 
 // 提供 reload 方法给子组件
 const reload = () => {
@@ -521,6 +525,16 @@ const handleExternalToken = () => {
       memberKey: runtimeContract.memberKey,
       store
     }).catch(() => {})
+  }
+}
+
+/**
+ * 处理导航菜单选择事件
+ * 直接使用路由路径跳转，避免 router-link 嵌套冲突
+ */
+const handleNavSelect = (index) => {
+  if (router && index !== router.currentRoute.value.path) {
+    router.push(index)
   }
 }
 
@@ -748,7 +762,6 @@ onBeforeUnmount(() => {
           margin-left: 218px;
 
           .header_nav {
-            // 移除 router-link 默认下划线
             & :deep(a) {
               text-decoration: none !important;
             }
@@ -756,46 +769,65 @@ onBeforeUnmount(() => {
             & :deep(.el-menu) {
               background: transparent;
               border-bottom: none;
+            }
 
-              &.el-menu--vertical {
-                background: transparent;
-              }
+            & :deep(.el-menu.el-menu--horizontal) {
+              --el-menu-hover-bg-color: transparent;
+              --el-menu-bg-color: transparent;
+              --el-menu-text-color: #8a99ad;
+              --el-menu-active-color: #f0a70a;
+              height: 50px;
+              gap: 4px;
+            }
 
-              .el-sub-menu__title {
-                &:hover {
-                  background: transparent !important;
-                }
-              }
+            & :deep(.el-menu.el-menu--horizontal > .el-menu-item) {
+              position: relative;
+              height: 50px;
+              line-height: 50px;
+              padding: 0 20px;
+              margin: 0;
+              font-size: 16px;
+              font-weight: 600;
+              color: #8a99ad !important;
+              background: transparent !important;
+              border-bottom: none !important;
+              transition: color 0.2s ease, background-color 0.2s ease;
+            }
 
-              .el-menu-item {
-                font-size: 16px;
-                font-weight: 500;
-                color: #e0e0e0 !important;
-                text-decoration: none !important;
-                border-bottom: none !important;
+            & :deep(.el-menu.el-menu--horizontal > .el-menu-item::after) {
+              content: '';
+              position: absolute;
+              left: 12%;
+              right: 12%;
+              bottom: 7px;
+              height: 4px;
+              border-radius: 2px;
+              background: transparent;
+              transition: background-color 0.2s ease;
+            }
 
-                &:hover {
-                  background: transparent !important;
-                  color: #fff !important;
-                  text-decoration: none !important;
-                  border-bottom: none !important;
-                }
+            & :deep(.el-menu.el-menu--horizontal > .el-menu-item:hover) {
+              color: #ffffff !important;
+              background: transparent !important;
+            }
 
-                &.is-active {
-                  color: #f0a70a !important;
-                }
-              }
+            & :deep(.el-menu.el-menu--horizontal > .el-menu-item:hover::after) {
+              background: rgba(240, 167, 10, 0.38);
+            }
 
-              // 激活项的容器边框下划线（非文字下划线）
-              .el-menu-item.is-active::after {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 3px;
-                background: #ffa800;
-              }
+            & :deep(.el-menu.el-menu--horizontal > .el-menu-item.is-active) {
+              color: #f0a70a !important;
+              background: transparent !important;
+            }
+
+            & :deep(.el-menu.el-menu--horizontal > .el-menu-item.is-active::after) {
+              background: #f0a70a;
+            }
+
+            & :deep(.el-menu--horizontal > .el-menu-item:not(.is-disabled):focus),
+            & :deep(.el-menu--horizontal > .el-menu-item:not(.is-disabled):hover),
+            & :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title:hover) {
+              background: transparent !important;
             }
           }
 

@@ -319,7 +319,7 @@ const generateQRCode = async () => {
 }
 
 const init = () => {
-  store.commit('navigate', 'nav-activity')
+    store.commit('navigate', '/mining')
 }
 
 const apply = () => {
