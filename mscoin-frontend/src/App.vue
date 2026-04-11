@@ -16,39 +16,40 @@
             <div class="header_nav">
               <el-menu
                 :default-active="activeNav"
+                :router="true"
                 mode="horizontal"
                 :ellipsis="false"
                 background-color="#172636"
                 text-color="#828ea1"
                 active-text-color="#f0a70a"
               >
-                <router-link to="/">
-                  <el-menu-item index="nav-index">{{ $t("header.index") }}</el-menu-item>
-                </router-link>
-                <router-link to="/exchange">
-                  <el-menu-item index="nav-exchange">{{ $t("header.exchange") }}</el-menu-item>
-                </router-link>
-                <router-link to="/ctc">
-                  <el-menu-item index="nav-ctc">{{ $t("header.ctc") }}</el-menu-item>
-                </router-link>
-                <router-link to="/otc/trade/usdt">
-                  <el-menu-item index="nav-otc">{{ $t("header.otc") }}</el-menu-item>
-                </router-link>
-                <router-link to="/swapindex/1">
-                  <el-menu-item index="nav-swapindex">{{ $t("header.swap") }}</el-menu-item>
-                </router-link>
-                <router-link to="/swapindex/2">
-                  <el-menu-item index="nav-secswap">{{ $t("header.secswap") }}</el-menu-item>
-                </router-link>
-                <router-link to="/activity">
-                  <el-menu-item index="nav-lab">{{ $t("header.lab") }}</el-menu-item>
-                </router-link>
-                <router-link to="/mining">
-                  <el-menu-item index="nav-mining">{{ $t("header.mining") }}</el-menu-item>
-                </router-link>
-                <router-link to="/crowdfunding">
-                  <el-menu-item index="nav-crowdfunding">{{ $t("header.crowdfunding") }}</el-menu-item>
-                </router-link>
+                <el-menu-item index="/">
+                  <router-link to="/">{{ $t("header.index") }}</router-link>
+                </el-menu-item>
+                <el-menu-item index="/exchange">
+                  <router-link to="/exchange">{{ $t("header.exchange") }}</router-link>
+                </el-menu-item>
+                <el-menu-item index="/ctc">
+                  <router-link to="/ctc">{{ $t("header.ctc") }}</router-link>
+                </el-menu-item>
+                <el-menu-item index="/otc/trade/usdt">
+                  <router-link to="/otc/trade/usdt">{{ $t("header.otc") }}</router-link>
+                </el-menu-item>
+                <el-menu-item index="/swapindex/1">
+                  <router-link to="/swapindex/1">{{ $t("header.swap") }}</router-link>
+                </el-menu-item>
+                <el-menu-item index="/swapindex/2">
+                  <router-link to="/swapindex/2">{{ $t("header.secswap") }}</router-link>
+                </el-menu-item>
+                <el-menu-item index="/activity">
+                  <router-link to="/activity">{{ $t("header.lab") }}</router-link>
+                </el-menu-item>
+                <el-menu-item index="/mining">
+                  <router-link to="/mining">{{ $t("header.mining") }}</router-link>
+                </el-menu-item>
+                <el-menu-item index="/crowdfunding">
+                  <router-link to="/crowdfunding">{{ $t("header.crowdfunding") }}</router-link>
+                </el-menu-item>
               </el-menu>
             </div>
             <div class="header_nav_mobile_triggle" @click="toggleMemu()">
@@ -150,61 +151,62 @@
     <el-drawer v-model="navDrawerModal" size="40%" direction="rtl" class="header_nav_mobile">
       <el-menu
         :default-active="activeNav"
+        :router="true"
         mode="vertical"
         background-color="#2b323a"
         text-color="#bdc2ca"
         active-text-color="#f0a70a"
       >
-        <router-link to="/">
-          <el-menu-item index="nav-index">{{ $t("header.index") }}</el-menu-item>
-        </router-link>
-        <router-link to="/ctc">
-          <el-menu-item index="nav-ctc">{{ $t("header.ctc") }}</el-menu-item>
-        </router-link>
-        <router-link to="/otc/trade/usdt">
-          <el-menu-item index="nav-otc">{{ $t("header.otc") }}</el-menu-item>
-        </router-link>
-        <router-link to="/activity">
-          <el-menu-item index="nav-lab">{{ $t("header.lab") }}</el-menu-item>
-        </router-link>
-        <router-link to="/mining">
-          <el-menu-item index="nav-mining">{{ $t("header.mining") }}</el-menu-item>
-        </router-link>
-        <router-link to="/crowdfunding">
-          <el-menu-item index="nav-crowdfunding">{{ $t("header.crowdfunding") }}</el-menu-item>
-        </router-link>
-        <router-link to="/partner">
-          <el-menu-item index="nav-invite">{{ $t("header.invite") }}</el-menu-item>
-        </router-link>
-        <router-link to="/notice/item/0">
-          <el-menu-item index="nav-service">{{ $t("header.service") }}</el-menu-item>
-        </router-link>
+        <el-menu-item index="/">
+          <router-link to="/">{{ $t("header.index") }}</router-link>
+        </el-menu-item>
+        <el-menu-item index="/ctc">
+          <router-link to="/ctc">{{ $t("header.ctc") }}</router-link>
+        </el-menu-item>
+        <el-menu-item index="/otc/trade/usdt">
+          <router-link to="/otc/trade/usdt">{{ $t("header.otc") }}</router-link>
+        </el-menu-item>
+        <el-menu-item index="/activity">
+          <router-link to="/activity">{{ $t("header.lab") }}</router-link>
+        </el-menu-item>
+        <el-menu-item index="/mining">
+          <router-link to="/mining">{{ $t("header.mining") }}</router-link>
+        </el-menu-item>
+        <el-menu-item index="/crowdfunding">
+          <router-link to="/crowdfunding">{{ $t("header.crowdfunding") }}</router-link>
+        </el-menu-item>
+        <el-menu-item index="/partner">
+          <router-link to="/partner">{{ $t("header.invite") }}</router-link>
+        </el-menu-item>
+        <el-menu-item index="/notice/item/0">
+          <router-link to="/notice/item/0">{{ $t("header.service") }}</router-link>
+        </el-menu-item>
 
         <el-sub-menu index="nav-login" v-if="!isLogin">
           <template #title>
             <span>{{ $t("common.loginregister") }}</span>
           </template>
-          <router-link to="/login">
-            <el-menu-item index="1-1" style="padding-left: 20px !important;">{{ $t("common.login") }}</el-menu-item>
-          </router-link>
-          <router-link to="/register">
-            <el-menu-item index="1-2" style="padding-left: 20px !important;">{{ $t("common.register") }}</el-menu-item>
-          </router-link>
+          <el-menu-item index="/login">
+            <router-link to="/login">{{ $t("common.login") }}</router-link>
+          </el-menu-item>
+          <el-menu-item index="/register">
+            <router-link to="/register">{{ $t("common.register") }}</router-link>
+          </el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="nav_personal" v-if="isLogin">
           <template #title>
             <span>{{ $t("header.usercenter") }}</span>
           </template>
-          <router-link to="/uc/safe">
-            <el-menu-item index="nav_safe" style="padding-left: 20px !important;">{{ $t("uc.member.securitysetting") }}</el-menu-item>
-          </router-link>
-          <router-link to="/uc/money">
-            <el-menu-item index="nav_assets" style="padding-left: 20px !important;">{{ $t("header.assetmanage") }}</el-menu-item>
-          </router-link>
-          <router-link to="/uc/innovation/minings">
-            <el-menu-item index="nav_innnovationmanage" style="padding-left: 20px !important;">{{ $t("header.innovationmanage") }}</el-menu-item>
-          </router-link>
+          <el-menu-item index="/uc/safe">
+            <router-link to="/uc/safe">{{ $t("uc.member.securitysetting") }}</router-link>
+          </el-menu-item>
+          <el-menu-item index="/uc/money">
+            <router-link to="/uc/money">{{ $t("header.assetmanage") }}</router-link>
+          </el-menu-item>
+          <el-menu-item index="/uc/innovation/minings">
+            <router-link to="/uc/innovation/minings">{{ $t("header.innovationmanage") }}</router-link>
+          </el-menu-item>
         </el-sub-menu>
 
         <div v-if="isLogin" @click="logout" style="margin-top: 5px; padding: 8px 24px 8px 5px; color: #bdc2ca; cursor: pointer;">
@@ -225,9 +227,9 @@
           </el-menu-item>
         </el-sub-menu>
 
-        <router-link to="/app">
-          <el-menu-item index="nav-appdownload">{{ $t("header.appdownlaod") }}</el-menu-item>
-        </router-link>
+        <el-menu-item index="/app">
+          <router-link to="/app">{{ $t("header.appdownlaod") }}</router-link>
+        </el-menu-item>
       </el-menu>
     </el-drawer>
     <div class="shoujiShow">
@@ -522,6 +524,41 @@ const handleExternalToken = () => {
   }
 }
 
+/**
+ * 根据路由路径同步导航菜单激活状态
+ * 解决快速点击导航时菜单状态与实际路由不同步的问题
+ */
+const syncActiveNav = (path) => {
+  // 使用完整路径作为菜单索引，与 el-menu-item 的 index 匹配
+  const navMap = {
+    '/index': '/',
+    '/': '/',
+    '/exchange': '/exchange',
+    '/ctc': '/ctc',
+    '/otc': '/otc/trade/usdt',
+    '/otc/trade': '/otc/trade/usdt',
+    '/otc/trade/usdt': '/otc/trade/usdt',
+    '/swapindex': '/swapindex/1',
+    '/swapindex/1': '/swapindex/1',
+    '/swapindex/2': '/swapindex/2',
+    '/activity': '/activity',
+    '/lab': '/activity',
+    '/mining': '/mining',
+    '/crowdfunding': '/crowdfunding'
+  }
+
+  // 精确匹配或前缀匹配
+  for (const [routePath, menuPath] of Object.entries(navMap)) {
+    if (path === routePath || path.startsWith(routePath + '/') || path.startsWith(routePath + '?')) {
+      store?.commit('navigate', menuPath)
+      return
+    }
+  }
+
+  // 默认设置为首页
+  store?.commit('navigate', '/')
+}
+
 // 路由监听
 const handleRouteChange = (to) => {
   pageView.value = 'page-view'
@@ -553,28 +590,23 @@ const handleRouteChange = (to) => {
 
 // 页面标题更新
 const updatePageTitle = () => {
-  switch (activeNav.value) {
-    case 'nav-exchange':
-      window.document.title = (lang.value === '简体中文' ? '交易中心' : 'Exchange') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
-      break
-    case 'nav-service':
-      window.document.title = (lang.value === '简体中文' ? '公告' : 'Announcement') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
-      break
-    case 'nav-about':
-      window.document.title = (lang.value === '简体中文' ? '关于' : 'About') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
-      break
-    case 'nav-lab':
-      window.document.title = (lang.value === '简体中文' ? '公益创新室' : 'Lab') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
-      break
-    case 'nav-mining':
-      window.document.title = (lang.value === '简体中文' ? '矿机' : 'Mining') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
-      break
-    case 'nav-invite':
-      window.document.title = (lang.value === '简体中文' ? '全球传递爱' : 'Promotion') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
-      break
-    default:
-      window.document.title = 'MSCOIN | MSCOIN 官网 - 全球比特币交易平台 | 全球数字货币交易平台'
-      break
+  const currentPath = router?.currentRoute?.value?.path || ''
+
+  // 根据路由路径更新标题
+  if (currentPath.startsWith('/exchange')) {
+    window.document.title = (lang.value === '简体中文' ? '交易中心' : 'Exchange') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+  } else if (currentPath.startsWith('/notice')) {
+    window.document.title = (lang.value === '简体中文' ? '公告' : 'Announcement') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+  } else if (currentPath.startsWith('/about')) {
+    window.document.title = (lang.value === '简体中文' ? '关于' : 'About') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+  } else if (currentPath.startsWith('/activity') || currentPath.startsWith('/lab')) {
+    window.document.title = (lang.value === '简体中文' ? '公益创新室' : 'Lab') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+  } else if (currentPath.startsWith('/mining')) {
+    window.document.title = (lang.value === '简体中文' ? '矿机' : 'Mining') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+  } else if (currentPath.startsWith('/partner')) {
+    window.document.title = (lang.value === '简体中文' ? '全球传递爱' : 'Promotion') + ' - MSCOIN | 全球比特币交易平台 | 全球数字货币交易平台'
+  } else {
+    window.document.title = 'MSCOIN | MSCOIN 官网 - 全球比特币交易平台 | 全球数字货币交易平台'
   }
 }
 
@@ -600,8 +632,10 @@ onMounted(() => {
   initialize()
   handleExternalToken()
 
-  // 监听路由变化
+  // 路由监听
   router?.afterEach((to) => {
+    // 同步导航菜单激活状态
+    syncActiveNav(to.path)
     handleRouteChange(to)
     updatePageTitle()
   })
