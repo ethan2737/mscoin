@@ -1866,11 +1866,15 @@ $night-color: #fff;
     display: flex;
     align-items: flex-start;
     margin-top: 5px;
+    max-width: 100%;
+    overflow-x: hidden;
 
     .left {
       flex: 0 0 20%;
       border-radius: 0px;
       margin-right: 10px;
+      min-width: 0;
+      overflow: hidden;
 
       .handlers {
         font-size: 0;
@@ -1934,6 +1938,8 @@ $night-color: #fff;
     .center {
       flex: 0 0 60%;
       margin-right: 5px;
+      min-width: 0;
+      overflow: hidden;
 
       .imgtable {
         height: 350px;
@@ -2017,6 +2023,8 @@ $night-color: #fff;
     .right {
       flex: 0 0 19%;
       margin-right: 5px;
+      min-width: 0;
+      overflow: hidden;
 
       .coin-menu {
         height: 785px;
@@ -2242,11 +2250,13 @@ $night-color: #fff;
 .exchange :deep(.plate-wrap .el-table__body-wrapper) {
   max-height: 180px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .exchange :deep(.right .el-table__body-wrapper) {
   max-height: 585px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .exchange :deep(.order .el-table__body-wrapper) {

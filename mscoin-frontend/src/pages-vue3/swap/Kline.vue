@@ -494,9 +494,13 @@ onBeforeUnmount(() => {
   .main {
     width: 99%;
     margin-left: 0.5%;
+    max-width: 100%;
+    overflow-x: hidden;
 
     .center {
       width: 100%;
+      min-width: 0;
+      overflow: hidden;
 
       .symbol {
         display: flex;
