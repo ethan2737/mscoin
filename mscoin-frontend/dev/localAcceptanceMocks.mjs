@@ -12,6 +12,24 @@ function pathOf(req) {
   return (req.url || '').split('?')[0]
 }
 
+async function readJsonBody(req) {
+  const chunks = []
+
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+
+  if (chunks.length === 0) {
+    return {}
+  }
+
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  } catch {
+    return {}
+  }
+}
+
 const otcCoins = [{ unit: 'USDT' }]
 
 const otcAdverts = [
@@ -108,16 +126,82 @@ const emptyPlate = {
   bid: { items: [] }
 }
 
+export function createLocalAcceptanceMockState() {
+  return {
+    favorSymbols: new Set(),
+    homepageAdvertisements: [
+      {
+        id: 11001,
+        name: '本地联调轮播-币币交易',
+        url: '/src/assets/images/bannerbg.png',
+        image: '/src/assets/images/bannerbg.png',
+        linkUrl: '/#/exchange/BTC_USDT',
+        title: 'BTC/USDT 交易入口'
+      },
+      {
+        id: 11002,
+        name: '本地联调轮播-众筹公益',
+        url: '/src/assets/images/crowdfunding_banner.png',
+        image: '/src/assets/images/crowdfunding_banner.png',
+        linkUrl: '/#/crowdfunding',
+        title: '众筹与公益创新实验室'
+      },
+      {
+        id: 11003,
+        name: '本地联调轮播-矿机理财',
+        url: '/src/assets/images/activity-bg_pro.jpg',
+        image: '/src/assets/images/activity-bg_pro.jpg',
+        linkUrl: '/#/mining',
+        title: '矿机专区体验页'
+      }
+    ]
+  }
+}
+
+export function resolveLocalAcceptanceMock({ method, path, body = {} }, state) {
+  if (path === '/uc/ancillary/system/advertise') {
+    return ok(state.homepageAdvertisements)
+  }
+
+  if (method === 'POST' && path === '/exchange/favor/find') {
+    return ok(Array.from(state.favorSymbols).map((symbol) => ({ symbol })))
+  }
+
+  if (method === 'POST' && path === '/exchange/favor/add') {
+    if (body.symbol) {
+      state.favorSymbols.add(body.symbol)
+    }
+    return ok(null)
+  }
+
+  if (method === 'POST' && path === '/exchange/favor/delete') {
+    if (body.symbol) {
+      state.favorSymbols.delete(body.symbol)
+    }
+    return ok(null)
+  }
+
+  return null
+}
+
 export function localAcceptanceMockPlugin() {
+  const state = createLocalAcceptanceMockState()
+
   return {
     name: 'local-acceptance-mocks',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
+      server.middlewares.use(async (req, res, next) => {
         const method = (req.method || 'GET').toUpperCase()
         const path = pathOf(req)
+        const requestBodyNeeded = method === 'POST' && (
+          path === '/exchange/favor/add' ||
+          path === '/exchange/favor/delete'
+        )
+        const body = requestBodyNeeded ? await readJsonBody(req) : {}
+        const resolved = resolveLocalAcceptanceMock({ method, path, body }, state)
 
-        if (path === '/uc/ancillary/system/advertise') {
-          return sendJson(res, 200, ok([]))
+        if (resolved) {
+          return sendJson(res, 200, resolved)
         }
 
         if (method === 'POST' && path === '/otc/coin') {
@@ -256,10 +340,6 @@ export function localAcceptanceMockPlugin() {
 
         if (method === 'POST' && path === '/uc/miningorder/fetch-profit') {
           return sendJson(res, 200, ok(null))
-        }
-
-        if (method === 'POST' && path === '/exchange/favor/find') {
-          return sendJson(res, 200, ok([]))
         }
 
         next()
