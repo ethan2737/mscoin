@@ -66,6 +66,8 @@ mscoin-backend/docker/*/conf/
 .claude/settings.local.json
 .openspec/
 .playwright-mcp/
+.omc/
+**/.omc/
 
 # OpenSpec archived changes (local-only storage)
 openspec/changes/archive/
