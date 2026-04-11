@@ -150,9 +150,10 @@ export default {
       this.convertTotal();
       this.initPoints();
       this.canvas.height = this.pHeight;
-      // this.drawAxis();
+      this.drawAxis();
       this.drawBuy();
       this.drawSell();
+      this.drawLabels();
     },
     drawBuy() {
       this.context.beginPath();
@@ -163,9 +164,9 @@ export default {
       this.context.lineTo((this.pWidth - 50) / 2, this.pHeight - 0);
       if (this.values.skin === "day") {
         this.context.fillStyle = "rgba(0,178,117,.5)";
-
       } else {
-        this.context.fillStyle = "#243235";
+        // 深色模式使用明显绿色
+        this.context.fillStyle = "rgba(0, 255, 136, 0.6)";
       }
       this.context.fill();
     },
@@ -180,99 +181,116 @@ export default {
         this.sellPoints[this.sellPoints.length - 1].y
       );
       this.context.lineTo(this.pWidth - 5, this.pHeight - 0);
-      this.context.fillStyle = "#392231";
+      // 深色模式使用明显红色
       if (this.values.skin === "day") {
         this.context.fillStyle = "rgba(241,80,87,.5)";
       } else {
-        this.context.fillStyle = "#392231";
+        this.context.fillStyle = "rgba(255, 95, 81, 0.6)";
       }
       this.context.fill();
     },
     drawAxis() {
+      const centerX = (this.pWidth - 50) / 2;
+      const axisColor = "#61688a";
+
+      // 绘制中心垂直分界线
       this.context.beginPath();
-      this.context.moveTo(0, this.pHeight - 50);
-      this.context.lineTo(this.pWidth - 50, this.pHeight - 50);
-      this.context.lineTo(this.pWidth - 50, 0);
-      this.context.strokeStyle = "#61688a";
+      this.context.moveTo(centerX, 0);
+      this.context.lineTo(centerX, this.pHeight - 25);
+      this.context.strokeStyle = axisColor;
+      this.context.setLineDash([5, 5]);
+      this.context.stroke();
+      this.context.setLineDash([]);
+      this.context.closePath();
+
+      // 绘制 X 轴水平线
+      this.context.beginPath();
+      this.context.moveTo(0, this.pHeight - 25);
+      this.context.lineTo(this.pWidth - 50, this.pHeight - 25);
+      this.context.strokeStyle = axisColor;
       this.context.stroke();
       this.context.closePath();
 
+      // 绘制 Y 轴垂直线
       this.context.beginPath();
-      this.context.moveTo(this.pWidth - 50, this.pHeight - 50);
-      this.context.lineTo(this.pWidth - 50 + 5, this.pHeight - 50);
-      this.context.strokeStyle = "#61688a";
+      this.context.moveTo(this.pWidth - 50, 0);
+      this.context.lineTo(this.pWidth - 50, this.pHeight - 25);
+      this.context.strokeStyle = axisColor;
       this.context.stroke();
       this.context.closePath();
 
-      this.context.fillStyle = "#61688a";
-      this.context.font = "12px Adobe Ming Std";
-      this.context.fillText("0", this.pWidth - 50 + 10, this.pHeight - 50 + 5);
+      // X 轴价格刻度 - 买入侧
+      this.context.fillStyle = axisColor;
+      this.context.font = "11px Microsoft YaHei";
+      const buyStep = Math.floor(this.buyPoints.length / 4);
+      for (let i = 0; i < this.buyPoints.length; i += buyStep || 1) {
+        const point = this.buyPoints[i];
+        if (!point) continue;
 
-      if(this.buyPoints.length > 50) {
-          this.buyPoints.length = 50;
-      }
-      for (var i = 0; i < this.buyPoints.length; i++) {
-        if (i % 10) {
-          this.context.beginPath();
-          this.context.moveTo(this.buyPoints[i].x, this.pHeight - 50);
-          this.context.lineTo(this.buyPoints[i].x, this.pHeight - 45);
-          this.context.strokeStyle = "#61688a";
-          this.context.stroke();
-          this.context.closePath();
-
-          this.context.fillStyle = "#61688a";
-          this.context.font = "12px Adobe Ming Std";
-          this.context.fillText(
-            this.buyPoints[i].price,
-            this.buyPoints[i].x - 10,
-            this.pHeight - 30
-          );
-        }
-      }
-
-      for (var i = 0; i < this.sellPoints.length; i++) {
-        if (i % 10) {
-          this.context.beginPath();
-          this.context.moveTo(this.sellPoints[i].x, this.pHeight - 50);
-          this.context.lineTo(this.sellPoints[i].x, this.pHeight - 45);
-          this.context.strokeStyle = "#61688a";
-          this.context.stroke();
-          this.context.closePath();
-
-          this.context.fillStyle = "#61688a";
-          this.context.font = "12px Adobe Ming Std";
-          this.context.fillText(
-            this.sellPoints[i].price,
-            this.sellPoints[i].x - 10,
-            this.pHeight - 30
-          );
-        }
-      }
-
-      var yInterval = Math.floor((this.pHeight - 100) / 5);
-      for (var i = 1; i <= 5; i++) {
+        // 绘制刻度线
         this.context.beginPath();
-        this.context.moveTo(
-          this.pWidth - 50,
-          this.pHeight - 50 - i * yInterval
-        );
-        this.context.lineTo(
-          this.pWidth - 50 + 5,
-          this.pHeight - 50 - i * yInterval
-        );
-        this.context.strokeStyle = "#61688a";
+        this.context.moveTo(point.x, this.pHeight - 25);
+        this.context.lineTo(point.x, this.pHeight - 20);
+        this.context.strokeStyle = axisColor;
         this.context.stroke();
         this.context.closePath();
 
-        this.context.fillStyle = "#61688a";
-        this.context.font = "12px Adobe Ming Std";
-        var yVal = this.yObj.max * i / 6;
-        this.context.fillText(
-          yVal,
-          this.pWidth - 50 + 10,
-          this.pHeight - 50 - i * yInterval + 5
-        );
+        // 绘制价格标签
+        const priceLabel = point.price?.toFixed(4) ?? "";
+        this.context.fillText(priceLabel, point.x - 15, this.pHeight - 10);
       }
+
+      // X 轴价格刻度 - 卖出侧
+      const sellStep = Math.floor(this.sellPoints.length / 4);
+      for (let i = 0; i < this.sellPoints.length; i += sellStep || 1) {
+        const point = this.sellPoints[i];
+        if (!point) continue;
+
+        // 绘制刻度线
+        this.context.beginPath();
+        this.context.moveTo(point.x, this.pHeight - 25);
+        this.context.lineTo(point.x, this.pHeight - 20);
+        this.context.strokeStyle = axisColor;
+        this.context.stroke();
+        this.context.closePath();
+
+        // 绘制价格标签
+        const priceLabel = point.price?.toFixed(4) ?? "";
+        this.context.fillText(priceLabel, point.x - 15, this.pHeight - 10);
+      }
+
+      // Y 轴数量刻度
+      const yInterval = Math.floor((this.pHeight - 50) / 5);
+      for (let i = 1; i <= 4; i++) {
+        const yPos = this.pHeight - 25 - i * yInterval;
+        const yValue = (this.yObj.max * i / 5) || 0;
+
+        // 绘制刻度线
+        this.context.beginPath();
+        this.context.moveTo(this.pWidth - 50, yPos);
+        this.context.lineTo(this.pWidth - 45, yPos);
+        this.context.strokeStyle = axisColor;
+        this.context.stroke();
+        this.context.closePath();
+
+        // 绘制数量标签
+        this.context.fillStyle = axisColor;
+        this.context.fillText(yValue.toFixed(2), this.pWidth - 48, yPos + 3);
+      }
+    },
+    // 绘制买卖文字标签
+    drawLabels() {
+      const centerX = (this.pWidth - 50) / 2;
+
+      // 买单标签 (左侧)
+      this.context.fillStyle = "rgba(0, 255, 136, 0.9)";
+      this.context.font = "bold 14px Microsoft YaHei";
+      this.context.fillText("买单 Bid", 10, this.pHeight - 40);
+
+      // 卖单标签 (右侧)
+      this.context.fillStyle = "rgba(255, 95, 81, 0.9)";
+      this.context.font = "bold 14px Microsoft YaHei";
+      this.context.fillText("卖单 Ask", this.pWidth - 100, this.pHeight - 40);
     },
     initHoverEvent() {
       var opts = this;
