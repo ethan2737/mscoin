@@ -418,52 +418,84 @@
           <span @click="changePlate('sell')" :class="{active: selectedPlate === 'sell'}">{{ $t('exchange.sellplate') }}</span>
         </div>
 
-        <!-- 卖盘 -->
-        <el-table
-          v-show="selectedPlate !== 'buy'"
-          :data="plate.askRows"
-          highlight-row
-          @current-change="buyPlate"
-          :no-data-text="$t('common.nodata')"
-        >
-          <el-table-column prop="price" :label="$t('exchange.price')">
-            <template #default="{ row }">
-              <span :class="row.direction?.toLowerCase()">{{ row.price?.toFixed(baseCoinScale) }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="amount" :label="$t('exchange.num')" />
-          <el-table-column prop="totalAmount" :label="$t('exchange.total')" />
-        </el-table>
+        <div class="plate-book">
+          <!-- 卖盘 -->
+          <div v-show="selectedPlate !== 'buy'" class="plate-table plate-table-sell">
+            <el-table
+              :data="plate.askRows"
+              highlight-current-row
+              @row-click="buyPlate"
+              :no-data-text="$t('common.nodata')"
+            >
+              <el-table-column prop="price" :label="$t('exchange.price')">
+                <template #default="{ row }">
+                  <span :class="row.direction?.toLowerCase()">
+                    {{ row.isPlaceholder ? row.displayPrice : row.price?.toFixed(baseCoinScale) }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="amount" :label="$t('exchange.num')">
+                <template #default="{ row }">
+                  {{ row.isPlaceholder ? row.displayAmount : row.amount }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="totalAmount" :label="$t('exchange.total')">
+                <template #default="{ row }">
+                  {{ row.isPlaceholder ? row.displayTotalAmount : row.totalAmount }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
 
-        <!-- 当前价格 -->
-        <div class="plate-nowprice">
-          <span class="price" :class="{buy: currentCoin.change > 0, sell: currentCoin.change < 0}">
-            {{ currentCoin.price?.toFixed(baseCoinScale) }}
-          </span>
-          <span v-if="currentCoin.change > 0" class="buy">↑</span>
-          <span v-else-if="currentCoin.change < 0" class="sell">↓</span>
-          <span class="price-cny"> ≈ {{ (currentCoin.usdRate * CNYRate)?.toFixed(2) }} CNY</span>
+          <!-- 当前价格 -->
+          <div class="plate-nowprice">
+            <div class="plate-nowprice__labels">
+              <span class="sell">{{ $t('exchange.sellplate') }}</span>
+              <span class="plate-nowprice__label">{{ $t('exchange.lastprice') }}</span>
+              <span class="buy">{{ $t('exchange.buyplate') }}</span>
+            </div>
+            <div class="plate-nowprice__value">
+              <span class="price" :class="{buy: currentCoin.change > 0, sell: currentCoin.change < 0}">
+                {{ currentCoin.price?.toFixed(baseCoinScale) }}
+              </span>
+              <span v-if="currentCoin.change > 0" class="buy">↑</span>
+              <span v-else-if="currentCoin.change < 0" class="sell">↓</span>
+              <span class="price-cny"> ≈ {{ (currentCoin.usdRate * CNYRate)?.toFixed(2) }} CNY</span>
+            </div>
+          </div>
+
+          <!-- 买盘 -->
+          <div v-show="selectedPlate !== 'sell'" class="plate-table plate-table-buy">
+            <el-table
+              :data="plate.bidRows"
+              highlight-current-row
+              @row-click="sellPlate"
+              :no-data-text="$t('common.nodata')"
+            >
+              <el-table-column prop="price" :label="$t('exchange.price')">
+                <template #default="{ row }">
+                  <span :class="row.direction?.toLowerCase()">
+                    {{ row.isPlaceholder ? row.displayPrice : row.price?.toFixed(baseCoinScale) }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="amount" :label="$t('exchange.num')">
+                <template #default="{ row }">
+                  {{ row.isPlaceholder ? row.displayAmount : row.amount }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="totalAmount" :label="$t('exchange.total')">
+                <template #default="{ row }">
+                  {{ row.isPlaceholder ? row.displayTotalAmount : row.totalAmount }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
         </div>
 
-        <!-- 买盘 -->
-        <el-table
-          v-show="selectedPlate !== 'sell'"
-          :data="plate.bidRows"
-          highlight-row
-          @current-change="sellPlate"
-          :no-data-text="$t('common.nodata')"
-        >
-          <el-table-column prop="price" :label="$t('exchange.price')">
-            <template #default="{ row }">
-              <span :class="row.direction?.toLowerCase()">{{ row.price?.toFixed(baseCoinScale) }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="amount" :label="$t('exchange.num')" />
-          <el-table-column prop="totalAmount" :label="$t('exchange.total')" />
-        </el-table>
-
         <!-- 最新成交 -->
-        <div class="trade-wrap" v-show="!showCountDown" style="margin-top: 10px;">
+        <div class="trade-wrap" v-show="!showCountDown">
+          <div class="trade-wrap__header">最新成交</div>
           <el-table :data="trade.rows" :no-data-text="$t('common.nodata')">
             <el-table-column prop="amount" :label="$t('exchange.num')">
               <template #default="{ row }">
@@ -597,6 +629,12 @@ import Datafeeds from '../../assets/js/charting_library/datafeed/bitrade.js'
 import { shouldUseAreaChartForSymbol } from './chart-preferences'
 import { applyFavorState, getFavorSuccessMessage } from './favor'
 import { pickWalletBalances } from './wallet'
+import {
+  PLATE_DISPLAY_ROWS,
+  buildBuyPlateRows,
+  buildSellPlateRows,
+  getPlateRowPrice
+} from './plate-utils'
 
 // Vuex 3.x 和 Vue Router 3.x 兼容
 const store = inject('store')
@@ -719,7 +757,7 @@ const trade = reactive({
 
 // 买卖盘数据
 const plate = reactive({
-  maxPostion: 10,
+  maxPostion: PLATE_DISPLAY_ROWS,
   columns: [],
   askRows: [],
   bidRows: [],
@@ -894,11 +932,7 @@ const changeBaseCion = (str) => {
 }
 
 const changePlate = (str) => {
-  if (str !== 'all') {
-    plate.maxPostion = 20
-  } else {
-    plate.maxPostion = 10
-  }
+  plate.maxPostion = PLATE_DISPLAY_ROWS
   getPlate(str)
 }
 
@@ -1310,76 +1344,10 @@ const getPlate = (str = '') => {
     .then(response => {
       const resp = unwrapPayload(response)
       if (!resp) return
-      plate.askRows = []
-      plate.bidRows = []
-
-      if (resp.ask && resp.ask.items) {
-        for (let i = 0; i < resp.ask.items.length; i++) {
-          if (i === 0) {
-            resp.ask.items[i].totalAmount = resp.ask.items[i].amount
-          } else {
-            resp.ask.items[i].totalAmount = resp.ask.items[i - 1].totalAmount + resp.ask.items[i].amount
-          }
-        }
-
-        if (resp.ask.items.length >= plate.maxPostion) {
-          for (let i = plate.maxPostion; i > 0; i--) {
-            const ask = resp.ask.items[i - 1]
-            ask.direction = 'SELL'
-            ask.position = i
-            plate.askRows.push(ask)
-          }
-          plate.askTotle = plate.askRows[0].totalAmount
-        } else {
-          for (let i = plate.maxPostion; i > resp.ask.items.length; i--) {
-            const ask = { price: 0, amount: 0 }
-            ask.direction = 'SELL'
-            ask.position = i
-            ask.totalAmount = ask.amount
-            plate.askRows.push(ask)
-          }
-          for (let i = resp.ask.items.length; i > 0; i--) {
-            const ask = resp.ask.items[i - 1]
-            ask.direction = 'SELL'
-            ask.position = i
-            plate.askRows.push(ask)
-          }
-          const askItemIndex = Math.max(resp.ask.items.length - 1, 0)
-          plate.askTotle = plate.askRows[askItemIndex].totalAmount
-        }
-      }
-
-      if (resp.bid && resp.bid.items) {
-        for (let i = 0; i < resp.bid.items.length; i++) {
-          if (i === 0) {
-            resp.bid.items[i].totalAmount = resp.bid.items[i].amount
-          } else {
-            resp.bid.items[i].totalAmount = resp.bid.items[i - 1].totalAmount + resp.bid.items[i].amount
-          }
-        }
-
-        for (let i = 0; i < resp.bid.items.length; i++) {
-          const bid = resp.bid.items[i]
-          bid.direction = 'BUY'
-          bid.position = i + 1
-          plate.bidRows.push(bid)
-          if (i === plate.maxPostion - 1) break
-        }
-
-        if (resp.bid.items.length < plate.maxPostion) {
-          for (let i = resp.bid.items.length; i < plate.maxPostion; i++) {
-            const bid = { price: 0, amount: 0 }
-            bid.direction = 'BUY'
-            bid.position = i + 1
-            bid.totalAmount = 0
-            plate.bidRows.push(bid)
-          }
-          const bidItemIndex = Math.max(resp.bid.items.length - 1, 0)
-          plate.bidTotle = plate.bidRows[bidItemIndex].totalAmount
-        } else {
-          plate.bidTotle = plate.bidRows[plate.bidRows.length - 1].totalAmount
-        }
-      }
+      plate.askRows = buildSellPlateRows(resp.ask?.items, plate.maxPostion)
+      plate.bidRows = buildBuyPlateRows(resp.bid?.items, plate.maxPostion)
+      plate.askTotle = (resp.ask?.items || []).reduce((total, item) => total + (Number(item?.amount) || 0), 0)
+      plate.bidTotle = (resp.bid?.items || []).reduce((total, item) => total + (Number(item?.amount) || 0), 0)
 
       if (str !== '') {
         selectedPlate.value = str
@@ -1481,43 +1449,11 @@ const startWebsock = () => {
   socket.on(`/topic/market/trade-plate/${currentCoin.symbol}`, (msg) => {
     const resp = JSON.parse(msg)
     if (resp.direction === 'SELL') {
-      const asks = resp.items
-      plate.askRows = []
-      let totle = 0
-      for (let i = plate.maxPostion - 1; i >= 0; i--) {
-        const ask = i < asks.length ? asks[i] : { price: 0, amount: 0 }
-        ask.direction = 'SELL'
-        ask.position = i + 1
-        plate.askRows.push(ask)
-      }
-      for (let i = plate.askRows.length - 1; i >= 0; i--) {
-        if (i === plate.askRows.length - 1 || plate.askRows[i].price === 0) {
-          plate.askRows[i].totalAmount = plate.askRows[i].amount
-        } else {
-          plate.askRows[i].totalAmount = plate.askRows[i + 1].totalAmount + plate.askRows[i].amount
-        }
-        totle += plate.askRows[i].amount
-      }
-      plate.askTotle = totle
+      plate.askRows = buildSellPlateRows(resp.items, plate.maxPostion)
+      plate.askTotle = (resp.items || []).reduce((total, item) => total + (Number(item?.amount) || 0), 0)
     } else {
-      const bids = resp.items
-      plate.bidRows = []
-      let totle = 0
-      for (let i = 0; i < plate.maxPostion; i++) {
-        const bid = i < bids.length ? bids[i] : { price: 0, amount: 0 }
-        bid.direction = 'BUY'
-        bid.position = i + 1
-        plate.bidRows.push(bid)
-      }
-      for (let i = 0; i < plate.bidRows.length; i++) {
-        if (i === 0 || plate.bidRows[i].amount === 0) {
-          plate.bidRows[i].totalAmount = plate.bidRows[i].amount
-        } else {
-          plate.bidRows[i].totalAmount = plate.bidRows[i - 1].totalAmount + plate.bidRows[i].amount
-        }
-        totle += plate.bidRows[i].amount
-      }
-      plate.bidTotle = totle
+      plate.bidRows = buildBuyPlateRows(resp.items, plate.maxPostion)
+      plate.bidTotle = (resp.items || []).reduce((total, item) => total + (Number(item?.amount) || 0), 0)
     }
     if (currentImgTable.value === 's') {
       getPlateFull()
@@ -1526,14 +1462,16 @@ const startWebsock = () => {
 }
 
 const buyPlate = (currentRow) => {
-  if (currentRow && currentRow.price) {
-    form.buy.limitPrice = currentRow.price
+  const price = getPlateRowPrice(currentRow)
+  if (price !== null) {
+    form.buy.limitPrice = price
   }
 }
 
 const sellPlate = (currentRow) => {
-  if (currentRow && currentRow.price) {
-    form.sell.limitPrice = currentRow.price
+  const price = getPlateRowPrice(currentRow)
+  if (price !== null) {
+    form.sell.limitPrice = price
   }
 }
 
@@ -2058,13 +1996,37 @@ $night-color: #fff;
       .plate-nowprice {
         text-align: center;
         background-color: #27313e;
-        line-height: 1;
         display: flex;
-        align-items: center;
-        height: 40px;
+        flex-direction: column;
         justify-content: center;
+        min-height: 48px;
+        padding: 4px 10px;
         font-size: 14px;
         font-weight: 500;
+        gap: 2px;
+
+        .plate-nowprice__labels,
+        .plate-nowprice__value {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+        }
+
+        .plate-nowprice__label {
+          color: #c7cce6;
+          font-size: 12px;
+          letter-spacing: 0.3px;
+        }
+
+        .plate-nowprice__labels {
+          font-size: 12px;
+        }
+
+        .plate-nowprice__value {
+          justify-content: center;
+          line-height: 1;
+        }
 
         .price {
           font-size: 18px;
@@ -2586,12 +2548,28 @@ $night-color: #fff;
 
 // 左侧区域 flex 布局
 .plate-wrap {
-  .handlers {
+  .plate-handlers {
     flex-shrink: 0;
   }
 
-  .el-table {
-    flex-shrink: 0;
+  .plate-book {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .plate-table {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    .el-table {
+      flex: 1;
+      min-height: 0;
+    }
   }
 
   .plate-nowprice {
@@ -2599,10 +2577,23 @@ $night-color: #fff;
   }
 
   .trade-wrap {
-    flex: 1;
+    flex: 0 0 176px;
     min-height: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    margin-top: 10px;
+
+    .trade-wrap__header {
+      height: 40px;
+      line-height: 40px;
+      padding: 0 20px;
+      color: #fff;
+      font-size: 14px;
+      background-color: #192330;
+      border-bottom: 1px solid #27313e;
+      flex-shrink: 0;
+    }
 
     :deep(.el-table__body-wrapper) {
       flex: 1;
