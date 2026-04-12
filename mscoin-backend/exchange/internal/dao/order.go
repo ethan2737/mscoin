@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"mscoin-common/msdb"
 	"mscoin-common/msdb/gorms"
+	"time"
 )
 
 type ExchangeOrderDao struct {
@@ -41,7 +42,11 @@ func (e *ExchangeOrderDao) UpdateOrderStatusTrading(ctx context.Context, orderId
 func (e *ExchangeOrderDao) UpdateStatusCancel(ctx context.Context, orderId string) error {
 	session := e.conn.Session(ctx)
 	err := session.Model(&model.ExchangeOrder{}).
-		Where("order_id=?", orderId).Update("status", model.Canceled).Error
+		Where("order_id=? and status in ?", orderId, []int{model.Init, model.Trading}).
+		Updates(map[string]any{
+			"status":        model.Canceled,
+			"canceled_time": time.Now().UnixMilli(),
+		}).Error
 	return err
 }
 
@@ -74,11 +79,11 @@ func (e *ExchangeOrderDao) FindCurrentTradingCount(ctx context.Context, id int64
 func (e *ExchangeOrderDao) FindOrderHistory(ctx context.Context, symbol string, page int64, size int64, memberId int64) (list []*model.ExchangeOrder, total int64, err error) {
 	session := e.conn.Session(ctx)
 	err = session.Model(&model.ExchangeOrder{}).
-		Where("symbol=? and member_id=?", symbol, memberId).
+		Where("symbol=? and member_id=? and status<>?", symbol, memberId, model.Trading).
 		Limit(int(size)).
 		Offset(int((page - 1) * size)).Find(&list).Error
 	err = session.Model(&model.ExchangeOrder{}).
-		Where("symbol=? and member_id=?", symbol, memberId).
+		Where("symbol=? and member_id=? and status<>?", symbol, memberId, model.Trading).
 		Count(&total).Error
 	return
 }

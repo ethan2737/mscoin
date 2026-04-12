@@ -418,6 +418,7 @@ func (t *CoinTrade) initData() {
 // matchLimitPriceWithMP focusedOrder 限价单
 func (t *CoinTrade) matchLimitPriceWithMP(mpList TradeTimeQueue, focusedOrder *model.ExchangeOrder) {
 	var delOrders []string
+	var completeOrders []*model.ExchangeOrder
 	for _, matchOrder := range mpList {
 		if matchOrder.MemberId == focusedOrder.MemberId {
 			//自己的订单就不处理了
@@ -439,6 +440,7 @@ func (t *CoinTrade) matchLimitPriceWithMP(mpList TradeTimeQueue, focusedOrder *m
 				matchOrder.Status = model.Completed
 				//从队列进行删除
 				delOrders = append(delOrders, matchOrder.OrderId)
+				completeOrders = append(completeOrders, matchOrder)
 			}
 			focusedOrder.TradedAmount = op.AddFloor(focusedOrder.TradedAmount, focusedAmount, 8)
 			focusedOrder.Turnover = op.AddFloor(focusedOrder.Turnover, turnover, 8)
@@ -510,8 +512,12 @@ func (t *CoinTrade) matchLimitPriceWithLP(lpList *LimitPriceQueue, focusedOrder 
 				matchOrder.Turnover = op.AddFloor(matchOrder.Turnover, turnover, 8)
 				if op.SubFloor(matchOrder.Amount, matchOrder.TradedAmount, 8) <= 0 {
 					matchOrder.Status = model.Completed
+					completeOrders = append(completeOrders, matchOrder)
+					completeOrders = append(completeOrders, matchOrder)
 					//从队列进行删除
 					delOrders = append(delOrders, matchOrder.OrderId)
+					completeOrders = append(completeOrders, matchOrder)
+					completeOrders = append(completeOrders, matchOrder)
 					completeOrders = append(completeOrders, matchOrder)
 				}
 				focusedOrder.TradedAmount = op.AddFloor(focusedOrder.TradedAmount, focusedAmount, 8)
@@ -532,6 +538,8 @@ func (t *CoinTrade) matchLimitPriceWithLP(lpList *LimitPriceQueue, focusedOrder 
 				matchOrder.TradedAmount = op.AddFloor(matchOrder.TradedAmount, matchAmount, 8)
 				matchOrder.Turnover = op.AddFloor(matchOrder.Turnover, turnover, 8)
 				matchOrder.Status = model.Completed
+				completeOrders = append(completeOrders, matchOrder)
+				completeOrders = append(completeOrders, matchOrder)
 				completeOrders = append(completeOrders, matchOrder)
 				//从队列进行删除
 				delOrders = append(delOrders, matchOrder.OrderId)
@@ -568,7 +576,12 @@ func (t *CoinTrade) matchLimitPriceWithLP(lpList *LimitPriceQueue, focusedOrder 
 	if sellNotify {
 		t.sendTradPlateMsg(t.sellTradePlate)
 	}
+	sentOrders := make(map[string]struct{}, len(completeOrders))
 	for _, v := range completeOrders {
+		if _, exists := sentOrders[v.OrderId]; exists {
+			continue
+		}
+		sentOrders[v.OrderId] = struct{}{}
 		t.sendCompleteOrder(v)
 	}
 }
@@ -578,6 +591,7 @@ func (t *CoinTrade) matchMarketPriceWithLP(lpList *LimitPriceQueue, focusedOrder
 	lpList.mux.Lock()
 	defer lpList.mux.Unlock()
 	var delOrders []string
+	var completeOrders []*model.ExchangeOrder
 	buyNotify := false
 	sellNotify := false
 	//如果是买  卖的队列价格是从低到高  如果是卖 买的队列 价格是从高到低
@@ -612,6 +626,7 @@ func (t *CoinTrade) matchMarketPriceWithLP(lpList *LimitPriceQueue, focusedOrder
 				focusedOrder.TradedAmount = op.AddFloor(focusedOrder.TradedAmount, focusedAmount, 8)
 				focusedOrder.Turnover = op.AddFloor(focusedOrder.Turnover, turnover, 8)
 				focusedOrder.Status = model.Completed
+				completeOrders = append(completeOrders, focusedOrder)
 				if matchOrder.Direction == model.BUY {
 					t.buyTradePlate.Remove(matchOrder, focusedAmount)
 					buyNotify = true
@@ -665,6 +680,14 @@ func (t *CoinTrade) matchMarketPriceWithLP(lpList *LimitPriceQueue, focusedOrder
 	}
 	if sellNotify {
 		t.sendTradPlateMsg(t.sellTradePlate)
+	}
+	sentOrders := make(map[string]struct{}, len(completeOrders))
+	for _, order := range completeOrders {
+		if _, exists := sentOrders[order.OrderId]; exists {
+			continue
+		}
+		sentOrders[order.OrderId] = struct{}{}
+		t.sendCompleteOrder(order)
 	}
 }
 

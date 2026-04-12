@@ -97,6 +97,12 @@ func (d *MemberWalletDomain) UpdateWalletCoinAndBase(ctx context.Context, baseWa
 	})
 }
 
+func (d *MemberWalletDomain) UpdateWallet(ctx context.Context, wallet *model.MemberWallet) error {
+	return d.transaction.Action(func(conn msdb.DbConn) error {
+		return d.memberWalletRepo.UpdateWallet(ctx, conn, wallet.Id, wallet.Balance, wallet.FrozenBalance)
+	})
+}
+
 func (d *MemberWalletDomain) FindWallet(ctx context.Context, userId int64) (list []*model.MemberWalletCoin, err error) {
 	memberWallets, err := d.memberWalletRepo.FindByMemberId(ctx, userId)
 	if err != nil {

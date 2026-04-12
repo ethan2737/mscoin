@@ -28,6 +28,10 @@ type OrderAdd struct {
 	CoinSymbol string  `json:"coinSymbol"`
 }
 
+type OrderCancelMessage struct {
+	OrderId string `json:"orderId"`
+}
+
 func ExchangeOrderAdd(redisCli *redis.Redis, cli *database.KafkaClient, orderRpc eclient.Order, db *msdb.MsDB) {
 	//exchange rpc kafka cli
 	for {
@@ -284,4 +288,111 @@ func ExchangeOrderComplete(redisCli *redis.Redis, cli *database.KafkaClient, db 
 		}
 
 	}
+}
+
+func ExchangeOrderCancel(redisCli *redis.Redis, cli *database.KafkaClient, orderRpc eclient.Order, db *msdb.MsDB) {
+	for {
+		kafkaData := cli.Read()
+		orderId := string(kafkaData.Key)
+		var cancelMsg OrderCancelMessage
+		json.Unmarshal(kafkaData.Data, &cancelMsg)
+		if cancelMsg.OrderId == "" {
+			cancelMsg.OrderId = orderId
+		}
+		if cancelMsg.OrderId == "" {
+			continue
+		}
+
+		ctx := context.Background()
+		exchangeOrderOrigin, err := orderRpc.FindByOrderId(ctx, &order.OrderReq{
+			OrderId: cancelMsg.OrderId,
+		})
+		if err != nil {
+			if isOrderNotFoundError(err) {
+				logx.Infof("discard stale exchange_order_cancel message, order not found: %s", cancelMsg.OrderId)
+				continue
+			}
+			logx.Error(err)
+			cli.Rput(kafkaData)
+			time.Sleep(250 * time.Millisecond)
+			continue
+		}
+		if exchangeOrderOrigin == nil || exchangeOrderOrigin.Status != Canceled {
+			continue
+		}
+
+		walletDomain := domain.NewMemberWalletDomain(db, nil, nil)
+		lock := redis.NewRedisLock(redisCli, fmt.Sprintf("exchange_order_cancel::%d::%s", exchangeOrderOrigin.MemberId, cancelMsg.OrderId))
+		acquire, err := lock.Acquire()
+		if err != nil {
+			logx.Error(err)
+			time.Sleep(250 * time.Millisecond)
+			continue
+		}
+		if !acquire {
+			continue
+		}
+
+		err = applyCancelWalletUpdate(ctx, walletDomain, exchangeOrderOrigin)
+		if err != nil {
+			logx.Error(err)
+			cli.Rput(kafkaData)
+			time.Sleep(250 * time.Millisecond)
+		}
+		lock.Release()
+	}
+}
+
+func applyCancelWalletUpdate(ctx context.Context, walletDomain *domain.MemberWalletDomain, orderInfo *order.ExchangeOrderOrigin) error {
+	if orderInfo == nil {
+		return nil
+	}
+	if orderInfo.Direction == BUY {
+		baseWallet, err := walletDomain.FindWalletByMemIdAndCoin(ctx, orderInfo.MemberId, orderInfo.BaseSymbol)
+		if err != nil {
+			return err
+		}
+		if baseWallet == nil {
+			return fmt.Errorf("base wallet not found, memberId=%d symbol=%s", orderInfo.MemberId, orderInfo.BaseSymbol)
+		}
+		releaseAmount := releaseCanceledOrderFunds(orderInfo)
+		baseWallet.FrozenBalance = op.SubFloor(baseWallet.FrozenBalance, releaseAmount, 8)
+		baseWallet.Balance = op.AddFloor(baseWallet.Balance, releaseAmount, 8)
+		return walletDomain.UpdateWallet(ctx, baseWallet)
+	}
+
+	coinWallet, err := walletDomain.FindWalletByMemIdAndCoin(ctx, orderInfo.MemberId, orderInfo.CoinSymbol)
+	if err != nil {
+		return err
+	}
+	if coinWallet == nil {
+		return fmt.Errorf("coin wallet not found, memberId=%d symbol=%s", orderInfo.MemberId, orderInfo.CoinSymbol)
+	}
+	releaseAmount := releaseCanceledOrderFunds(orderInfo)
+	coinWallet.FrozenBalance = op.SubFloor(coinWallet.FrozenBalance, releaseAmount, 8)
+	coinWallet.Balance = op.AddFloor(coinWallet.Balance, releaseAmount, 8)
+	return walletDomain.UpdateWallet(ctx, coinWallet)
+}
+
+func releaseCanceledOrderFunds(orderInfo *order.ExchangeOrderOrigin) float64 {
+	if orderInfo == nil {
+		return 0
+	}
+
+	if orderInfo.Direction == BUY {
+		if orderInfo.Type == MarketPrice {
+			return positiveAmount(op.SubFloor(orderInfo.Amount, orderInfo.Turnover, 8))
+		}
+		remainingAmount := positiveAmount(op.SubFloor(orderInfo.Amount, orderInfo.TradedAmount, 8))
+		return positiveAmount(op.MulFloor(orderInfo.Price, remainingAmount, 8))
+	}
+
+	return positiveAmount(op.SubFloor(orderInfo.Amount, orderInfo.TradedAmount, 8))
+}
+
+func positiveAmount(amount float64) float64 {
+	if amount < 0 {
+		return 0
+	}
+	return amount
 }

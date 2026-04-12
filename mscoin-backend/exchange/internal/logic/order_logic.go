@@ -216,7 +216,21 @@ func (l *ExchangeOrderLogic) FindByOrderId(req *order.OrderReq) (*order.Exchange
 }
 
 func (l *ExchangeOrderLogic) CancelOrder(req *order.OrderReq) (*order.CancelOrderRes, error) {
-	l.exchangeOrderDomain.UpdateStatusCancel(l.ctx, req.OrderId)
+	exchangeOrder, err := l.exchangeOrderDomain.FindOrderByOrderId(l.ctx, req.OrderId)
+	if err != nil {
+		return nil, err
+	}
+	if exchangeOrder.Status != model.Trading && exchangeOrder.Status != model.Init {
+		return nil, errors.New("当前订单不可撤销")
+	}
+	if err = l.exchangeOrderDomain.UpdateStatusCancel(l.ctx, req.OrderId); err != nil {
+		return nil, err
+	}
+	if exchangeOrder.Status == model.Trading {
+		if err = l.kafkaDomain.SendOrderCancel("exchange_order_cancel", req.OrderId); err != nil {
+			return nil, errors.New("撤单消息发送失败")
+		}
+	}
 	return &order.CancelOrderRes{}, nil
 }
 func NewExchangeOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ExchangeOrderLogic {
