@@ -1,976 +1,1360 @@
-<template>
-  <div class="ctc">
-    <img class="bannerimg shoujiIf" src="../../assets/images/ctc-bg.jpg" alt="">
-    <div class="ctc_container">
-      <h1 class="shoujiIf">{{$t('ctc.title')}}</h1>
-      <p class="shoujiIf" style="letter-spacing: 1px;">{{$t('ctc.desc')}}</p>
-      <div class="main">
-        <el-tabs v-model="activeTab" style="width:100%;">
-          <el-tab-pane name="all">
+﻿<template>
+  <div class="ctc-page">
+    <img class="ctc-page__banner shoujiIf" src="../../assets/images/ctc-bg.jpg" alt="">
+    <div class="ctc-page__container">
+      <h1 class="shoujiIf">{{ $t('ctc.title') }}</h1>
+      <p class="ctc-page__desc shoujiIf">{{ $t('ctc.desc') }}</p>
+
+      <div class="ctc-page__content">
+        <el-tabs v-model="activeTab" class="ctc-page__tabs">
+          <el-tab-pane name="usdt">
             <template #label>
-              <span>USDT{{$t('ctc.trade')}}</span>
+              <span>USDT{{ $t('ctc.trade') }}</span>
             </template>
-            <div class="ctc-container">
-              <div class="trade_wrap">
-                <div class="trade_panel">
-                  <div class="trade_bd_ctc">
-                    <div class="panel panel_buy">
-                      <div class="bd bd_limited">
-                        <el-form>
-                          <el-form-item class="buy-input">
-                            <label class="before">{{$t('ctc.buyprice')}}</label>
-                            <el-input v-model="buyPrice" disabled></el-input>
-                            <label class="after" style="color: #45b854;">CNY</label>
-                          </el-form-item>
-                          <el-form-item class="trade-input">
-                            <label class="before">{{$t('ctc.buynum')}}:</label>
-                            <el-input-number style="width:70%;float:right;" v-model="buyAmount" size="large" :max="50000" :min="50" :placeholder="$t('ctc.input50tips')"></el-input-number>
-                            <label class="after">USDT</label>
-                          </el-form-item>
-                          <p style="font-size: 12px;margin-top: -20px;text-align:right;margin-bottom: 10px;">&nbsp; </p>
-                          <el-form-item>
-                            <label class="before">{{$t('ctc.payType')}}:</label>
-                            <el-select v-model="payType" style="width:70%;float:right;" size="large">
-                              <el-option v-for="item in payTypeList" :value="item.value" :key="item.value">{{ item.label }}</el-option>
-                            </el-select>
-                          </el-form-item>
-                          <div style="height: 30px;line-height: 30px;margin-top: -20px;margin-bottom: 5px;color: #0074eb;text-align:right;font-size:12px;">
-                            <router-link to="/uc/account">{{$t("ctc.payset")}}</router-link>
-                          </div>
-                          <div class="total buy_total" style="min-height">
-                            <div style="min-height: 40px;">
-                              <div style="float:left;">{{$t('ctc.payamount')}}</div>
-                              <div style="float:right;">
-                                <span style="color: #45b854;font-size:24px;font-weight: 600;">{{totalBuyMoney}}</span>
-                                <span style="font-size:14px;margin-left: 5px;color: #45b854;">CNY</span>
-                              </div>
-                            </div>
-                            <div style="width: 100%;font-size:12px;text-align:right;">{{$t("ctc.moneyTips")}}</div>
-                          </div>
-                          <el-button style="padding-bottom: 10px;padding-top: 10px;" class="bg-green" size="large" @click="buyClick">{{$t("ctc.buyin")}} USDT</el-button>
-                        </el-form>
-                      </div>
+
+            <div class="ctc-page__hero">
+              <div class="ctc-page__grid">
+                <section class="trade-card trade-card--buy">
+                  <div class="trade-card__header">
+                    <div>
+                      <p class="trade-card__eyebrow">{{ $t('ctc.buyin') }} USDT</p>
+                      <h3 class="trade-card__title">{{ quote.buy }} CNY</h3>
                     </div>
-                    <div class="panel panel_sell">
-                      <div class="bd bd_limited">
-                        <el-form ref="formValidateRef" :model="formValidate">
-                          <el-form-item class="sell-input">
-                            <label class="before">{{$t('ctc.sellprice')}}</label>
-                            <el-input v-model="sellPrice" disabled></el-input>
-                            <label class="after" style="color: #f2334f;">CNY</label>
-                          </el-form-item>
-                          <el-form-item class="trade-input">
-                            <label class="before">{{$t('ctc.sellnum')}}:</label>
-                            <el-input-number style="width:70%;float:right;" v-model="sellAmount" size="large" :max="50000" :min="2" :placeholder="$t('ctc.input2tips')"></el-input-number>
-                            <label class="after">USDT</label>
-                          </el-form-item>
-                          <p style="font-size: 12px;margin-top: -20px;text-align:right;margin-bottom: 10px;">
-                            <span>{{$t('ctc.avabalance')}}</span>:
-                            <span>{{wallet.base || '--'}}</span><span style="margin-left: 5px;">USDT</span>
-                          </p>
-                          <el-form-item>
-                            <label class="before">{{$t('ctc.receiveType')}}:</label>
-                            <el-select v-model="receiveType" style="width:70%;float:right;" size="large">
-                              <el-option v-for="item in receiveTypeList" :value="item.value" :key="item.value">{{ item.label }}</el-option>
-                            </el-select>
-                          </el-form-item>
-                          <div style="height: 30px;line-height: 30px;margin-top: -20px;text-align:right;margin-bottom: 5px;font-size: 12px;">
-                            {{$t("ctc.useselfaccount")}}
-                          </div>
-                          <div class="total buy_total">
-                            <div style="min-height: 40px;">
-                              <div style="float:left;">{{$t('ctc.getamount')}}</div>
-                              <div style="float:right;color: #f2334f;">
-                                <span style="color: #f2334f;font-size:24px;font-weight: 600;">{{totalSellMoney}}</span>
-                                <span style="font-size:14px;margin-left: 5px;">CNY</span>
-                              </div>
-                            </div>
-                            <div style="width: 100%;font-size:12px;text-align:right;">{{$t("ctc.moneyTips")}}</div>
-                          </div>
-                          <el-button style="padding-bottom: 10px;padding-top: 10px;" class="bg-red" size="large" @click="sellClick">{{$t("ctc.sell")}} USDT</el-button>
-                        </el-form>
-                      </div>
-                    </div>
+                    <span class="trade-card__badge">C2C</span>
                   </div>
 
-                  <div class="shoujiIf" style="float:right;width: 30%;height: 455px;font-size: 12px;color: #bcbcbc;">
-                    <div style="padding: 25px 35px;width: 100%;height: 395px;overflow-y: auto; overflow-x:hidden;background-color:#192330;text-align:left;line-height: 26px;">
-                      <p style="text-align:center;font-size: 18px;margin-bottom: 10px;">{{$t("ctc.notice")}}</p>
-                      <p>{{$t("ctc.notice1")}}</p>
-                      <p>{{$t("ctc.notice2")}}</p>
-                      <p>{{$t("ctc.notice3")}}</p>
-                      <p>{{$t("ctc.notice4")}}</p>
-                      <p>{{$t("ctc.notice5")}}</p>
-                      <router-link target="_blank" to="/helpdetail?cate=2&id=40&cateTitle=交易指南" style="float:right;">{{$t("ctc.moredetail")}}</router-link>
+                  <el-form class="trade-card__form" label-position="top">
+                    <el-form-item :label="$t('ctc.buyprice')">
+                      <el-input :model-value="quote.buy" disabled />
+                    </el-form-item>
+                    <el-form-item :label="$t('ctc.buynum')">
+                      <el-input
+                        v-model="tradeForm.buyAmount"
+                        class="trade-card__number"
+                        placeholder="请输入 50 - 50000 USDT"
+                        inputmode="decimal"
+                      />
+                    </el-form-item>
+                    <el-form-item :label="$t('ctc.payType')">
+                      <el-select v-model="tradeForm.payType" class="trade-card__select">
+                        <el-option
+                          v-for="item in payTypeOptions"
+                          :key="item.value"
+                          :label="item.label"
+                          :value="item.value"
+                        />
+                      </el-select>
+                    </el-form-item>
+                    <router-link class="trade-card__link" to="/uc/account">
+                      {{ $t('ctc.payset') }}
+                    </router-link>
+
+                    <div class="trade-card__summary">
+                      <span>{{ $t('ctc.payamount') }}</span>
+                      <strong>{{ totalBuyMoney }} CNY</strong>
                     </div>
-                    <div class="notice-bottom">
-                      <router-link to="/uc/safe" class="notice-btn-left">{{$t("ctc.verifyset")}}</router-link>
-                      <router-link to="/uc/account" class="notice-btn-right">{{$t("ctc.payset")}}</router-link>
+                    <p class="trade-card__tip">{{ $t('ctc.moneyTips') }}</p>
+
+                    <el-button class="trade-card__action trade-card__action--buy" @click="openVerifyDialog('buy')">
+                      {{ $t('ctc.buyin') }} USDT
+                    </el-button>
+                  </el-form>
+                </section>
+
+                <section class="trade-card trade-card--sell">
+                  <div class="trade-card__header">
+                    <div>
+                      <p class="trade-card__eyebrow">{{ $t('ctc.sell') }} USDT</p>
+                      <h3 class="trade-card__title">{{ quote.sell }} CNY</h3>
                     </div>
+                    <span class="trade-card__badge">C2C</span>
                   </div>
-                  <div></div>
+
+                  <el-form class="trade-card__form" label-position="top">
+                    <el-form-item :label="$t('ctc.sellprice')">
+                      <el-input :model-value="quote.sell" disabled />
+                    </el-form-item>
+                    <el-form-item :label="$t('ctc.sellnum')">
+                      <el-input
+                        v-model="tradeForm.sellAmount"
+                        class="trade-card__number"
+                        placeholder="请输入 2 - 50000 USDT"
+                        inputmode="decimal"
+                      />
+                    </el-form-item>
+                    <p class="trade-card__balance">可卖数量：{{ walletBalance }} USDT</p>
+                    <el-form-item :label="$t('ctc.receiveType')">
+                      <el-select v-model="tradeForm.receiveType" class="trade-card__select">
+                        <el-option
+                          v-for="item in receiveTypeOptions"
+                          :key="item.value"
+                          :label="item.label"
+                          :value="item.value"
+                        />
+                      </el-select>
+                    </el-form-item>
+                    <p class="trade-card__tip trade-card__tip--tight">{{ $t('ctc.useselfaccount') }}</p>
+
+                    <div class="trade-card__summary">
+                      <span>{{ $t('ctc.getamount') }}</span>
+                      <strong>{{ totalSellMoney }} CNY</strong>
+                    </div>
+                    <p class="trade-card__tip">{{ $t('ctc.moneyTips') }}</p>
+
+                    <el-button class="trade-card__action trade-card__action--sell" @click="openVerifyDialog('sell')">
+                      {{ $t('ctc.sell') }} USDT
+                    </el-button>
+                  </el-form>
+                </section>
+              </div>
+
+              <aside class="notice-card shoujiIf">
+                <div class="notice-card__body">
+                  <p class="notice-card__title">{{ $t('ctc.notice') }}</p>
+                  <p>{{ $t('ctc.notice1') }}</p>
+                  <p>{{ $t('ctc.notice2') }}</p>
+                  <p>{{ $t('ctc.notice3') }}</p>
+                  <p>{{ $t('ctc.notice4') }}</p>
+                  <p>{{ $t('ctc.notice5') }}</p>
+                  <router-link class="notice-card__more" target="_blank" to="/helpdetail?cate=2&id=40&cateTitle=交易指南">
+                    {{ $t('ctc.moredetail') }}
+                  </router-link>
+                </div>
+                <div class="notice-card__footer">
+                  <router-link class="notice-card__button" to="/uc/safe">{{ $t('ctc.verifyset') }}</router-link>
+                  <router-link class="notice-card__button" to="/uc/account">{{ $t('ctc.payset') }}</router-link>
+                </div>
+              </aside>
+            </div>
+
+            <section class="orders-card shoujiIf">
+              <div class="orders-card__header">
+                <div>
+                  <p class="orders-card__eyebrow">C2C</p>
+                  <h3 class="orders-card__title">快捷买卖订单</h3>
                 </div>
               </div>
-            </div>
-            <div class="table shoujiIf">
-              <el-table :no-data-text="$t('common.nodata')" :columns="columns" :data="orders" :loading="loading"></el-table>
-              <div class="page">
-                <el-pagination :total="total" :page-size="pageSize" :current-page="pageNo" @current-change="loadDataPage"></el-pagination>
+
+              <el-table :data="orders" v-loading="loading" empty-text="暂无记录" class="orders-card__table">
+                <el-table-column prop="createTime" label="下单时间" min-width="170">
+                  <template #default="{ row }">
+                    {{ formatDateTime(row.createTime) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="orderSn" label="订单号" min-width="180" />
+                <el-table-column label="方向" min-width="90">
+                  <template #default="{ row }">
+                    <span :class="directionClass(row.direction)">
+                      {{ directionLabel(row.direction) }}
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="amount" label="数量(USDT)" min-width="120" />
+                <el-table-column prop="price" label="单价(CNY)" min-width="120" />
+                <el-table-column label="总额(CNY)" min-width="120">
+                  <template #default="{ row }">
+                    {{ formatMoney(row.money) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="状态" min-width="180">
+                  <template #default="{ row }">
+                    {{ orderStatusText(row) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" min-width="120" fixed="right">
+                  <template #default="{ row }">
+                    <el-button type="warning" plain size="small" @click="showOrderDetail(row.id)">
+                      查看详情
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <div class="orders-card__pagination">
+                <el-pagination
+                  background
+                  layout="prev, pager, next"
+                  :total="total"
+                  :page-size="pageSize"
+                  :current-page="pageNo"
+                  @current-change="loadDataPage"
+                />
               </div>
-            </div>
+            </section>
           </el-tab-pane>
         </el-tabs>
       </div>
     </div>
 
-    <el-dialog v-model="modal" width="450px">
+    <el-dialog v-model="verifyDialogVisible" width="460px" destroy-on-close class="ctc-dialog ctc-dialog--verify">
       <template #title>
-        {{$t("ctc.tip")}}
+        <h3 class="ctc-dialog__title">{{ verifyDialogTitle }}</h3>
       </template>
-      <el-form class="withdraw-form-inline" ref="formInlineRef" :model="formInline">
-        <el-form-item prop="code">
-          <el-input id="verifyCode" style="width:calc(100% - 105px)" type="text" autocomplete="off" v-model="formInline.code" :placeholder="$t('uc.regist.smscode')">
-          </el-input>
-          <input id="sendCode" style="width:100px;border-radius: 10px;height: 30px;line-height: 10px;position: relative;top: 2px;" @click="sendCode" type="button" :value="sendcodeValue" :disabled="codeIsSending">
-          </input>
+      <el-form label-position="top" class="verify-dialog">
+        <p class="verify-dialog__hint">{{ verifyDialogHint }}</p>
+        <el-form-item label="短信验证码">
+          <div class="verify-dialog__row">
+            <el-input v-model.trim="verifyForm.code" placeholder="请输入短信验证码" />
+            <el-button class="ctc-dialog__secondary-btn" :disabled="codeIsSending" @click="sendCode">{{ sendCodeText }}</el-button>
+          </div>
         </el-form-item>
-        <el-form-item>
-          <el-input id="fundPwd" type="password" autocomplete="off" v-model="formInline.fundpwd" :placeholder="$t('otc.chat.msg7')"></el-input>
+        <el-form-item label="资金密码">
+          <el-input v-model.trim="verifyForm.fundpwd" type="password" show-password placeholder="请输入资金密码" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <span style="margin-right:50px;cursor: pointer;" @click="cancel">取消</span>
-        <span style="background:#f0ac19;cursor: pointer;color:#fff;width:80px;border-radius:30px;display:inline-block;text-align:center;height:30px;line-height: 30px;" @click="ok">确定</span>
+        <el-button class="ctc-dialog__ghost-btn" @click="closeVerifyDialog">取消</el-button>
+        <el-button class="ctc-dialog__primary-btn" type="warning" @click="submitOrder">{{ verifyDialogConfirmText }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="detailModal" title="订单详情" @close="closeDetail">
-      <p class="ctc-order-status" v-if="detailOrder.direction == 0 && detailOrder.status == 0">订单状态：等待承兑商接单...</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 0 && detailOrder.status == 1">订单状态：承兑商已接单，等待您付款中</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 0 && detailOrder.status == 2">订单状态：已付款，等待承兑商放币</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 0 && detailOrder.status == 3">订单状态：已完成</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 0 && detailOrder.status == 4">订单状态：已取消 ({{detailOrder.cancelReason}})</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 1 && detailOrder.status == 0">订单状态：等待承兑商接单...</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 1 && detailOrder.status == 1">订单状态：承兑商已接单，正在付款中</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 1 && detailOrder.status == 2">订单状态：承兑商已付款，确认放币中</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 1 && detailOrder.status == 3">订单状态：已完成</p>
-      <p class="ctc-order-status" v-if="detailOrder.direction == 1 && detailOrder.status == 4">订单状态：已取消 ({{detailOrder.cancelReason}})</p>
-      <el-row style="background: #27384a;padding: 10px 0px;border-radius: 5px;">
+    <el-dialog
+      v-model="detailDialogVisible"
+      width="760px"
+      destroy-on-close
+      class="ctc-dialog ctc-dialog--detail"
+      @close="closeDetailDialog"
+    >
+      <template #title>
+        <h3 class="ctc-dialog__title">订单详情</h3>
+      </template>
+      <p class="detail-dialog__status">{{ detailStatusText }}</p>
+
+      <el-row class="detail-dialog__metrics" :gutter="12">
         <el-col :span="8">
-          <p v-if="detailOrder.direction == 0" class="item-title">买入</p>
-          <p v-if="detailOrder.direction == 1" class="item-title">卖出</p>
-          <p class="item-desc">订单类型</p>
+          <p class="detail-dialog__metric-value">{{ directionLabel(detailOrder.direction) || '--' }}</p>
+          <p class="detail-dialog__metric-label">订单方向</p>
         </el-col>
         <el-col :span="8">
-          <p v-if="detailOrder.direction == 0" class="item-title">{{toFixed(detailOrder.amount, 2)}} <span class="unit">USDT</span></p>
-          <p v-if="detailOrder.direction == 1" class="item-title">{{toFixed(detailOrder.amount, 2)}} <span class="unit">USDT</span></p>
-          <p class="item-desc">交易数量</p>
+          <p class="detail-dialog__metric-value">{{ formatMoney(detailOrder.amount) }} <span class="detail-dialog__unit">USDT</span></p>
+          <p class="detail-dialog__metric-label">交易数量</p>
         </el-col>
         <el-col :span="8">
-          <p v-if="detailOrder.direction == 0" class="item-title green">{{toFixed(detailOrder.money, 2)}} <span class="unit">CNY</span></p>
-          <p v-if="detailOrder.direction == 1" class="item-title red">{{toFixed(detailOrder.money, 2)}} <span class="unit">CNY</span></p>
-          <p class="item-desc">交易总额</p>
+          <p class="detail-dialog__metric-value">{{ formatMoney(detailOrder.money) }} <span class="detail-dialog__unit">CNY</span></p>
+          <p class="detail-dialog__metric-label">交易总额</p>
         </el-col>
       </el-row>
 
-      <div style="font-size: 12px;margin-top: 15px;" v-if="detailOrder.direction == 0">
-        <el-icon style="color:rgb(183, 183, 183);margin-right:5px;font-size:14px;"><InfoFilled /></el-icon>请向以下收款账户汇款/转账：<span class="green" style="font-size: 20px;font-weight:bold;">{{toFixed(detailOrder.money, 2)}}</span> <span class="green">CNY</span>
+      <div class="detail-dialog__notice" v-if="detailOrder.direction === 0">
+        <span class="detail-dialog__notice-tag">线下付款</span>
+        请使用下方收款信息完成人民币付款，金额为
+        <strong>{{ formatMoney(detailOrder.money) }} CNY</strong>
+        <span v-if="countdownText" class="detail-dialog__countdown">{{ countdownText }}</span>
+      </div>
+      <div class="detail-dialog__notice" v-else>
+        <span class="detail-dialog__notice-tag detail-dialog__notice-tag--sell">平台打款</span>
+        平台将按您绑定的收款方式支付人民币，预计到账 <strong>{{ formatMoney(detailOrder.money) }} CNY</strong>
+      </div>
 
-        <div style="float:right;padding: 2px 10px;color:#FF0000;" v-if="orderCountdown > 0 && (detailOrder.status == 0 || detailOrder.status == 1)">
-          <el-icon style="font-weight:bold;font-size:18px;margin-top:-5px;margin-right: 3px;"><Clock /></el-icon>
-          <span style="font-size:16px;">{{formatCountdown(orderCountdown)}}</span>
+      <div class="detail-dialog__panel">
+        <p class="detail-dialog__panel-title">收付款信息</p>
+        <div class="detail-dialog__row">
+          <span>真实姓名</span>
+          <strong>{{ detailOrder.realName || '--' }}</strong>
         </div>
+        <div class="detail-dialog__row">
+          <span>收付款方式</span>
+          <strong>{{ payModeLabel(detailOrder.payMode) }}</strong>
+        </div>
+
+        <template v-if="detailOrder.payMode === 'bank'">
+          <div class="detail-dialog__row">
+            <span>开户银行</span>
+            <strong>{{ detailOrder.bankInfo?.bank || '--' }}</strong>
+          </div>
+          <div class="detail-dialog__row">
+            <span>开户支行</span>
+            <strong>{{ detailOrder.bankInfo?.branch || '--' }}</strong>
+          </div>
+          <div class="detail-dialog__row">
+            <span>银行卡号</span>
+            <strong>{{ detailOrder.bankInfo?.cardNo || '--' }}</strong>
+          </div>
+        </template>
+
+        <template v-if="detailOrder.payMode === 'alipay'">
+          <div class="detail-dialog__row">
+            <span>支付宝账号</span>
+            <strong>{{ detailOrder.alipay?.aliNo || '--' }}</strong>
+          </div>
+          <img v-if="detailOrder.alipay?.qrCodeUrl" :src="detailOrder.alipay.qrCodeUrl" class="detail-dialog__qr" alt="">
+        </template>
+
+        <template v-if="detailOrder.payMode === 'wechatpay'">
+          <div class="detail-dialog__row">
+            <span>微信账号</span>
+            <strong>{{ detailOrder.wechatPay?.wechat || '--' }}</strong>
+          </div>
+          <img v-if="detailOrder.wechatPay?.qrWeCodeUrl" :src="detailOrder.wechatPay.qrWeCodeUrl" class="detail-dialog__qr" alt="">
+        </template>
       </div>
-
-      <div style="font-size: 12px;margin-top: 15px;" v-if="detailOrder.direction == 1">
-        <el-icon style="color:rgb(183, 183, 183);margin-right:5px;font-size:14px;"><InfoFilled /></el-icon>你的以下账户将收到汇款/转账：<span class="red" style="font-size: 20px;font-weight:bold;">{{toFixed(detailOrder.money, 2)}}</span> <span class="red">CNY</span>
-      </div>
-
-      <el-row style="margin-top: 5px;background: #27384a;padding: 20px 0px;border-radius: 5px;">
-        <el-col :span="24">
-          <div style="float:left;margin-left:20px;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">账户实名:</span>
-            <span style="font-size:14px;color:#FFF;">{{detailOrder.realName}}</span>
-          </div>
-          <div style="float:right;margin-right: 20px;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">收款方式:</span>
-            <span style="font-size:14px;color:#FFF;" v-if="detailOrder.payMode == 'bank'">银行卡</span>
-            <span style="font-size:14px;color:#FFF;" v-if="detailOrder.payMode == 'alipay'">支付宝</span>
-            <span style="font-size:14px;color:#FFF;" v-if="detailOrder.payMode == 'wechatpay'">微信支付</span>
-          </div>
-        </el-col>
-        <el-col :span="24" v-if="detailOrder.payMode == 'bank'" style="margin-top: 10px;text-align:left;">
-          <div style="float:left;margin-left:20px;width: 100%;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">开户银行:</span>
-            <span style="font-size:14px;color:#FFF;">{{detailOrder.bankInfo.bank}}</span>
-          </div>
-          <div style="float:left;margin-left:20px;width: 100%;margin-top: 10px;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">开户支行:</span>
-            <span style="font-size:14px;color:#FFF;">{{detailOrder.bankInfo.branch}}</span>
-          </div>
-          <div style="float:left;margin-left:20px;width: 100%;margin-top: 10px;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">银行卡号:</span>
-            <span style="font-size:16px;color:#FFF;letter-spacing: 3px;font-weight:bold;">{{detailOrder.bankInfo.cardNo}}</span>
-          </div>
-        </el-col>
-
-        <el-col :span="24" v-if="detailOrder.payMode == 'alipay'" style="margin-top: 10px;text-align:left;">
-          <div style="float:left;margin-left:20px;width: 100%;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">支付宝账号:</span>
-            <span style="font-size:14px;color:#FFF;">{{detailOrder.alipay.aliNo}}</span>
-          </div>
-          <div style="float:left;margin-left:20px;width: 100%;margin-top: 10px;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">收款码:</span>
-          </div>
-          <div style="float:left;margin-left:20px;width: 100%;margin-top: 10px;text-align:center;">
-            <img :src="detailOrder.alipay.qrCodeUrl" style="width: 300px;height:400px;" alt="">
-          </div>
-        </el-col>
-
-        <el-col :span="24" v-if="detailOrder.payMode == 'wechatpay'" style="margin-top: 10px;text-align:left;">
-          <div style="float:left;margin-left:20px;width: 100%;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">微信账号:</span>
-            <span style="font-size:14px;color:#FFF;">{{detailOrder.wechatPay.wechat}}</span>
-          </div>
-          <div style="float:left;margin-left:20px;width: 100%;margin-top: 10px;">
-            <span style="color:rgb(190, 190, 190);font-size:12px;">收款码:</span>
-          </div>
-          <div style="float:left;margin-left:20px;width: 100%;margin-top: 10px;text-align:center;">
-            <img :src="detailOrder.wechatPay.qrWeCodeUrl" style="width: 300px;height:400px;" alt="">
-          </div>
-        </el-col>
-      </el-row>
 
       <template #footer>
-        <el-button v-if="(detailOrder.direction==1 && detailOrder.status==0) || (detailOrder.direction==0 && detailOrder.status < 2)" type="danger" size="large" @click="cancelOrderClick">撤消订单</el-button>
-        <el-button v-if="detailOrder.direction==0 && detailOrder.status == 1" type="success" size="large" @click="payOrderClick">标记已付款</el-button>
-        <el-button type="default" size="large" @click="closeDetail">关闭</el-button>
+        <el-button v-if="canCancelDetail" class="ctc-dialog__danger-btn" type="danger" @click="cancelOrderClick">取消订单</el-button>
+        <el-button v-if="canMarkPaid" class="ctc-dialog__primary-btn" type="warning" @click="payOrderClick">我已线下付款</el-button>
+        <el-button class="ctc-dialog__ghost-btn" @click="closeDetailDialog">关闭</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-/**
- * Vue 3 迁移 - CTC 交易页面
- */
-import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { ElMessage, ElNotification, ElTable, ElPagination, ElTabs, ElTabPane, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElButton, ElDialog, ElCol, ElRow, ElIcon } from 'element-plus'
-import { InfoFilled, Clock } from '@element-plus/icons-vue'
-import axios from 'axios'
-import { useStore } from 'vuex'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import moment from 'moment'
+import { useStore } from 'vuex'
+import {
+  cancelCtcOrder,
+  createCtcOrder,
+  fetchCtcDetail,
+  fetchCtcOrders,
+  fetchCtcQuote,
+  fetchSecuritySetting,
+  fetchUsdtWallet,
+  markCtcOrderPaid,
+  sendCtcCode
+} from './ctc-api'
+import {
+  buildOrderPayload,
+  calcSettlement,
+  directionLabelOf,
+  formatDateTime,
+  formatMoney,
+  getOrderStatusText,
+  normalizeOrderPage,
+  normalizeSecuritySetting,
+  normalizeWalletBalance,
+  payModeLabelOf
+} from './ctc-utils'
 
+const { t } = useI18n()
 const router = useRouter()
 const store = useStore()
 
-const host = ''
-
-const activeTab = ref('all')
-const formValidateRef = ref(null)
-const formInlineRef = ref(null)
-
-const payTypeList = ref([{
-  label: '银行',
-  value: 'bank'
-},{
-  label: '支付宝',
-  value: 'alipay'
-},{
-  label: '微信支付',
-  value: 'wechatpay'
-}])
-
-const receiveTypeList = ref([{
-  label: '银行',
-  value: 'bank'
-}])
-
-const countdown = ref(60)
+const activeTab = ref('usdt')
+const loading = ref(false)
 const timer = ref(null)
 const orderTimer = ref(null)
-const orderCountdown = ref(0)
-const direction = ref('buy')
-const receiveType = ref('bank')
-const payType = ref('bank')
-const buyPrice = ref(7.00)
-const buyAmount = ref(null)
-const sellPrice = ref(7.00)
-const sellAmount = ref(null)
-const modal = ref(false)
-const detailModal = ref(false)
-const formInline = reactive({
+const pageNo = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const orders = ref([])
+const quote = reactive({ buy: '0.00', sell: '0.00' })
+const security = reactive({
+  realVerified: false,
+  fundsVerified: false,
+  accountVerified: false
+})
+const tradeForm = reactive({
+  payType: 'bank',
+  receiveType: 'bank',
+  buyAmount: null,
+  sellAmount: null
+})
+const walletBalance = ref('0.00')
+const verifyDialogVisible = ref(false)
+const detailDialogVisible = ref(false)
+const submitDirection = ref('buy')
+const codeIsSending = ref(false)
+const cooldown = ref(60)
+const sendCodeText = ref('发送验证码')
+const countdownSeconds = ref(0)
+const verifyForm = reactive({
   code: '',
   fundpwd: ''
 })
-const formValidate = reactive({})
-const fundpwd = ref('')
-const codeIsSending = ref(false)
-const sendcodeValue = ref('发送验证码')
-const loading = ref(false)
-const pageSize = ref(10)
-const pageNo = ref(1)
-const total = ref(10)
-const user = reactive({})
-const userAccount = reactive({})
-const orders = ref([])
 const detailOrder = reactive({})
-const wallet = reactive({
-  base: 0
-})
 
-const lang = computed(() => store.state.lang)
-const langPram = computed(() => {
-  if (store.state.lang === '简体中文') return 'CN'
-  if (store.state.lang === 'English') return 'EN'
-  return 'CN'
-})
+const payTypeOptions = [
+  { label: t('ctc.bank'), value: 'bank' },
+  { label: t('ctc.alipay'), value: 'alipay' },
+  { label: t('ctc.wechatpay'), value: 'wechatpay' }
+]
+const receiveTypeOptions = [{ label: t('ctc.bank'), value: 'bank' }]
+
 const isLogin = computed(() => store.getters.isLogin)
-const totalBuyMoney = computed(() => (buyPrice.value * buyAmount.value).toFixed(2))
-const totalSellMoney = computed(() => (sellPrice.value * sellAmount.value).toFixed(2))
-
-const dateFormat = (tick) => moment(tick).format('YYYY-MM-DD HH:mm:ss')
-
-const toFixed = (value, scale) => {
-  if (value !== undefined && value !== null && value !== '') {
-    return Number(value).toFixed(scale)
+const totalBuyMoney = computed(() => calcSettlement(quote.buy, tradeForm.buyAmount))
+const totalSellMoney = computed(() => calcSettlement(quote.sell, tradeForm.sellAmount))
+const detailStatusText = computed(() => getOrderStatusText(detailOrder))
+const verifyDialogTitle = computed(() => submitDirection.value === 'buy' ? '确认买入订单' : '确认卖出订单')
+const verifyDialogHint = computed(() => submitDirection.value === 'buy'
+  ? '当前流程仅创建订单并校验账户安全，请在订单详情中按收款信息线下付款。'
+  : '当前流程仅创建卖出订单并校验账户安全，平台会按订单状态向您的收款账户付款。')
+const verifyDialogConfirmText = computed(() => submitDirection.value === 'buy' ? '确认创建买单' : '确认创建卖单')
+const countdownText = computed(() => {
+  if (countdownSeconds.value <= 0) {
+    return ''
   }
-  return 0
-}
 
-const formatCountdown = (value) => {
-  const m = parseInt(value / 60)
-  const s = value % 60
-  const mm = m < 10 ? '0' + m : m
-  const ss = s < 10 ? '0' + s : s
-  return mm + ':' + ss
-}
+  const minutes = `${Math.floor(countdownSeconds.value / 60)}`.padStart(2, '0')
+  const seconds = `${countdownSeconds.value % 60}`.padStart(2, '0')
 
-const getC2cPrice = () => {
-  axios.post(`${host}/market/ctc-usdt`, {}, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      buyPrice.value = res.data.data.buy
-      sellPrice.value = res.data.data.sell
-    }
-  }).catch(() => {})
-}
-
-const getWallet = () => {
-  axios.post(`${host}/uc/walletUSDT`, {}, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      wallet.base = res.data.data.balance || 0
-    }
-  }).catch(() => {})
-}
-
-const getAccountSecurity = () => {
-  axios.post(`${host}/uc/approve/security/setting`, {}, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      Object.assign(user, res.data.data)
-    } else {
-      ElNotification.error({ title: '提示', message: res.data.message })
-    }
-  }).catch(() => {})
-}
-
-const getAccount = () => {
-  axios.post(`${host}/uc/approve/account/setting`, {}, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      Object.assign(userAccount, res.data.data)
-    } else {
-      ElNotification.error({ title: '提示', message: res.data.message })
-    }
-  }).catch(() => {})
-}
-
-const getOrderList = () => {
-  loading.value = true
-  const params = {
-    pageNo: pageNo.value,
-    pageSize: pageSize.value
+  return `${minutes}:${seconds}`
+})
+const canCancelDetail = computed(() => {
+  if (!detailOrder.id) {
+    return false
   }
-  axios.post(`${host}/uc/ctc/page-query`, params, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      if (res.data.data.content.length > 0) {
-        total.value = res.data.data.totalElements
-        orders.value = res.data.data.content
-      }
-    }
-    loading.value = false
-  }).catch(() => {
-    loading.value = false
-  })
+
+  return (detailOrder.direction === 1 && detailOrder.status === 0) || (detailOrder.direction === 0 && detailOrder.status < 2)
+})
+const canMarkPaid = computed(() => detailOrder.direction === 0 && detailOrder.status === 1)
+
+const handleRequestError = (error, fallbackMessage) => {
+  const message = error?.response?.data?.message || error?.message || fallbackMessage
+  ElNotification.error({ title: '提示', message })
 }
 
-const loadDataPage = (page) => {
-  pageNo.value = page
-  getOrderList()
+const directionLabel = (direction) => directionLabelOf(direction)
+const payModeLabel = (payMode) => payModeLabelOf(payMode)
+const orderStatusText = (order) => getOrderStatusText(order)
+const directionClass = (direction) => direction === 0 ? 'direction-buy' : 'direction-sell'
+
+const closeVerifyDialog = () => {
+  verifyDialogVisible.value = false
+  verifyForm.code = ''
+  verifyForm.fundpwd = ''
 }
 
-const createOrder = () => {
-  const params = {}
-  if (direction.value === 'buy') {
-    params.price = buyPrice.value
-    params.amount = buyAmount.value
-    params.payType = payType.value
-    params.direction = 0
-  } else {
-    params.price = sellPrice.value
-    params.amount = sellAmount.value
-    params.payType = receiveType.value
-    params.direction = 1
-  }
-  params.unit = 'USDT'
-  params.fundpwd = formInline.fundpwd
-  params.code = formInline.code
-
-  axios.post(`${host}/uc/ctc/new-ctc-order`, params, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      getOrderList()
-      Object.assign(detailOrder, res.data.data)
-      modal.value = false
-      showDetailModal()
-    } else {
-      ElNotification.error({ title: '提示', message: res.data.message })
-    }
-  }).catch(() => {})
-}
-
-const showDetailModal = () => {
+const closeDetailDialog = () => {
+  detailDialogVisible.value = false
   if (orderTimer.value) {
     clearInterval(orderTimer.value)
+    orderTimer.value = null
   }
-  if (detailOrder.currentTime) {
-    const currentT = parseInt(new Date(detailOrder.currentTime).getTime() / 1000)
-    if (detailOrder.status === 0) {
-      const endT = parseInt(new Date(detailOrder.createTime).getTime() / 1000)
-      orderCountdown.value = currentT - endT
-    } else if (detailOrder.status === 1) {
-      const endT = parseInt(new Date(detailOrder.confirmTime).getTime() / 1000)
-      orderCountdown.value = currentT - endT
-    }
-
-    if (orderCountdown.value < 30 * 60) {
-      orderCountdown.value = 1800 - orderCountdown.value
-      orderTimer.value = setInterval(() => {
-        orderCountdown.value--
-        if (orderCountdown.value < 1) {
-          clearInterval(orderTimer.value)
-        }
-      }, 1000)
-    }
-  }
-  detailModal.value = true
 }
 
-const cancel = () => {
-  modal.value = false
-  formInline.code = ''
-  formInline.fundpwd = ''
-}
-
-const sendCode = () => {
-  axios.post(`${host}/uc/mobile/ctc/code`, {}, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      settime()
-      ElNotification.success({ title: '提示', message: res.data.message })
-    } else {
-      ElNotification.error({ title: '提示', message: res.data.message })
-    }
-  }).catch(() => {})
-}
-
-const settime = () => {
-  sendcodeValue.value = countdown.value + 's 后重新发送'
+const startSendCodeCooldown = () => {
   codeIsSending.value = true
-  const timercode = setInterval(() => {
-    countdown.value--
-    sendcodeValue.value = countdown.value + 's 后重新发送'
-    if (countdown.value <= 0) {
-      clearInterval(timercode)
-      sendcodeValue.value = '发送验证码'
-      countdown.value = 60
+  sendCodeText.value = `${cooldown.value}s 后重发`
+
+  const timerId = setInterval(() => {
+    cooldown.value -= 1
+    sendCodeText.value = `${cooldown.value}s 后重发`
+
+    if (cooldown.value <= 0) {
+      clearInterval(timerId)
+      cooldown.value = 60
       codeIsSending.value = false
+      sendCodeText.value = '发送验证码'
     }
   }, 1000)
 }
 
-const ok = () => {
-  if (formInline.code === '') {
+const refreshQuote = async () => {
+  try {
+    const response = await fetchCtcQuote()
+    if (response.code === 0) {
+      quote.buy = formatMoney(response.data?.buy)
+      quote.sell = formatMoney(response.data?.sell)
+    }
+  } catch (error) {
+    handleRequestError(error, '获取 C2C 报价失败')
+  }
+}
+
+const refreshWallet = async () => {
+  try {
+    const response = await fetchUsdtWallet()
+    if (response.code === 0) {
+      walletBalance.value = normalizeWalletBalance(response.data)
+    }
+  } catch (error) {
+    handleRequestError(error, '获取钱包余额失败')
+  }
+}
+
+const refreshSecurity = async () => {
+  try {
+    const response = await fetchSecuritySetting()
+    if (response.code === 0) {
+      Object.assign(security, normalizeSecuritySetting(response.data))
+    } else {
+      ElNotification.error({ title: '提示', message: response.message })
+    }
+  } catch (error) {
+    handleRequestError(error, '鑾峰彇瀹夊叏璁剧疆澶辫触')
+  }
+}
+
+const refreshOrders = async () => {
+  loading.value = true
+
+  try {
+    const response = await fetchCtcOrders({
+      pageNo: pageNo.value,
+      pageSize: pageSize.value
+    })
+
+    if (response.code === 0) {
+      const page = normalizeOrderPage(response.data)
+      orders.value = page.content
+      total.value = page.totalElements
+    } else {
+      ElNotification.error({ title: '鎻愮ず', message: response.message })
+    }
+  } catch (error) {
+    handleRequestError(error, '鑾峰彇璁㈠崟鍒楄〃澶辫触')
+  } finally {
+    loading.value = false
+  }
+}
+
+const refreshLoginData = async () => {
+  if (!isLogin.value) {
+    orders.value = []
+    total.value = 0
+    walletBalance.value = '0.00'
+    Object.assign(security, {
+      realVerified: false,
+      fundsVerified: false,
+      accountVerified: false
+    })
+    return
+  }
+
+  await Promise.all([refreshSecurity(), refreshWallet(), refreshOrders()])
+}
+
+const loadDataPage = (page) => {
+  pageNo.value = page
+  refreshOrders()
+}
+
+const openVerifyDialog = async (direction) => {
+  submitDirection.value = direction
+
+  if (!isLogin.value) {
+    ElMessage.error(t('common.logintip'))
+    router.push('/login')
+    return
+  }
+
+  await refreshSecurity()
+
+  if (!security.realVerified) {
+    ElMessage.error('请先完成实名认证')
+    return
+  }
+
+  if (!security.fundsVerified) {
+    ElMessage.error('请先设置资金密码')
+    return
+  }
+
+  if (direction === 'buy') {
+    if (!tradeForm.buyAmount || tradeForm.buyAmount < 50 || tradeForm.buyAmount > 50000) {
+      ElMessage.error('请输入 50 到 50000 之间的买入数量')
+      return
+    }
+  } else {
+    if (!security.accountVerified) {
+      ElMessage.error('请先完成收款方式设置')
+      return
+    }
+
+    if (!tradeForm.sellAmount || tradeForm.sellAmount < 2 || tradeForm.sellAmount > 50000) {
+      ElMessage.error('请输入 2 到 50000 之间的卖出数量')
+      return
+    }
+  }
+
+  closeVerifyDialog()
+  verifyDialogVisible.value = true
+}
+
+const sendCode = async () => {
+  try {
+    const response = await sendCtcCode()
+    if (response.code === 0) {
+      startSendCodeCooldown()
+      ElNotification.success({ title: '提示', message: response.message || '验证码已发送' })
+    } else {
+      ElNotification.error({ title: '提示', message: response.message })
+    }
+  } catch (error) {
+    handleRequestError(error, '发送验证码失败')
+  }
+}
+
+const setDetailCountdown = () => {
+  if (orderTimer.value) {
+    clearInterval(orderTimer.value)
+    orderTimer.value = null
+  }
+
+  countdownSeconds.value = 0
+
+  if (!detailOrder.currentTime) {
+    return
+  }
+
+  const currentTimestamp = Math.floor(new Date(detailOrder.currentTime).getTime() / 1000)
+  const baseTime = detailOrder.status === 1 ? detailOrder.confirmTime : detailOrder.createTime
+
+  if (!baseTime) {
+    return
+  }
+
+  const baseTimestamp = Math.floor(new Date(baseTime).getTime() / 1000)
+  const passed = currentTimestamp - baseTimestamp
+
+  if (passed >= 1800) {
+    return
+  }
+
+  countdownSeconds.value = 1800 - passed
+  orderTimer.value = setInterval(() => {
+    countdownSeconds.value -= 1
+    if (countdownSeconds.value <= 0) {
+      clearInterval(orderTimer.value)
+      orderTimer.value = null
+    }
+  }, 1000)
+}
+
+const applyDetailOrder = (order) => {
+  Object.keys(detailOrder).forEach((key) => delete detailOrder[key])
+  Object.assign(detailOrder, order)
+  setDetailCountdown()
+  detailDialogVisible.value = true
+}
+
+const showOrderDetail = async (orderId) => {
+  try {
+    const response = await fetchCtcDetail({ oid: orderId })
+    if (response.code === 0) {
+      applyDetailOrder(response.data)
+    } else {
+      ElNotification.error({ title: '提示', message: response.message })
+    }
+  } catch (error) {
+    handleRequestError(error, '获取订单详情失败')
+  }
+}
+
+const submitOrder = async () => {
+  if (!verifyForm.code) {
     ElMessage.error('请填写短信验证码')
     return
   }
-  if (formInline.fundpwd === '') {
+
+  if (!verifyForm.fundpwd) {
     ElMessage.error('请填写资金密码')
     return
   }
-  createOrder()
-}
 
-const valid = (type) => {
-  if (!isLogin.value) {
-    ElMessage.error('请先登录！')
-    return false
-  }
-  if (user.realVerified !== 1) {
-    ElMessage.error('请先完成实名认证！')
-    return false
-  }
-  if (user.fundsVerified !== 1) {
-    ElMessage.error('请设置资产交易密码！')
-    return false
-  }
-  if (type === 0) {
-    if (!buyAmount.value || buyAmount.value < 50 || buyAmount.value > 50000) {
-      ElMessage.error('请输入正确的买入数量')
-      return false
+  const payload = buildOrderPayload({
+    direction: submitDirection.value,
+    quote,
+    tradeForm,
+    verifyForm
+  })
+
+  try {
+    const response = await createCtcOrder(payload)
+    if (response.code === 0) {
+      closeVerifyDialog()
+      await refreshOrders()
+      applyDetailOrder(response.data)
+    } else {
+      ElNotification.error({ title: '提示', message: response.message })
     }
-    return true
-  } else {
-    if (userAccount.bankVerified !== 1) {
-      ElMessage.error('请先绑定银行卡')
-      return false
-    }
-    if (!sellAmount.value || sellAmount.value < 2 || sellAmount.value > 50000) {
-      ElMessage.error('请输入正确的卖出数量')
-      return false
-    }
-    return true
+  } catch (error) {
+    handleRequestError(error, '创建订单失败')
   }
 }
 
-const buyClick = () => {
-  direction.value = 'buy'
-  if (valid(0)) {
-    modal.value = true
-    const timercode = setInterval(() => {
-      if (countdown.value <= 0) {
-        clearInterval(timercode)
-        sendcodeValue.value = '发送验证码'
-        codeIsSending.value = false
-      }
-    }, 1000)
+const cancelOrder = async () => {
+  try {
+    const response = await cancelCtcOrder({ oid: detailOrder.id })
+    if (response.code === 0) {
+      await refreshOrders()
+      applyDetailOrder(response.data)
+    } else {
+      ElNotification.error({ title: '提示', message: response.message })
+    }
+  } catch (error) {
+    handleRequestError(error, '取消订单失败')
   }
 }
 
-const sellClick = () => {
-  direction.value = 'sell'
-  if (valid(1)) {
-    modal.value = true
-    const timercode = setInterval(() => {
-      if (countdown.value <= 0) {
-        clearInterval(timercode)
-        sendcodeValue.value = '发送验证码'
-        codeIsSending.value = false
-      }
-    }, 1000)
+const payOrder = async () => {
+  try {
+    const response = await markCtcOrderPaid({ oid: detailOrder.id })
+    if (response.code === 0) {
+      await refreshOrders()
+      applyDetailOrder(response.data)
+    } else {
+      ElNotification.error({ title: '提示', message: response.message })
+    }
+  } catch (error) {
+    handleRequestError(error, '标记已付款失败')
   }
 }
 
 const cancelOrderClick = () => {
-  ElMessageBox.confirm('您确定要取消该笔订单吗？', '确定取消订单吗', {
+  ElMessageBox.confirm('确定取消这笔订单吗？', '取消订单', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    cancelOrder()
-  }).catch(() => {})
+  }).then(() => cancelOrder()).catch(() => {})
 }
 
 const payOrderClick = () => {
-  ElMessageBox.confirm('标记已付款前请确认您已付款！注意：对于恶意标记付款的账户，我们将对您的账户进行冻结等限制！', '确定您已付款吗？', {
+  ElMessageBox.confirm('请确认您已经完成线下付款。恶意标记已付款会触发账户限制。', '我已线下付款', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    payOrder()
-  }).catch(() => {})
+  }).then(() => payOrder()).catch(() => {})
 }
 
-const closeDetail = () => {
-  detailModal.value = false
-}
-
-const payOrder = () => {
-  const params = { oid: detailOrder.id }
-  axios.post(`${host}/uc/ctc/pay-ctc-order`, params, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      getOrderList()
-      Object.assign(detailOrder, res.data.data)
-    } else {
-      ElNotification.error({ title: '提示', message: res.data.message })
-    }
-  }).catch(() => {})
-}
-
-const cancelOrder = () => {
-  const params = { oid: detailOrder.id }
-  axios.post(`${host}/uc/ctc/cancel-ctc-order`, params, {
-    headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
-  }).then(res => {
-    if (res.data.code === 0) {
-      getOrderList()
-      Object.assign(detailOrder, res.data.data)
-    } else {
-      ElNotification.error({ title: '提示', message: res.data.message })
-    }
-  }).catch(() => {})
-}
-
-const init = () => {
+const init = async () => {
   store.commit('navigate', '/ctc')
-  getC2cPrice()
-  if (isLogin.value) {
-    getOrderList()
-    getAccount()
-    getAccountSecurity()
-    getWallet()
-  }
+  await refreshQuote()
+  await refreshLoginData()
 }
 
-onMounted(() => {
-  init()
-  timer.value = setInterval(() => {
-    getC2cPrice()
-  }, 30000)
+onMounted(async () => {
+  await init()
+  timer.value = setInterval(refreshQuote, 30000)
 })
 
 onBeforeUnmount(() => {
   if (timer.value) {
     clearInterval(timer.value)
   }
+
   if (orderTimer.value) {
     clearInterval(orderTimer.value)
   }
 })
 </script>
 
-<style>
-.ctc .item-title {
-  font-size: 20px;
-  text-align: center;
-  font-weight: bold;
-  color: rgb(188, 188, 188);
-}
-.ctc .red {
-  color: #f2334f;
-}
-.ctc .green {
-  color: #45b854;
-}
-.ctc .item-title .unit {
-  font-size: 14px;
-}
-.ctc .item-desc {
-  font-size: 12px;
-  text-align: center;
-  color: #7c7f82;
-}
-.ctc .notice-bottom {
-  margin-top: 5px;
-  height: 55px;
-  background-color: #192330;
-  padding-top: 12px;
-  color: rgb(42, 147, 255);
-}
-.ctc .notice-btn-left {
-  height: 30px;
-  line-height: 30px;
-  width: 42%;
-  margin-left: 5%;
-  float: left;
-  border-radius: 3px;
-  border: 1px solid rgb(0, 116, 235);
-}
-.ctc .notice-btn-left:hover {
-  cursor: pointer;
-}
-.ctc #sendCode {
-  position: absolute;
-  border: none;
-  background: none;
-  top: 6px;
-  outline: none;
-  right: 0;
-  width: 30%;
-  color: #f0ac19;
-  cursor: pointer;
-  height: 20px;
-  line-height: 20px;
-  border-left: 1px solid #dddee1;
-}
-.ctc .notice-btn-right {
-  height: 30px;
-  line-height: 30px;
-  width: 42%;
-  margin-right: 5%;
-  float: right;
-  border-radius: 3px;
-  border: 1px solid rgb(0, 116, 235);
-}
-.ctc .notice-btn-right:hover {
-  cursor: pointer;
-}
-.ctc .el-tabs__nav {
-  border-bottom: 1px solid #323c53;
-  font-size: 18px;
-}
-.ctc .el-tabs__item:hover {
-  color: #f0a70a;
-}
-.ctc .el-tabs__item.is-active {
-  color: #f0a70a;
-  font-size: 18px;
-}
-.ctc .el-tabs__active-bar {
-  background-color: #f0a70a;
-}
-.ctc .buy_total {
-  border-top: 1px solid #323c53;
-  padding-top: 30px;
-  margin-bottom: 30px;
-}
-.ctc .trade_bd_ctc {
-  width: 70%;
-}
-.ctc .trade_bd_ctc .panel {
-  position: relative;
-  z-index: 2;
-  float: left;
-  width: 49%;
-  height: 455px;
-  margin-top: 0;
-  margin-right: 0;
-  border: 0 solid transparent;
-  padding-top: 35px;
-}
-.ctc .trade_panel {
-  background: transparent !important;
-}
-.ctc .trade_panel .panel .hd {
-  line-height: 20px;
-  height: 20px;
-  border-bottom: 1px solid #1F2943;
-  margin-bottom: 5px;
-}
-.ctc .trade_panel .panel .hd span {
-  padding-left: 0;
-  font-size: 12px;
-  margin: 0 3px;
-  float: right;
-}
-.ctc-order-status {
-  text-align: center;
-  margin-bottom: 15px;
-  background: #f0a70a;
-  padding: 5px 0px;
-  border-radius: 2px;
-  color: #000000;
-}
-.ctc .trade_panel .panel .hd b {
-  padding-left: 0;
-  font-size: 12px;
-  color: #7A98F7;
-  float: right;
-}
-.ctc .trade_panel .panel.panel_buy {
-  padding-right: 35px;
-  padding-left: 35px;
-  background: #192330;
-}
-.ctc .trade_panel .panel.panel_sell {
-  padding-right: 35px;
-  padding-left: 35px;
-  background: #192330;
-  margin-left: 5px;
-}
-.ctc .trade_wrap .buy-input .el-input__inner {
-  color: #45b854;
-  font-weight: bold;
-  font-size: 22px;
-  height: 40px;
-}
-.ctc .trade_wrap .sell-input .el-input__inner {
-  color: #f2334f;
-  font-weight: bold;
-  font-size: 22px;
-  height: 40px;
-}
-.ctc .trade_wrap .trade-input .el-input__inner {
-  border: 1px solid #27313e;
+<style scoped lang="scss">
+.ctc-page {
+  padding: 60px 0 50px;
   color: #fff;
-  height: 40px;
-  text-indent: 25px;
-  border-radius: 0;
 }
-.ctc .trade_wrap .el-input-wrapper {
-  outline: none;
+
+.ctc-page__banner {
+  display: block;
+  width: 100%;
 }
-.ctc .trade_wrap .el-input:focus,
-.ctc .trade_wrap .el-input:hover {
-  box-shadow: none;
-  outline: none;
+
+.ctc-page__container {
+  padding: 0 5%;
 }
-.ctc .trade_wrap .el-input-number-input:focus,
-.ctc .trade_wrap .el-input-number-input:hover {
-  box-shadow: none;
-  border-color: #41546d;
-  outline: none;
+
+.ctc-page__container > h1 {
+  margin-top: -170px;
+  padding: 50px 0 20px;
+  font-size: 32px;
+  letter-spacing: 3px;
+  text-align: center;
 }
-.ctc .trade_wrap .el-form-item-content input {
-  padding-left: 50px;
-  text-align: right;
-  padding-right: 75px;
-  font-size: 20px;
-  line-height: 30px;
+
+.ctc-page__desc {
+  margin: 0;
+  text-align: center;
+  letter-spacing: 1px;
 }
-.ctc .trade_wrap .el-form-item-content input::placeholder {
+
+.ctc-page__content {
+  margin-top: 55px;
+}
+
+.ctc-page__tabs :deep(.el-tabs__nav-wrap::after) {
+  background: #27313e;
+}
+
+.ctc-page__tabs :deep(.el-tabs__item) {
+  color: #9aa4b6;
+  font-size: 18px;
+}
+
+.ctc-page__tabs :deep(.el-tabs__item.is-active),
+.ctc-page__tabs :deep(.el-tabs__item:hover) {
+  color: #f0a70a;
+}
+
+.ctc-page__tabs :deep(.el-tabs__active-bar) {
+  background: #f0a70a;
+}
+
+.ctc-page__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  min-height: 470px;
+}
+
+.ctc-page__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.trade-card,
+.notice-card,
+.orders-card {
+  border: 1px solid #27313e;
+  background: #192330;
+  box-shadow: 0 12px 30px rgba(10, 18, 32, 0.22);
+}
+
+.trade-card {
+  display: flex;
+  min-height: 455px;
+  flex-direction: column;
+  padding: 28px 28px 24px;
+}
+
+.trade-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.trade-card__eyebrow {
+  margin: 0 0 10px;
+  color: #9aa4b6;
   font-size: 12px;
-  color: #515a6e;
-  margin-bottom: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
-.ctc .trade_wrap .el-form-item-content label.before {
-  position: absolute;
-  top: 4px;
-  left: 10px;
-  color: #7c7f82;
-  z-index: 2;
+
+.trade-card__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.trade-card--buy .trade-card__title,
+.trade-card--buy .trade-card__summary strong {
+  color: #f15057;
+}
+
+.trade-card--sell .trade-card__title,
+.trade-card--sell .trade-card__summary strong {
+  color: #00b275;
+}
+
+.trade-card__badge {
+  border: 1px solid #334056;
+  padding: 6px 10px;
+  color: #9aa4b6;
+  font-size: 12px;
+}
+
+.trade-card__form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.trade-card__form :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+
+.trade-card__form :deep(.el-form-item__label) {
+  color: #9aa4b6;
+}
+
+.trade-card__form :deep(.el-input__wrapper),
+.trade-card__form :deep(.el-input-number__wrapper),
+.trade-card__form :deep(.el-select__wrapper) {
+  border-radius: 0;
+  box-shadow: 0 0 0 1px #27313e inset;
+  background: #111925;
+}
+
+.trade-card__form :deep(.el-input__inner),
+.trade-card__form :deep(.el-input-number__input),
+.trade-card__form :deep(.el-select__selected-item) {
+  color: #fff;
+}
+
+.trade-card__number,
+.trade-card__select {
+  width: 100%;
+}
+
+.trade-card__link {
+  margin: -6px 0 16px;
+  color: #4b8df8;
+  font-size: 12px;
+  text-align: right;
+  text-decoration: none;
+}
+
+.trade-card__balance {
+  margin: -6px 0 16px;
+  color: #9aa4b6;
+  font-size: 12px;
+  text-align: right;
+}
+
+.trade-card__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #27313e;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.trade-card__summary span {
+  color: #9aa4b6;
   font-size: 14px;
 }
-.ctc .trade_wrap .el-form-item-content label.after {
-  position: absolute;
-  top: 4px;
-  right: 25px;
-  color: #7c7f82;
-  font-size: 14px;
+
+.trade-card__summary strong {
+  font-size: 26px;
 }
-.trade_bd_ctc .el-button {
+
+.trade-card__tip {
+  margin: 8px 0 18px;
+  color: #7f8a9b;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.trade-card__tip--tight {
+  margin-top: -6px;
+  margin-bottom: 16px;
+}
+
+.trade-card__action {
   width: 100%;
   border: 0;
+  border-radius: 0;
   color: #fff;
 }
-.trade_bd_ctc .el-button.bg-red {
-  background-color: #f15057;
+
+.trade-card__action--buy {
+  background: #f15057;
 }
-.trade_bd_ctc .el-button.bg-red:hover {
-  background-color: #ff7278;
+
+.trade-card__action--buy:hover {
+  background: #ff7278;
 }
-.trade_bd_ctc .el-button.bg-green {
-  background-color: #00b275;
+
+.trade-card__action--sell {
+  background: #00b275;
 }
-.trade_bd_ctc .el-button.bg-green:hover {
-  background-color: #01ce88;
+
+.trade-card__action--sell:hover {
+  background: #01ce88;
 }
-.trade_bd_ctc .el-button.bg-gray {
-  background-color: #35475b;
-  cursor: not-allowed;
-  color: #9fabb5;
+
+.notice-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 455px;
 }
-.trade_bd_ctc .el-button.bg-gray:hover {
-  color: #9fabb5 !important;
+
+.notice-card__body {
+  flex: 1;
+  padding: 25px 30px;
+  color: #bcbcbc;
+  font-size: 12px;
+  line-height: 26px;
 }
-.ctc .total {
-  min-height: 90px;
+
+.notice-card__title {
+  margin: 0 0 10px;
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
 }
+
+.notice-card__more {
+  float: right;
+  color: #f0a70a;
+  text-decoration: none;
+}
+
+.notice-card__footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  border-top: 1px solid #27313e;
+  padding: 12px 16px;
+}
+
+.notice-card__button {
+  border: 1px solid #0074eb;
+  padding: 8px 10px;
+  color: #2a93ff;
+  font-size: 13px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.orders-card {
+  margin-top: 18px;
+  padding: 24px;
+}
+
+.orders-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.orders-card__eyebrow {
+  margin: 0 0 6px;
+  color: #9aa4b6;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.orders-card__title {
+  margin: 0;
+  font-size: 22px;
+}
+
+.orders-card__table :deep(th.el-table__cell) {
+  background: #1b2635;
+  color: #9aa4b6;
+}
+
+.orders-card__table :deep(.el-table__row) {
+  background: #192330;
+  color: #fff;
+}
+
+.orders-card__table :deep(td.el-table__cell) {
+  border-bottom-color: #27313e;
+  background: #192330;
+}
+
+.orders-card__table :deep(.el-table__body tr:hover > td.el-table__cell) {
+  background: #223043 !important;
+  color: #fff;
+}
+
+.orders-card__table :deep(.el-table__body tr.hover-row > td.el-table__cell) {
+  background: #223043 !important;
+  color: #fff;
+}
+
+.orders-card__table :deep(.el-table__inner-wrapper::before) {
+  background: #27313e;
+}
+
+.orders-card__pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.direction-buy {
+  color: #f15057;
+}
+
+.direction-sell {
+  color: #00b275;
+}
+
+:deep(.ctc-dialog) {
+  border: 1px solid #27313e;
+  border-radius: 0;
+  background: #192330;
+  box-shadow: 0 24px 60px rgba(4, 10, 18, 0.55);
+}
+
+:deep(.ctc-dialog .el-dialog__header),
+:deep(.ctc-dialog__header) {
+  margin: 0;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #27313e;
+  background: linear-gradient(180deg, #1f2b3b 0%, #192330 100%);
+}
+
+:deep(.ctc-dialog .el-dialog__headerbtn .el-dialog__close) {
+  color: #9aa4b6;
+}
+
+:deep(.ctc-dialog .el-dialog__headerbtn:hover .el-dialog__close) {
+  color: #f0a70a;
+}
+
+:deep(.ctc-dialog .el-dialog__body) {
+  padding: 24px;
+  color: #fff;
+  background: #192330;
+}
+
+:deep(.ctc-dialog .el-dialog__footer) {
+  padding: 0 24px 24px;
+  background: #192330;
+}
+
+.ctc-dialog__title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ctc-dialog__title {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.ctc-dialog__ghost-btn,
+.ctc-dialog__primary-btn,
+.ctc-dialog__secondary-btn,
+.ctc-dialog__danger-btn {
+  border-radius: 0;
+}
+
+.ctc-dialog__ghost-btn {
+  border-color: #334056;
+  background: transparent;
+  color: #d9e1ee;
+}
+
+.ctc-dialog__ghost-btn:hover {
+  border-color: #4b5a73;
+  color: #fff;
+  background: #223043;
+}
+
+.ctc-dialog__primary-btn {
+  min-width: 148px;
+  background: #f0a70a;
+  border-color: #f0a70a;
+  color: #111925;
+  font-weight: 600;
+}
+
+.ctc-dialog__primary-btn:hover {
+  background: #ffbe34;
+  border-color: #ffbe34;
+  color: #111925;
+}
+
+.ctc-dialog__secondary-btn {
+  border-color: #334056;
+  background: #223043;
+  color: #f0a70a;
+}
+
+.ctc-dialog__secondary-btn:hover {
+  border-color: #4b5a73;
+  background: #29384d;
+  color: #ffbe34;
+}
+
+.ctc-dialog__danger-btn {
+  background: #f15057;
+  border-color: #f15057;
+  color: #fff;
+}
+
+.ctc-dialog__danger-btn:hover {
+  background: #ff7278;
+  border-color: #ff7278;
+}
+
+.verify-dialog__hint {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #334056;
+  background: #111925;
+  color: #9aa4b6;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.verify-dialog :deep(.el-form-item__label) {
+  color: #9aa4b6;
+}
+
+.verify-dialog :deep(.el-input__wrapper) {
+  border-radius: 0;
+  box-shadow: 0 0 0 1px #27313e inset;
+  background: #111925;
+}
+
+.verify-dialog :deep(.el-input__wrapper:hover),
+.verify-dialog :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #41546d inset;
+  background: #111925;
+}
+
+.verify-dialog :deep(.el-input__inner) {
+  background: transparent;
+  color: #fff;
+}
+
+.verify-dialog :deep(.el-input__inner::placeholder) {
+  color: #7f8a9b;
+}
+
+.verify-dialog :deep(.el-input__prefix),
+.verify-dialog :deep(.el-input__suffix),
+.verify-dialog :deep(.el-input__icon) {
+  color: #9aa4b6;
+}
+
+.verify-dialog :deep(input:-webkit-autofill),
+.verify-dialog :deep(input:-webkit-autofill:hover),
+.verify-dialog :deep(input:-webkit-autofill:focus) {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px #111925 inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.verify-dialog__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.detail-dialog__status {
+  margin: 0 0 16px;
+  background: #f0a70a;
+  padding: 8px 12px;
+  color: #111925;
+  text-align: center;
+}
+
+.detail-dialog__metrics {
+  margin-bottom: 16px;
+}
+
+.detail-dialog__metrics :deep(.el-col) {
+  border: 1px solid #27313e;
+  background: #1b2635;
+  padding: 14px;
+}
+
+.detail-dialog__metric-value {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.detail-dialog__metric-label {
+  margin: 0;
+  color: #7f8a9b;
+  font-size: 12px;
+  text-align: center;
+}
+
+.detail-dialog__unit {
+  font-size: 13px;
+}
+
+.detail-dialog__notice {
+  margin-bottom: 16px;
+  color: #d9e1ee;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.detail-dialog__notice strong {
+  color: #f0a70a;
+}
+
+.detail-dialog__notice-tag {
+  display: inline-block;
+  margin-right: 10px;
+  padding: 2px 8px;
+  border: 1px solid rgba(240, 167, 10, 0.35);
+  background: rgba(240, 167, 10, 0.12);
+  color: #f0a70a;
+  font-size: 12px;
+}
+
+.detail-dialog__notice-tag--sell {
+  border-color: rgba(0, 178, 117, 0.35);
+  background: rgba(0, 178, 117, 0.12);
+  color: #00b275;
+}
+
+.detail-dialog__countdown {
+  margin-left: 12px;
+  color: #f15057;
+  font-weight: 600;
+}
+
+.detail-dialog__panel {
+  border: 1px solid #27313e;
+  background: #1b2635;
+  padding: 18px;
+}
+
+.detail-dialog__panel-title {
+  margin: 0 0 12px;
+  color: #9aa4b6;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.detail-dialog__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #27313e;
+  color: #d9e1ee;
+  font-size: 13px;
+}
+
+.detail-dialog__row:last-child {
+  border-bottom: 0;
+}
+
+.detail-dialog__qr {
+  display: block;
+  width: 220px;
+  max-width: 100%;
+  margin: 16px auto 0;
+  border: 1px solid #27313e;
+}
+
+@media screen and (max-width: 1280px) {
+  .ctc-page__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .notice-card {
+    min-height: auto;
+  }
+}
+
 @media screen and (max-width: 768px) {
   .shoujiIf {
     display: none;
   }
-  .ctc .main {
-    margin-top: 10px !important;
+
+  .ctc-page__content {
+    margin-top: 16px;
   }
-  .ctc .trade_bd_ctc {
-    width: 100%;
+
+  .ctc-page__grid {
+    grid-template-columns: 1fr;
   }
-  .ctc .trade_bd_ctc .panel {
-    width: 100%;
+
+  .trade-card {
+    min-height: auto;
   }
-  .ctc .trade_panel .panel.panel_sell {
-    margin-left: 0px;
-    margin-top: 15px;
+
+  .orders-card {
+    padding: 16px;
   }
-  .ctc .trade_wrap .el-form-item-content input {
-    padding-left: 0px;
-  }
-}
-</style>
-<style lang="scss" scoped>
-.ctc {
-  height: 100%;
-  background-size: cover;
-  position: relative;
-  overflow: hidden;
-  padding-bottom: 50px;
-  padding-top: 60px;
-  color: #fff;
-}
-.ctc .bannerimg {
-  display: block;
-  width: 100%;
-}
-.ctc_container {
-  padding: 0 5%;
-  text-align: center;
-  height: 100%;
-  > h1 {
-    margin-top: -170px;
-    font-size: 32px;
-    line-height: 1;
-    padding: 50px 0 20px 0;
-    letter-spacing: 3px;
-  }
-}
-.ctc .main {
-  margin-top: 55px;
-  display: flex;
-  justify-content: space-between;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-.ctc-container {
-  min-height: 470px;
-}
-.bottom-panel {
-  border-top: 1px solid rgb(237, 237, 237);
-  margin-top: 15px;
-  .bottom {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    span {
-      font-size: 12px;
-      color: #a7a7a7;
-      margin-top: 15px;
-    }
-    button, a {
-      margin-top: 11px;
-    }
-  }
-}
-.right {
-  float: right;
-}
-.left {
-  float: left;
-}
-.gray {
-  color: #a7a7a7;
 }
 </style>
