@@ -246,9 +246,9 @@
                       <span class="total-label">{{ $t("exchange.amount") }}:</span>
                       <span class="total-value">{{ form.buy.limitTurnover?.toFixed(baseCoinScale) }} {{ currentCoin.base }}</span>
                     </div>
-                    <el-button
-                      v-if="exchangeable === 1"
-                      type="success"
+                      <el-button
+                        v-if="exchangeable === 1"
+                        type="danger"
                       @click="buyWithLimitPrice"
                       :loading="buying"
                       class="btn-compact"
@@ -284,9 +284,9 @@
                       <span class="total-label">{{ $t("exchange.amount") }}:</span>
                       <span class="total-value">{{ form.sell.limitTurnover?.toFixed(coinScale) }} {{ currentCoin.base }}</span>
                     </div>
-                    <el-button
-                      v-if="exchangeable === 1"
-                      type="danger"
+                      <el-button
+                        v-if="exchangeable === 1"
+                        type="success"
                       @click="sellLimitPrice"
                       :loading="selling"
                       class="btn-compact"
@@ -321,9 +321,9 @@
                       <el-input v-model="form.buy.marketAmount" :placeholder="$t('exchange.amount')" @input="keyEvent" size="small" />
                       <span class="inline-unit">{{ currentCoin.base }}</span>
                     </div>
-                    <el-button
-                      v-if="enableMarketBuy === 1 && exchangeable === 1"
-                      type="success"
+                      <el-button
+                        v-if="enableMarketBuy === 1 && exchangeable === 1"
+                        type="danger"
                       @click="buyWithMarketPrice"
                       :loading="buying"
                       class="btn-compact"
@@ -355,9 +355,9 @@
                       <el-input v-model="form.sell.marketAmount" :placeholder="$t('exchange.sellnum')" @input="keyEvent" size="small" />
                       <span class="inline-unit">{{ currentCoin.coin }}</span>
                     </div>
-                    <el-button
-                      v-if="enableMarketSell === 1 && exchangeable === 1"
-                      type="danger"
+                      <el-button
+                        v-if="enableMarketSell === 1 && exchangeable === 1"
+                        type="success"
                       @click="sellMarketPrice"
                       :loading="selling"
                       class="btn-compact"
@@ -496,7 +496,7 @@
         <!-- 最新成交 -->
         <div class="trade-wrap" v-show="!showCountDown">
           <div class="trade-wrap__header">最新成交</div>
-          <el-table :data="trade.rows" :no-data-text="$t('common.nodata')">
+          <el-table class="trade-wrap__table" :data="trade.rows" :no-data-text="$t('common.nodata')">
             <el-table-column prop="amount" :label="$t('exchange.num')">
               <template #default="{ row }">
                 {{ row.amount?.toFixed(coinScale) }}
@@ -628,6 +628,7 @@ import expandRow from './expand.vue'
 import Datafeeds from '../../assets/js/charting_library/datafeed/bitrade.js'
 import { shouldUseAreaChartForSymbol } from './chart-preferences'
 import { applyFavorState, getFavorSuccessMessage } from './favor'
+import { buildOrderPayload, toOrderNumber } from './order-utils'
 import { pickWalletBalances } from './wallet'
 import {
   PLATE_DISPLAY_ROWS,
@@ -1657,27 +1658,29 @@ const cancel = (index) => {
 }
 
 const buyWithLimitPrice = () => {
-  if (!form.buy.limitAmount) {
+  const limitAmount = toOrderNumber(form.buy.limitAmount)
+  const limitPrice = toOrderNumber(form.buy.limitPrice)
+  if (limitAmount <= 0) {
     ElMessage.error('请输入买入数量')
     return
   }
 
-  const maxAmount = wallet.base / form.buy.limitPrice
-  if (form.buy.limitAmount > maxAmount) {
+  const maxAmount = wallet.base / limitPrice
+  if (limitAmount > maxAmount) {
     ElMessage.error('买入数量超过可用余额')
     return
   }
 
   buying.value = true
 
-  const params = {
+  const params = buildOrderPayload({
     symbol: currentCoin.symbol,
-    price: form.buy.limitPrice,
-    amount: form.buy.limitAmount,
+    price: limitPrice,
+    amount: limitAmount,
     direction: 'BUY',
     type: 'LIMIT_PRICE',
     useDiscount: 0
-  }
+  })
 
   post(host + api.exchange.order, params)
     .then(response => {
@@ -1702,19 +1705,20 @@ const buyWithLimitPrice = () => {
 }
 
 const buyWithMarketPrice = () => {
-  if (!form.buy.marketAmount) {
+  const marketAmount = toOrderNumber(form.buy.marketAmount)
+  if (marketAmount <= 0) {
     ElMessage.error('请输入买入金额')
     return
   }
 
   buying.value = true
 
-  const params = {
+  const params = buildOrderPayload({
     symbol: currentCoin.symbol,
-    amount: form.buy.marketAmount,
+    amount: marketAmount,
     direction: 'BUY',
     type: 'MARKET_PRICE'
-  }
+  })
 
   post(host + api.exchange.order, params)
     .then(response => {
@@ -1739,20 +1743,22 @@ const buyWithMarketPrice = () => {
 }
 
 const sellLimitPrice = () => {
-  if (!form.sell.limitAmount) {
+  const limitAmount = toOrderNumber(form.sell.limitAmount)
+  const limitPrice = toOrderNumber(form.sell.limitPrice)
+  if (limitAmount <= 0) {
     ElMessage.error('请输入卖出数量')
     return
   }
 
   selling.value = true
 
-  const params = {
+  const params = buildOrderPayload({
     symbol: currentCoin.symbol,
-    price: form.sell.limitPrice,
-    amount: form.sell.limitAmount,
+    price: limitPrice,
+    amount: limitAmount,
     direction: 'SELL',
     type: 'LIMIT_PRICE'
-  }
+  })
 
   post(host + api.exchange.order, params)
     .then(response => {
@@ -1777,19 +1783,20 @@ const sellLimitPrice = () => {
 }
 
 const sellMarketPrice = () => {
-  if (!form.sell.marketAmount) {
+  const marketAmount = toOrderNumber(form.sell.marketAmount)
+  if (marketAmount <= 0) {
     ElMessage.error('请输入卖出数量')
     return
   }
 
   selling.value = true
 
-  const params = {
+  const params = buildOrderPayload({
     symbol: currentCoin.symbol,
-    amount: form.sell.marketAmount,
+    amount: marketAmount,
     direction: 'SELL',
     type: 'MARKET_PRICE'
-  }
+  })
 
   post(host + api.exchange.order, params)
     .then(response => {
@@ -1999,11 +2006,11 @@ $night-color: #fff;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        min-height: 48px;
-        padding: 4px 10px;
+        min-height: 42px;
+        padding: 3px 10px;
         font-size: 14px;
         font-weight: 500;
-        gap: 2px;
+        gap: 1px;
 
         .plate-nowprice__labels,
         .plate-nowprice__value {
@@ -2029,7 +2036,7 @@ $night-color: #fff;
         }
 
         .price {
-          font-size: 18px;
+          font-size: 17px;
           margin-right: 10px;
         }
 
@@ -2157,11 +2164,11 @@ $night-color: #fff;
           }
 
           .buy-title {
-            color: #5ec66b;
+            color: #ff7a7a;
           }
 
           .sell-title {
-            color: #ff7a7a;
+            color: #5ec66b;
           }
 
           .trade-hint {
@@ -2276,7 +2283,7 @@ $night-color: #fff;
     width: 98.6%;
     margin-left: 0.5%;
     margin-bottom: 10px;
-    margin-top: 0;
+    margin-top: 5px;
     flex-shrink: 0;
     border-top: 1px solid #27313e;
 
@@ -2577,12 +2584,11 @@ $night-color: #fff;
   }
 
   .trade-wrap {
-    flex: 0 0 176px;
-    min-height: 0;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    margin-top: 10px;
+    margin-top: 5px;
 
     .trade-wrap__header {
       height: 40px;
@@ -2595,9 +2601,19 @@ $night-color: #fff;
       flex-shrink: 0;
     }
 
-    :deep(.el-table__body-wrapper) {
-      flex: 1;
-      min-height: 0;
+    :deep(.trade-wrap__table) {
+      height: auto !important;
+    }
+
+    :deep(.trade-wrap__table .el-table__inner-wrapper) {
+      height: auto;
+    }
+
+    :deep(.trade-wrap__table .el-table__body-wrapper) {
+      flex: none;
+      min-height: auto;
+      max-height: 84px;
+      overflow-y: auto;
     }
   }
 }
@@ -2651,7 +2667,9 @@ $night-color: #fff;
     border-radius: 4px;
     padding: 10px;
     // 固定高度确保左右一致
-    height: 165px;
+    height: 190px;
+    display: flex;
+    flex-direction: column;
 
     &.trade-grid-buy,
     &.trade-grid-sell {
@@ -2694,6 +2712,13 @@ $night-color: #fff;
   }
 
   // 标题行
+  .compact-form {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   .form-row-title {
     margin-bottom: 6px;
 
@@ -2702,11 +2727,11 @@ $night-color: #fff;
       font-weight: 600;
 
       &.buy-title {
-        color: #5ec66b;
+        color: #ff7a7a;
       }
 
       &.sell-title {
-        color: #ff7a7a;
+        color: #5ec66b;
       }
     }
   }
@@ -2780,7 +2805,7 @@ $night-color: #fff;
     height: 28px;
     font-size: 13px;
     font-weight: 500;
-    margin-top: 4px;
+    margin-top: auto;
     border-radius: 4px;
 
     &.el-button--success {
