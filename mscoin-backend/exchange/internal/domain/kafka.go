@@ -47,6 +47,25 @@ type OrderResult struct {
 	OrderId string `json:"orderId"`
 }
 
+type OrderCancelResult struct {
+	OrderId string `json:"orderId"`
+}
+
+func (d *KafkaDomain) SendOrderCancel(topic string, orderId string) error {
+	m := OrderCancelResult{
+		OrderId: orderId,
+	}
+	marshal, _ := json.Marshal(m)
+	data := database.KafkaData{
+		Topic: topic,
+		Key:   []byte(orderId),
+		Data:  marshal,
+	}
+	err := d.cli.SendSync(data)
+	logx.Info("撤销订单发送消息成功,orderId=" + orderId)
+	return err
+}
+
 func (d *KafkaDomain) WaitAddOrderResult() {
 	cli := d.cli.StartRead("exchange_order_init_complete_trading")
 	for {

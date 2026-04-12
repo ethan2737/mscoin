@@ -35,6 +35,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	conf := c.CacheRedis[0].RedisConf
 	newRedis := redis.MustNewRedis(conf)
 	go consumer.ExchangeOrderAdd(newRedis, cli, order, mysql)
+	cancelCli := cli.StartReadNew("exchange_order_cancel")
+	go consumer.ExchangeOrderCancel(newRedis, cancelCli, order, mysql)
 	completeCli := cli.StartReadNew("exchange_order_complete_update_success")
 	go consumer.ExchangeOrderComplete(newRedis, completeCli, mysql)
 	btCli := cli.StartReadNew("BTC_TRANSACTION")

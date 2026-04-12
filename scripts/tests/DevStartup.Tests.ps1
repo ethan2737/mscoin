@@ -35,6 +35,8 @@ Describe 'Get-MscoinAppServiceDefinitions' {
 
 Describe 'Resolve-MscoinValidationBaseline' {
     $baseline = Resolve-MscoinValidationBaseline -RepoRoot $repoRoot
+    $marketSql = Get-Content -Raw $baseline.MarketSqlPath
+    $authSql = Get-Content -Raw $baseline.AuthSqlPath
 
     It 'returns the local auth baseline sql path' {
         $baseline.AuthSqlPath | Should Exist
@@ -51,6 +53,14 @@ Describe 'Resolve-MscoinValidationBaseline' {
     It 'returns the documented local login account' {
         $baseline.LoginPhone | Should Be '13800000000'
         $baseline.Password | Should Be '123456'
+    }
+
+    It 'includes 1INCH coin metadata in the local market baseline' {
+        $marketSql | Should Match "'1INCH'"
+    }
+
+    It 'includes a 1INCH wallet for the local validation account' {
+        $authSql | Should Match "'1INCH', 'LOCAL-1INCH-ADDRESS-10001'"
     }
 }
 

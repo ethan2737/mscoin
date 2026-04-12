@@ -30,9 +30,10 @@
                 <div style="display: flex; align-items: center;">
                   <el-icon
                     style="margin-right: 5px; cursor: pointer;"
+                    :class="{ 'favor-icon-active': row.isFavor }"
                     @click.stop="toggleFavor(row)"
                   >
-                    <Star v-if="row.isFavor" />
+                    <StarFilled v-if="row.isFavor" />
                     <Star v-else />
                   </el-icon>
                   <span>{{ row.symbol }}</span>
@@ -54,7 +55,21 @@
             highlight-row
             @current-change="gohref"
           >
-            <el-table-column prop="coin" :label="$t('exchange.coin')" width="120" />
+            <el-table-column prop="coin" :label="$t('exchange.coin')" width="120">
+              <template #default="{ row }">
+                <div style="display: flex; align-items: center;">
+                  <el-icon
+                    style="margin-right: 5px; cursor: pointer;"
+                    :class="{ 'favor-icon-active': row.isFavor }"
+                    @click.stop="toggleFavor(row)"
+                  >
+                    <StarFilled v-if="row.isFavor" />
+                    <Star v-else />
+                  </el-icon>
+                  <span>{{ row.symbol }}</span>
+                </div>
+              </template>
+            </el-table-column>
             <el-table-column prop="close" :label="$t('exchange.lastprice')" sortable />
             <el-table-column prop="rose" :label="$t('exchange.daychange')" sortable>
               <template #default="{ row }">
@@ -69,7 +84,21 @@
             highlight-row
             @current-change="gohref"
           >
-            <el-table-column prop="coin" :label="$t('exchange.coin')" width="120" />
+            <el-table-column prop="coin" :label="$t('exchange.coin')" width="120">
+              <template #default="{ row }">
+                <div style="display: flex; align-items: center;">
+                  <el-icon
+                    style="margin-right: 5px; cursor: pointer;"
+                    :class="{ 'favor-icon-active': row.isFavor }"
+                    @click.stop="toggleFavor(row)"
+                  >
+                    <StarFilled v-if="row.isFavor" />
+                    <Star v-else />
+                  </el-icon>
+                  <span>{{ row.symbol }}</span>
+                </div>
+              </template>
+            </el-table-column>
             <el-table-column prop="close" :label="$t('exchange.lastprice')" sortable />
             <el-table-column prop="rose" :label="$t('exchange.daychange')" sortable>
               <template #default="{ row }">
@@ -101,8 +130,8 @@
         <!-- 币种信息 -->
         <div class="symbol">
           <div class="item" @click="currentCoinFavorChange">
-            <el-icon :size="24" color="#f0a70a">
-              <Star v-if="currentCoinIsFavor" />
+            <el-icon :size="24" :class="{ 'favor-icon-active': currentCoinIsFavor }">
+              <StarFilled v-if="currentCoinIsFavor" />
               <Star v-else />
             </el-icon>
           </div>
@@ -145,16 +174,18 @@
 
         <!-- K 线图和深度图 -->
         <div class="imgtable">
+          <div class="chart-panel">
+            <div id="kline_container" :class="{hidden: currentImgTable === 's'}"></div>
+            <DepthGraph
+              ref="depthGraphRef"
+              :values="depthPlate"
+              :class="{hidden: currentImgTable === 'k'}"
+            />
+          </div>
           <div class="handler">
             <span @click="changeImgTable('k')" :class="{active: currentImgTable === 'k'}">{{ $t("exchange.kline") }}</span>
             <span @click="changeImgTable('s')" :class="{active: currentImgTable === 's'}">{{ $t("exchange.depth") }}</span>
           </div>
-          <div id="kline_container" :class="{hidden: currentImgTable === 's'}"></div>
-          <DepthGraph
-            ref="depthGraphRef"
-            :values="{ bid: { items: [] }, ask: { items: [] }, skin }"
-            :class="{hidden: currentImgTable === 'k'}"
-          />
         </div>
 
         <!-- 交易面板 -->
@@ -184,166 +215,155 @@
               <span @click="market_price" :class="{active: showMarket}">{{ $t("exchange.market_price") }}</span>
             </div>
 
-            <!-- 交易表单 -->
+            <!-- 交易表单 - 紧凑型布局 -->
             <div class="trade_bd">
-              <!-- 买入面板 -->
-              <div class="panel panel_buy">
-                <div v-if="isLogin" class="hd hd_login">
-                  <span>{{ currentCoin.base }}</span>
-                  <span>{{ wallet.base?.toFixed(baseCoinScale) }}</span>
-                  <span>{{ $t("exchange.canuse") }}</span>
-                  <router-link :to="rechargeUSDTUrl">{{ $t("exchange.recharge") }}</router-link>
-                </div>
-
+              <!-- 限价交易区 -->
+              <div class="trade-grid" v-show="!showMarket">
                 <!-- 限价买入 -->
-                <div class="bd bd_limited" v-show="!showMarket">
-                  <el-form :model="form.buy">
-                    <el-form-item>
-                      <label class="before">{{ $t('exchange.buyprice') }}</label>
-                      <el-input v-model="form.buy.limitPrice" :placeholder="$t('exchange.buyprice')" @input="keyEvent" />
-                      <label class="after">{{ currentCoin.base }}</label>
-                      <p class="math_price">≈ {{ ((currentCoin.usdRate / currentCoin.close) * form.buy.limitPrice * CNYRate) || 0 }} CNY</p>
-                    </el-form-item>
-                    <el-form-item>
-                      <label class="before">{{ $t('exchange.buynum') }}</label>
-                      <el-input v-model="form.buy.limitAmount" :placeholder="$t('exchange.buynum')" @input="keyEvent" />
-                      <label class="after">{{ currentCoin.coin }}</label>
-                    </el-form-item>
-                    <div class="slider-wrap">
-                      <el-slider
-                        v-model="sliderBuyLimitPercent"
-                        :step="25"
-                        :disabled="sliderBuyDisabled"
-                        :format="tipFormat"
-                      />
+                <div class="trade-grid-item trade-grid-buy">
+                  <div v-if="isLogin" class="hd hd_login hd-compact">
+                    <span class="balance-unit">{{ currentCoin.base }}</span>
+                    <span class="balance-value">{{ wallet.base?.toFixed(baseCoinScale) }}</span>
+                    <span class="balance-label">{{ $t("exchange.canuse") }}</span>
+                    <router-link :to="rechargeUSDTUrl">{{ $t("exchange.recharge") }}</router-link>
+                  </div>
+                  <el-form :model="form.buy" class="compact-form">
+                    <!-- 标题和输入框合并到一行 -->
+                    <div class="form-row-title">
+                      <span class="form-title buy-title">{{ $t("exchange.buyin") }} {{ currentCoin.coin }}</span>
                     </div>
-                    <div class="total buy_total">
-                      {{ $t("exchange.amount") }}
-                      <span>{{ form.buy.limitTurnover?.toFixed(baseCoinScale) }}</span> {{ currentCoin.base }}
+                    <div class="form-row-inline">
+                      <label class="inline-label">{{ $t('exchange.buyprice') }}</label>
+                      <el-input v-model="form.buy.limitPrice" :placeholder="$t('exchange.buyprice')" @input="keyEvent" size="small" />
+                      <span class="inline-unit">{{ currentCoin.base }}</span>
                     </div>
-                    <el-button
-                      v-if="exchangeable === 1"
-                      type="success"
+                    <div class="form-row-inline">
+                      <label class="inline-label">{{ $t('exchange.buynum') }}</label>
+                      <el-input v-model="form.buy.limitAmount" :placeholder="$t('exchange.buynum')" @input="keyEvent" size="small" />
+                      <span class="inline-unit">{{ currentCoin.coin }}</span>
+                    </div>
+                    <div class="form-row-total">
+                      <span class="total-label">{{ $t("exchange.amount") }}:</span>
+                      <span class="total-value">{{ form.buy.limitTurnover?.toFixed(baseCoinScale) }} {{ currentCoin.base }}</span>
+                    </div>
+                      <el-button
+                        v-if="exchangeable === 1"
+                        type="danger"
                       @click="buyWithLimitPrice"
                       :loading="buying"
+                      class="btn-compact"
                     >
-                      {{ $t("exchange.buyin") }} ({{ currentCoin.coin }})
+                      {{ $t("exchange.buyin") }}
                     </el-button>
-                    <el-button v-else disabled>{{ $t("exchange.buyin") }} ({{ currentCoin.coin }})</el-button>
                   </el-form>
                 </div>
 
-                <!-- 市价买入 -->
-                <div class="bd bd_market" v-show="showMarket">
-                  <el-form :model="form.buy">
-                    <el-form-item>
-                      <label class="before">{{ $t('exchange.buyprice') }}</label>
-                      <el-input disabled :placeholder="$t('exchange.buytip')" />
-                      <label class="after">{{ currentCoin.base }}</label>
-                    </el-form-item>
-                    <el-form-item>
-                      <label class="before">{{ $t('exchange.buynum') }}</label>
-                      <el-input v-model="form.buy.marketAmount" :placeholder="$t('exchange.amount')" @input="keyEvent" />
-                      <label class="after">{{ currentCoin.base }}</label>
-                    </el-form-item>
-                    <div class="slider-wrap">
-                      <el-slider
-                        v-model="sliderBuyMarketPercent"
-                        :step="25"
-                        :disabled="sliderBuyDisabled"
-                        :format="tipFormat"
-                      />
+                <!-- 限价卖出 -->
+                <div class="trade-grid-item trade-grid-sell">
+                  <div v-if="isLogin" class="hd hd_login hd-compact">
+                    <span class="balance-label">{{ $t("exchange.canuse") }}</span>
+                    <span class="balance-value">{{ wallet.coin?.toFixed(coinScale) }}</span>
+                    <span class="balance-unit">{{ currentCoin.coin }}</span>
+                    <router-link :to="rechargeCoinUrl">{{ $t("exchange.recharge") }}</router-link>
+                  </div>
+                  <el-form :model="form.sell" class="compact-form">
+                    <div class="form-row-title">
+                      <span class="form-title sell-title">{{ $t("exchange.sellout") }} {{ currentCoin.coin }}</span>
                     </div>
-                    <el-button
-                      v-if="enableMarketBuy === 1 && exchangeable === 1"
-                      type="success"
-                      @click="buyWithMarketPrice"
-                      :loading="buying"
+                    <div class="form-row-inline">
+                      <label class="inline-label">{{ $t('exchange.sellprice') }}</label>
+                      <el-input v-model="form.sell.limitPrice" :placeholder="$t('exchange.sellprice')" @input="keyEvent" size="small" />
+                      <span class="inline-unit">{{ currentCoin.base }}</span>
+                    </div>
+                    <div class="form-row-inline">
+                      <label class="inline-label">{{ $t('exchange.sellnum') }}</label>
+                      <el-input v-model="form.sell.limitAmount" :placeholder="$t('exchange.sellnum')" @input="keyEvent" size="small" />
+                      <span class="inline-unit">{{ currentCoin.coin }}</span>
+                    </div>
+                    <div class="form-row-total">
+                      <span class="total-label">{{ $t("exchange.amount") }}:</span>
+                      <span class="total-value">{{ form.sell.limitTurnover?.toFixed(coinScale) }} {{ currentCoin.base }}</span>
+                    </div>
+                      <el-button
+                        v-if="exchangeable === 1"
+                        type="success"
+                      @click="sellLimitPrice"
+                      :loading="selling"
+                      class="btn-compact"
                     >
-                      {{ $t("exchange.buyin") }} ({{ currentCoin.coin }})
+                      {{ $t("exchange.sellout") }}
                     </el-button>
-                    <el-button v-else disabled>{{ $t("exchange.buyin") }} ({{ currentCoin.coin }})</el-button>
                   </el-form>
                 </div>
               </div>
 
-              <!-- 卖出面板 -->
-              <div class="panel panel_sell">
-                <div v-if="isLogin" class="hd hd_login">
-                  <span>{{ $t("exchange.canuse") }}</span>
-                  <span>{{ wallet.coin?.toFixed(coinScale) }}</span>
-                  <span>{{ currentCoin.coin }}</span>
-                  <router-link :to="rechargeCoinUrl">{{ $t("exchange.recharge") }}</router-link>
-                </div>
-
-                <!-- 限价卖出 -->
-                <div class="bd bd_limited" v-show="!showMarket">
-                  <el-form :model="form.sell">
-                    <el-form-item>
-                      <label class="before">{{ $t('exchange.sellprice') }}</label>
-                      <el-input v-model="form.sell.limitPrice" :placeholder="$t('exchange.sellprice')" @input="keyEvent" />
-                      <label class="after">{{ currentCoin.base }}</label>
-                      <p class="math_price">≈ {{ ((currentCoin.usdRate / currentCoin.close) * form.sell.limitPrice * CNYRate) || 0 }} CNY</p>
-                    </el-form-item>
-                    <el-form-item>
-                      <label class="before">{{ $t('exchange.sellnum') }}</label>
-                      <el-input v-model="form.sell.limitAmount" :placeholder="$t('exchange.sellnum')" @input="keyEvent" />
-                      <label class="after">{{ currentCoin.coin }}</label>
-                    </el-form-item>
-                    <div class="slider-wrap">
-                      <el-slider
-                        v-model="sliderSellLimitPercent"
-                        :step="25"
-                        :disabled="sliderSellDisabled"
-                        :format="tipFormat"
-                      />
+              <!-- 市价交易区 -->
+              <div class="trade-grid" v-show="showMarket">
+                <!-- 市价买入 -->
+                <div class="trade-grid-item trade-grid-buy">
+                  <div v-if="isLogin" class="hd hd_login hd-compact">
+                    <span class="balance-unit">{{ currentCoin.base }}</span>
+                    <span class="balance-value">{{ wallet.base?.toFixed(baseCoinScale) }}</span>
+                    <span class="balance-label">{{ $t("exchange.canuse") }}</span>
+                    <router-link :to="rechargeUSDTUrl">{{ $t("exchange.recharge") }}</router-link>
+                  </div>
+                  <el-form :model="form.buy" class="compact-form">
+                    <div class="form-row-title">
+                      <span class="form-title buy-title">{{ $t("exchange.buyin") }} {{ currentCoin.coin }}</span>
                     </div>
-                    <div class="total sell_total">
-                      {{ $t("exchange.amount") }}
-                      <span>{{ form.sell.limitTurnover?.toFixed(coinScale) }}</span> {{ currentCoin.base }}
+                    <div class="form-row-inline">
+                      <label class="inline-label">{{ $t('exchange.buyprice') }}</label>
+                      <el-input disabled :placeholder="$t('exchange.buytip')" size="small" />
+                      <span class="inline-unit">{{ currentCoin.base }}</span>
                     </div>
-                    <el-button
-                      v-if="exchangeable === 1"
-                      type="danger"
-                      @click="sellLimitPrice"
-                      :loading="selling"
+                    <div class="form-row-inline">
+                      <label class="inline-label">{{ $t('exchange.amount') }}</label>
+                      <el-input v-model="form.buy.marketAmount" :placeholder="$t('exchange.amount')" @input="keyEvent" size="small" />
+                      <span class="inline-unit">{{ currentCoin.base }}</span>
+                    </div>
+                      <el-button
+                        v-if="enableMarketBuy === 1 && exchangeable === 1"
+                        type="danger"
+                      @click="buyWithMarketPrice"
+                      :loading="buying"
+                      class="btn-compact"
                     >
-                      {{ $t("exchange.sellout") }} ({{ currentCoin.coin }})
+                      {{ $t("exchange.buyin") }}
                     </el-button>
-                    <el-button v-else disabled>{{ $t("exchange.sellout") }} ({{ currentCoin.coin }})</el-button>
                   </el-form>
                 </div>
 
                 <!-- 市价卖出 -->
-                <div class="bd bd_market" v-show="showMarket">
-                  <el-form :model="form.sell">
-                    <el-form-item>
-                      <label class="before">{{ $t('exchange.sellprice') }}</label>
-                      <el-input disabled :placeholder="$t('exchange.selltip')" />
-                      <label class="after">{{ currentCoin.base }}</label>
-                    </el-form-item>
-                    <el-form-item>
-                      <label class="before">{{ $t('exchange.sellnum') }}</label>
-                      <el-input v-model="form.sell.marketAmount" :placeholder="$t('exchange.sellnum')" @input="keyEvent" />
-                      <label class="after">{{ currentCoin.coin }}</label>
-                    </el-form-item>
-                    <div class="slider-wrap">
-                      <el-slider
-                        v-model="sliderSellMarketPercent"
-                        :step="25"
-                        :disabled="sliderSellDisabled"
-                        :format="tipFormat"
-                      />
+                <div class="trade-grid-item trade-grid-sell">
+                  <div v-if="isLogin" class="hd hd_login hd-compact">
+                    <span class="balance-label">{{ $t("exchange.canuse") }}</span>
+                    <span class="balance-value">{{ wallet.coin?.toFixed(coinScale) }}</span>
+                    <span class="balance-unit">{{ currentCoin.coin }}</span>
+                    <router-link :to="rechargeCoinUrl">{{ $t("exchange.recharge") }}</router-link>
+                  </div>
+                  <el-form :model="form.sell" class="compact-form">
+                    <div class="form-row-title">
+                      <span class="form-title sell-title">{{ $t("exchange.sellout") }} {{ currentCoin.coin }}</span>
                     </div>
-                    <el-button
-                      v-if="enableMarketSell === 1 && exchangeable === 1"
-                      type="danger"
+                    <div class="form-row-inline">
+                      <label class="inline-label">{{ $t('exchange.sellprice') }}</label>
+                      <el-input disabled :placeholder="$t('exchange.selltip')" size="small" />
+                      <span class="inline-unit">{{ currentCoin.base }}</span>
+                    </div>
+                    <div class="form-row-inline">
+                      <label class="inline-label">{{ $t('exchange.num') }}</label>
+                      <el-input v-model="form.sell.marketAmount" :placeholder="$t('exchange.sellnum')" @input="keyEvent" size="small" />
+                      <span class="inline-unit">{{ currentCoin.coin }}</span>
+                    </div>
+                      <el-button
+                        v-if="enableMarketSell === 1 && exchangeable === 1"
+                        type="success"
                       @click="sellMarketPrice"
                       :loading="selling"
+                      class="btn-compact"
                     >
-                      {{ $t("exchange.sellout") }} ({{ currentCoin.coin }})
+                      {{ $t("exchange.sellout") }}
                     </el-button>
-                    <el-button v-else disabled>{{ $t("exchange.sellout") }} ({{ currentCoin.coin }})</el-button>
                   </el-form>
                 </div>
               </div>
@@ -353,7 +373,7 @@
       </div>
 
       <!-- 左侧：买卖盘和成交 -->
-      <div class="left plate-wrap" style="position:relative;">
+      <div class="left plate-wrap" style="position:relative; flex: 1; display: flex; flex-direction: column;">
         <!-- 倒计时面板 -->
         <div class="lightning-panel" v-if="showCountDown" :style="{backgroundColor: countDownBgColor}">
           <img v-if="lang === '简体中文' && publishType === 'FENTAN'" src="../../assets/images/lightning-bg.png" alt="" />
@@ -392,59 +412,91 @@
         </div>
 
         <!-- 盘口选择器 -->
-        <div class="handlers">
-          <span @click="changePlate('all')" class="handler handler-all" :class="{active: selectedPlate === 'all'}"></span>
-          <span @click="changePlate('buy')" class="handler handler-green" :class="{active: selectedPlate === 'buy'}"></span>
-          <span @click="changePlate('sell')" class="handler handler-red" :class="{active: selectedPlate === 'sell'}"></span>
+        <div class="plate-handlers">
+          <span @click="changePlate('all')" :class="{active: selectedPlate === 'all'}">{{ $t('exchange.all') }}</span>
+          <span @click="changePlate('buy')" :class="{active: selectedPlate === 'buy'}">{{ $t('exchange.buyplate') }}</span>
+          <span @click="changePlate('sell')" :class="{active: selectedPlate === 'sell'}">{{ $t('exchange.sellplate') }}</span>
         </div>
 
-        <!-- 卖盘 -->
-        <el-table
-          v-show="selectedPlate !== 'buy'"
-          :data="plate.askRows"
-          highlight-row
-          @current-change="buyPlate"
-          :no-data-text="$t('common.nodata')"
-        >
-          <el-table-column prop="price" :label="$t('exchange.price')">
-            <template #default="{ row }">
-              <span :class="row.direction?.toLowerCase()">{{ row.price?.toFixed(baseCoinScale) }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="amount" :label="$t('exchange.num')" />
-          <el-table-column prop="totalAmount" :label="$t('exchange.total')" />
-        </el-table>
+        <div class="plate-book">
+          <!-- 卖盘 -->
+          <div v-show="selectedPlate !== 'buy'" class="plate-table plate-table-sell">
+            <el-table
+              :data="plate.askRows"
+              highlight-current-row
+              @row-click="buyPlate"
+              :no-data-text="$t('common.nodata')"
+            >
+              <el-table-column prop="price" :label="$t('exchange.price')">
+                <template #default="{ row }">
+                  <span :class="row.direction?.toLowerCase()">
+                    {{ row.isPlaceholder ? row.displayPrice : row.price?.toFixed(baseCoinScale) }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="amount" :label="$t('exchange.num')">
+                <template #default="{ row }">
+                  {{ row.isPlaceholder ? row.displayAmount : row.amount }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="totalAmount" :label="$t('exchange.total')">
+                <template #default="{ row }">
+                  {{ row.isPlaceholder ? row.displayTotalAmount : row.totalAmount }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
 
-        <!-- 当前价格 -->
-        <div class="plate-nowprice">
-          <span class="price" :class="{buy: currentCoin.change > 0, sell: currentCoin.change < 0}">
-            {{ currentCoin.price?.toFixed(baseCoinScale) }}
-          </span>
-          <span v-if="currentCoin.change > 0" class="buy">↑</span>
-          <span v-else-if="currentCoin.change < 0" class="sell">↓</span>
-          <span class="price-cny"> ≈ {{ (currentCoin.usdRate * CNYRate)?.toFixed(2) }} CNY</span>
+          <!-- 当前价格 -->
+          <div class="plate-nowprice">
+            <div class="plate-nowprice__labels">
+              <span class="sell">{{ $t('exchange.sellplate') }}</span>
+              <span class="plate-nowprice__label">{{ $t('exchange.lastprice') }}</span>
+              <span class="buy">{{ $t('exchange.buyplate') }}</span>
+            </div>
+            <div class="plate-nowprice__value">
+              <span class="price" :class="{buy: currentCoin.change > 0, sell: currentCoin.change < 0}">
+                {{ currentCoin.price?.toFixed(baseCoinScale) }}
+              </span>
+              <span v-if="currentCoin.change > 0" class="buy">↑</span>
+              <span v-else-if="currentCoin.change < 0" class="sell">↓</span>
+              <span class="price-cny"> ≈ {{ (currentCoin.usdRate * CNYRate)?.toFixed(2) }} CNY</span>
+            </div>
+          </div>
+
+          <!-- 买盘 -->
+          <div v-show="selectedPlate !== 'sell'" class="plate-table plate-table-buy">
+            <el-table
+              :data="plate.bidRows"
+              highlight-current-row
+              @row-click="sellPlate"
+              :no-data-text="$t('common.nodata')"
+            >
+              <el-table-column prop="price" :label="$t('exchange.price')">
+                <template #default="{ row }">
+                  <span :class="row.direction?.toLowerCase()">
+                    {{ row.isPlaceholder ? row.displayPrice : row.price?.toFixed(baseCoinScale) }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="amount" :label="$t('exchange.num')">
+                <template #default="{ row }">
+                  {{ row.isPlaceholder ? row.displayAmount : row.amount }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="totalAmount" :label="$t('exchange.total')">
+                <template #default="{ row }">
+                  {{ row.isPlaceholder ? row.displayTotalAmount : row.totalAmount }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
         </div>
-
-        <!-- 买盘 -->
-        <el-table
-          v-show="selectedPlate !== 'sell'"
-          :data="plate.bidRows"
-          highlight-row
-          @current-change="sellPlate"
-          :no-data-text="$t('common.nodata')"
-        >
-          <el-table-column prop="price" :label="$t('exchange.price')">
-            <template #default="{ row }">
-              <span :class="row.direction?.toLowerCase()">{{ row.price?.toFixed(baseCoinScale) }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="amount" :label="$t('exchange.num')" />
-          <el-table-column prop="totalAmount" :label="$t('exchange.total')" />
-        </el-table>
 
         <!-- 最新成交 -->
-        <div class="trade-wrap" v-show="!showCountDown" style="margin-top: 10px;">
-          <el-table :data="trade.rows" :no-data-text="$t('common.nodata')">
+        <div class="trade-wrap" v-show="!showCountDown">
+          <div class="trade-wrap__header">最新成交</div>
+          <el-table class="trade-wrap__table" :data="trade.rows" :no-data-text="$t('common.nodata')">
             <el-table-column prop="amount" :label="$t('exchange.num')">
               <template #default="{ row }">
                 {{ row.amount?.toFixed(coinScale) }}
@@ -490,7 +542,11 @@
           <el-table-column prop="symbol" :label="$t('exchange.symbol')" />
           <el-table-column prop="type" :label="$t('exchange.type')" />
           <el-table-column prop="direction" :label="$t('exchange.direction')" />
-          <el-table-column prop="price" :label="$t('exchange.price')" />
+          <el-table-column prop="price" :label="$t('exchange.price')">
+            <template #default="{ row }">
+              <span>{{ formatOrderPrice(row) }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="amount" :label="$t('exchange.num')" />
           <el-table-column prop="tradedAmount" :label="$t('exchange.traded')" />
           <el-table-column prop="turnover" :label="$t('exchange.dealamount')" />
@@ -517,14 +573,18 @@
           <el-table-column prop="symbol" :label="$t('exchange.symbol')" />
           <el-table-column prop="type" :label="$t('exchange.type')" />
           <el-table-column prop="direction" :label="$t('exchange.direction')" />
-          <el-table-column prop="price" :label="$t('exchange.price')" />
+          <el-table-column prop="price" :label="$t('exchange.price')">
+            <template #default="{ row }">
+              <span>{{ formatOrderPrice(row) }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="amount" :label="$t('exchange.num')" />
           <el-table-column prop="tradedAmount" :label="$t('exchange.done')" />
           <el-table-column prop="turnover" :label="$t('exchange.dealamount')" />
           <el-table-column prop="status" :label="$t('exchange.status')">
             <template #default="{ row }">
-              <span v-if="row.status === 'COMPLETED'" style="color: #f0a70a;">{{ $t("exchange.finished") }}</span>
-              <span v-else-if="row.status === 'CANCELED'" style="color: #7c7f82;">{{ $t("exchange.canceled") }}</span>
+              <span :class="statusClass(row.status)" v-if="row.status === 'COMPLETED'">{{ $t("exchange.finished") }}</span>
+              <span :class="statusClass(row.status)" v-else-if="row.status === 'CANCELED'">{{ $t("exchange.canceled") }}</span>
               <span v-else>--</span>
             </template>
           </el-table-column>
@@ -553,7 +613,7 @@
 
 import { ref, reactive, computed, inject, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
-import { Star, InfoFilled } from '@element-plus/icons-vue'
+import { Star, StarFilled, InfoFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import moment from 'moment'
 import io from 'socket.io-client'
@@ -566,6 +626,16 @@ import expandRow from './expand.vue'
 
 // 导入 TradingView datafeed
 import Datafeeds from '../../assets/js/charting_library/datafeed/bitrade.js'
+import { shouldUseAreaChartForSymbol } from './chart-preferences'
+import { applyFavorState, getFavorSuccessMessage } from './favor'
+import { buildOrderPayload, toOrderNumber } from './order-utils'
+import { pickWalletBalances } from './wallet'
+import {
+  PLATE_DISPLAY_ROWS,
+  buildBuyPlateRows,
+  buildSellPlateRows,
+  getPlateRowPrice
+} from './plate-utils'
 
 // Vuex 3.x 和 Vue Router 3.x 兼容
 const store = inject('store')
@@ -688,12 +758,23 @@ const trade = reactive({
 
 // 买卖盘数据
 const plate = reactive({
-  maxPostion: 10,
+  maxPostion: PLATE_DISPLAY_ROWS,
   columns: [],
   askRows: [],
   bidRows: [],
   askTotle: 0,
   bidTotle: 0
+})
+
+const depthPlate = reactive({
+  bid: { items: [], highestPrice: 0, lowestPrice: 0 },
+  ask: { items: [], highestPrice: 0, lowestPrice: 0 },
+  skin: 'night',
+  priceUnit: '',
+  amountUnit: '',
+  priceScale: 4,
+  amountScale: 4,
+  symbol: ''
 })
 
 // 当前委托
@@ -737,10 +818,16 @@ const depthGraphRef = ref(null)
 const socketRef = ref(null)
 let tvWidget = null
 let tradingViewLoader = null
+let depthPlateRequestSeq = 0
 
 // 计算属性
 const rechargeUSDTUrl = computed(() => `/uc/recharge?name=${currentCoin.base}`)
 const rechargeCoinUrl = computed(() => `/uc/recharge?name=${currentCoin.coin}`)
+const preferAreaChart = computed(() => shouldUseAreaChartForSymbol({
+  base: currentCoin.base,
+  baseCoinScale: baseCoinScale.value,
+  close: currentCoin.close
+}))
 const buildAuthConfig = (config = {}) => ({
   ...config,
   headers: {
@@ -763,6 +850,47 @@ const unwrapPayload = (response) => {
 
 // 方法实现
 const tipFormat = (val) => `${val}%`
+
+const cloneDepthItems = (items) => (
+  Array.isArray(items)
+    ? items
+      .filter(item => item && item.price !== undefined && item.amount !== undefined)
+      .map(item => ({
+        price: Number(item.price) || 0,
+        amount: Number(item.amount) || 0
+      }))
+    : []
+)
+
+const resetDepthPlate = (symbol = currentCoin.symbol) => {
+  depthPlate.bid = { items: [], highestPrice: 0, lowestPrice: 0 }
+  depthPlate.ask = { items: [], highestPrice: 0, lowestPrice: 0 }
+  depthPlate.skin = skin.value
+  depthPlate.priceUnit = currentCoin.base || ''
+  depthPlate.amountUnit = currentCoin.coin || ''
+  depthPlate.priceScale = baseCoinScale.value
+  depthPlate.amountScale = coinScale.value
+  depthPlate.symbol = symbol || ''
+}
+
+const syncDepthPlate = (payload, symbol = currentCoin.symbol) => {
+  depthPlate.bid = {
+    highestPrice: Number(payload?.bid?.highestPrice) || 0,
+    lowestPrice: Number(payload?.bid?.lowestPrice) || 0,
+    items: cloneDepthItems(payload?.bid?.items)
+  }
+  depthPlate.ask = {
+    highestPrice: Number(payload?.ask?.highestPrice) || 0,
+    lowestPrice: Number(payload?.ask?.lowestPrice) || 0,
+    items: cloneDepthItems(payload?.ask?.items)
+  }
+  depthPlate.skin = skin.value
+  depthPlate.priceUnit = currentCoin.base || ''
+  depthPlate.amountUnit = currentCoin.coin || ''
+  depthPlate.priceScale = baseCoinScale.value
+  depthPlate.amountScale = coinScale.value
+  depthPlate.symbol = symbol || currentCoin.symbol
+}
 
 const keyEvent = () => {
   // 键盘事件处理
@@ -805,11 +933,7 @@ const changeBaseCion = (str) => {
 }
 
 const changePlate = (str) => {
-  if (str !== 'all') {
-    plate.maxPostion = 20
-  } else {
-    plate.maxPostion = 10
-  }
+  plate.maxPostion = PLATE_DISPLAY_ROWS
   getPlate(str)
 }
 
@@ -868,37 +992,33 @@ const currentCoinFavorChange = () => {
   if (collecRequesting.value) return
 
   collecRequesting.value = true
-  if (currentCoinIsFavor.value) {
-    // 取消收藏
-    post(host + api.exchange.favorDelete, { symbol: currentCoin.symbol })
-      .then(response => {
-        const resp = response.data
-        if (resp.code === 0) {
-          ElMessage.info('取消收藏成功')
-          getSymbol()
-          currentCoinIsFavor.value = false
-        }
-        collecRequesting.value = false
-      })
-      .catch(() => {
-        collecRequesting.value = false
-      })
-  } else {
-    // 添加收藏
-    post(host + api.exchange.favorAdd, { symbol: currentCoin.symbol })
-      .then(response => {
-        const resp = response.data
-        if (resp.code === 0) {
-          ElMessage.info('添加收藏成功')
-          getSymbol()
-          currentCoinIsFavor.value = true
-        }
-        collecRequesting.value = false
-      })
-      .catch(() => {
-        collecRequesting.value = false
-      })
-  }
+  const nextFavorState = !currentCoinIsFavor.value
+  const requestUrl = nextFavorState ? api.exchange.favorAdd : api.exchange.favorDelete
+
+  post(host + requestUrl, { symbol: currentCoin.symbol })
+    .then(response => {
+      const resp = response.data
+      if (resp.code === 0) {
+        const updated = applyFavorState({
+          coins,
+          symbol: currentCoin.symbol,
+          isFavor: nextFavorState,
+          currentCoinSymbol: currentCoin.symbol
+        })
+
+        currentCoin.isFavor = nextFavorState
+        currentCoinIsFavor.value = updated.currentCoinIsFavor ?? currentCoinIsFavor.value
+        ElMessage.success(getFavorSuccessMessage(nextFavorState))
+      } else {
+        ElMessage.error(resp.message || '自选操作失败')
+      }
+    })
+    .catch(() => {
+      ElMessage.error('自选操作失败')
+    })
+    .finally(() => {
+      collecRequesting.value = false
+    })
 }
 
 const collect = (index, row) => {
@@ -910,15 +1030,28 @@ const collect = (index, row) => {
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
-        ElMessage.info('添加收藏成功')
-        const coin = coins._map[row.symbol]
-        if (coin) coin.isFavor = true
-        row.isFavor = true
-        coins.favor.push(row)
+        const updated = applyFavorState({
+          coins,
+          row,
+          symbol: row.symbol,
+          isFavor: true,
+          currentCoinSymbol: currentCoin.symbol
+        })
+
         if (currentCoin.symbol === row.symbol) {
-          currentCoinIsFavor.value = true
+          currentCoin.isFavor = true
+          currentCoinIsFavor.value = updated.currentCoinIsFavor ?? true
         }
+        ElMessage.success(getFavorSuccessMessage(true))
+      } else {
+        ElMessage.error(resp.message || '自选操作失败')
       }
+    })
+    .catch(() => {
+      ElMessage.error('自选操作失败')
+    })
+    .finally(() => {
+      collecRequesting.value = false
     })
 }
 
@@ -931,15 +1064,28 @@ const cancelCollect = (index, row) => {
     .then(response => {
       const resp = response.data
       if (resp.code === 0) {
-        ElMessage.info('取消收藏成功')
-        const coin = coins._map[row.symbol]
-        if (coin) coin.isFavor = false
-        const idx = coins.favor.findIndex(f => f.symbol === row.symbol)
-        if (idx !== -1) coins.favor.splice(idx, 1)
+        const updated = applyFavorState({
+          coins,
+          row,
+          symbol: row.symbol,
+          isFavor: false,
+          currentCoinSymbol: currentCoin.symbol
+        })
+
         if (currentCoin.symbol === row.symbol) {
-          currentCoinIsFavor.value = false
+          currentCoin.isFavor = false
+          currentCoinIsFavor.value = updated.currentCoinIsFavor ?? false
         }
+        ElMessage.success(getFavorSuccessMessage(false))
+      } else {
+        ElMessage.error(resp.message || '自选操作失败')
       }
+    })
+    .catch(() => {
+      ElMessage.error('自选操作失败')
+    })
+    .finally(() => {
+      collecRequesting.value = false
     })
 }
 
@@ -1000,13 +1146,13 @@ const loadTradingView = () => {
 const createPeriodButtons = (widget) => {
   const periods = [
     { title: 'realtime', text: '分时', resolution: '1', chartType: 3 },
-    { title: 'M1', text: 'M1', resolution: '1', chartType: 1 },
-    { title: 'M5', text: 'M5', resolution: '5', chartType: 1 },
-    { title: 'M15', text: 'M15', resolution: '15', chartType: 1 },
-    { title: 'M30', text: 'M30', resolution: '30', chartType: 1 },
-    { title: 'H1', text: 'H1', resolution: '60', chartType: 1 },
-    { title: 'D1', text: 'D1', resolution: '1D', chartType: 1 },
-    { title: 'W1', text: 'W1', resolution: '1W', chartType: 1 }
+    { title: 'M1', text: 'M1', resolution: '1', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'M5', text: 'M5', resolution: '5', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'M15', text: 'M15', resolution: '15', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'M30', text: 'M30', resolution: '30', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'H1', text: 'H1', resolution: '60', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'D1', text: 'D1', resolution: '1D', chartType: preferAreaChart.value ? 3 : 1 },
+    { title: 'W1', text: 'W1', resolution: '1W', chartType: preferAreaChart.value ? 3 : 1 }
   ]
 
   periods.forEach((period) => {
@@ -1108,6 +1254,9 @@ const initKline = async () => {
   await nextTick()
   tvWidget = window.tvWidget = new window.TradingView.widget(config)
   tvWidget.onChartReady(() => {
+    if (preferAreaChart.value) {
+      tvWidget.chart().setChartType(3)
+    }
     tvWidget.chart().executeActionById('drawingToolbarAction')
     tvWidget.chart().createStudy('Moving Average', false, false, [5], null, { 'plot.color': '#EDEDED' })
     tvWidget.chart().createStudy('Moving Average', false, false, [10], null, { 'plot.color': '#ffe000' })
@@ -1118,7 +1267,7 @@ const initKline = async () => {
 }
 
 const getSymbol = () => {
-  silentPost(host + api.market.thumb, {})
+  return silentPost(host + api.market.thumb, {})
     .then(response => {
       const resp = unwrapPayload(response)
       if (!Array.isArray(resp)) return
@@ -1196,76 +1345,10 @@ const getPlate = (str = '') => {
     .then(response => {
       const resp = unwrapPayload(response)
       if (!resp) return
-      plate.askRows = []
-      plate.bidRows = []
-
-      if (resp.ask && resp.ask.items) {
-        for (let i = 0; i < resp.ask.items.length; i++) {
-          if (i === 0) {
-            resp.ask.items[i].totalAmount = resp.ask.items[i].amount
-          } else {
-            resp.ask.items[i].totalAmount = resp.ask.items[i - 1].totalAmount + resp.ask.items[i].amount
-          }
-        }
-
-        if (resp.ask.items.length >= plate.maxPostion) {
-          for (let i = plate.maxPostion; i > 0; i--) {
-            const ask = resp.ask.items[i - 1]
-            ask.direction = 'SELL'
-            ask.position = i
-            plate.askRows.push(ask)
-          }
-          plate.askTotle = plate.askRows[0].totalAmount
-        } else {
-          for (let i = plate.maxPostion; i > resp.ask.items.length; i--) {
-            const ask = { price: 0, amount: 0 }
-            ask.direction = 'SELL'
-            ask.position = i
-            ask.totalAmount = ask.amount
-            plate.askRows.push(ask)
-          }
-          for (let i = resp.ask.items.length; i > 0; i--) {
-            const ask = resp.ask.items[i - 1]
-            ask.direction = 'SELL'
-            ask.position = i
-            plate.askRows.push(ask)
-          }
-          const askItemIndex = Math.max(resp.ask.items.length - 1, 0)
-          plate.askTotle = plate.askRows[askItemIndex].totalAmount
-        }
-      }
-
-      if (resp.bid && resp.bid.items) {
-        for (let i = 0; i < resp.bid.items.length; i++) {
-          if (i === 0) {
-            resp.bid.items[i].totalAmount = resp.bid.items[i].amount
-          } else {
-            resp.bid.items[i].totalAmount = resp.bid.items[i - 1].totalAmount + resp.bid.items[i].amount
-          }
-        }
-
-        for (let i = 0; i < resp.bid.items.length; i++) {
-          const bid = resp.bid.items[i]
-          bid.direction = 'BUY'
-          bid.position = i + 1
-          plate.bidRows.push(bid)
-          if (i === plate.maxPostion - 1) break
-        }
-
-        if (resp.bid.items.length < plate.maxPostion) {
-          for (let i = resp.bid.items.length; i < plate.maxPostion; i++) {
-            const bid = { price: 0, amount: 0 }
-            bid.direction = 'BUY'
-            bid.position = i + 1
-            bid.totalAmount = 0
-            plate.bidRows.push(bid)
-          }
-          const bidItemIndex = Math.max(resp.bid.items.length - 1, 0)
-          plate.bidTotle = plate.bidRows[bidItemIndex].totalAmount
-        } else {
-          plate.bidTotle = plate.bidRows[plate.bidRows.length - 1].totalAmount
-        }
-      }
+      plate.askRows = buildSellPlateRows(resp.ask?.items, plate.maxPostion)
+      plate.bidRows = buildBuyPlateRows(resp.bid?.items, plate.maxPostion)
+      plate.askTotle = (resp.ask?.items || []).reduce((total, item) => total + (Number(item?.amount) || 0), 0)
+      plate.bidTotle = (resp.bid?.items || []).reduce((total, item) => total + (Number(item?.amount) || 0), 0)
 
       if (str !== '') {
         selectedPlate.value = str
@@ -1274,14 +1357,15 @@ const getPlate = (str = '') => {
 }
 
 const getPlateFull = () => {
-  silentPost(host + api.market.platefull, { symbol: currentCoin.symbol })
+  const requestSymbol = currentCoin.symbol
+  const requestSeq = ++depthPlateRequestSeq
+
+  silentPost(host + api.market.platefull, { symbol: requestSymbol })
     .then(response => {
       const resp = unwrapPayload(response)
       if (!resp) return
-      resp.skin = skin.value
-      if (depthGraphRef.value && depthGraphRef.value.draw) {
-        depthGraphRef.value.draw(resp)
-      }
+      if (requestSeq !== depthPlateRequestSeq || requestSymbol !== currentCoin.symbol) return
+      syncDepthPlate(resp, requestSymbol)
     })
 }
 
@@ -1301,7 +1385,16 @@ const startWebsock = () => {
   disconnectSocket()
   const socket = io(runtime.wshost || undefined)
   socketRef.value = socket
-  datafeed.value = new Datafeeds.WebsockFeed(host + '/market', currentCoin, socket)
+  datafeed.value = new Datafeeds.WebsockFeed(
+    host + '/market',
+    {
+      ...currentCoin,
+      baseCoinScale: baseCoinScale.value,
+      coinScale: coinScale.value
+    },
+    socket,
+    baseCoinScale.value
+  )
 
   socket.on('connect', () => {
     console.log('connect', socket.id)
@@ -1357,43 +1450,11 @@ const startWebsock = () => {
   socket.on(`/topic/market/trade-plate/${currentCoin.symbol}`, (msg) => {
     const resp = JSON.parse(msg)
     if (resp.direction === 'SELL') {
-      const asks = resp.items
-      plate.askRows = []
-      let totle = 0
-      for (let i = plate.maxPostion - 1; i >= 0; i--) {
-        const ask = i < asks.length ? asks[i] : { price: 0, amount: 0 }
-        ask.direction = 'SELL'
-        ask.position = i + 1
-        plate.askRows.push(ask)
-      }
-      for (let i = plate.askRows.length - 1; i >= 0; i--) {
-        if (i === plate.askRows.length - 1 || plate.askRows[i].price === 0) {
-          plate.askRows[i].totalAmount = plate.askRows[i].amount
-        } else {
-          plate.askRows[i].totalAmount = plate.askRows[i + 1].totalAmount + plate.askRows[i].amount
-        }
-        totle += plate.askRows[i].amount
-      }
-      plate.askTotle = totle
+      plate.askRows = buildSellPlateRows(resp.items, plate.maxPostion)
+      plate.askTotle = (resp.items || []).reduce((total, item) => total + (Number(item?.amount) || 0), 0)
     } else {
-      const bids = resp.items
-      plate.bidRows = []
-      let totle = 0
-      for (let i = 0; i < plate.maxPostion; i++) {
-        const bid = i < bids.length ? bids[i] : { price: 0, amount: 0 }
-        bid.direction = 'BUY'
-        bid.position = i + 1
-        plate.bidRows.push(bid)
-      }
-      for (let i = 0; i < plate.bidRows.length; i++) {
-        if (i === 0 || plate.bidRows[i].amount === 0) {
-          plate.bidRows[i].totalAmount = plate.bidRows[i].amount
-        } else {
-          plate.bidRows[i].totalAmount = plate.bidRows[i - 1].totalAmount + plate.bidRows[i].amount
-        }
-        totle += plate.bidRows[i].amount
-      }
-      plate.bidTotle = totle
+      plate.bidRows = buildBuyPlateRows(resp.items, plate.maxPostion)
+      plate.bidTotle = (resp.items || []).reduce((total, item) => total + (Number(item?.amount) || 0), 0)
     }
     if (currentImgTable.value === 's') {
       getPlateFull()
@@ -1402,19 +1463,41 @@ const startWebsock = () => {
 }
 
 const buyPlate = (currentRow) => {
-  if (currentRow && currentRow.price) {
-    form.buy.limitPrice = currentRow.price
+  const price = getPlateRowPrice(currentRow)
+  if (price !== null) {
+    form.buy.limitPrice = price
   }
 }
 
 const sellPlate = (currentRow) => {
-  if (currentRow && currentRow.price) {
-    form.sell.limitPrice = currentRow.price
+  const price = getPlateRowPrice(currentRow)
+  if (price !== null) {
+    form.sell.limitPrice = price
   }
 }
 
 const timeFormat = (time) => {
   return moment(time).format('HH:mm:ss')
+}
+
+const formatOrderPrice = (row) => {
+  if (row?.type === 'MARKET_PRICE') {
+    return '市价'
+  }
+  if (row?.price === null || row?.price === undefined || row?.price === '') {
+    return '--'
+  }
+  return row.price
+}
+
+const statusClass = (status) => {
+  if (status === 'COMPLETED') {
+    return 'order-status order-status-completed'
+  }
+  if (status === 'CANCELED') {
+    return 'order-status order-status-canceled'
+  }
+  return 'order-status'
 }
 
 const dateFormat = (time) => {
@@ -1426,7 +1509,7 @@ const toFloor = (value, scale = 6) => {
   return Math.floor(value * Math.pow(10, scale)) / Math.pow(10, scale)
 }
 
-const init = () => {
+const init = async () => {
   disconnectSocket()
   destroyKline()
   const params = router.currentRoute.value.params.pair || defaultPath.value
@@ -1444,14 +1527,15 @@ const init = () => {
   currentCoin.symbol = `${coin}/${baseCoin}`
   currentCoin.coin = coin
   currentCoin.base = baseCoin
+  resetDepthPlate(currentCoin.symbol)
 
   store.commit('navigate', '/exchange')
   store.commit('setSkin', skin.value)
 
   getCNYRate()
-  getSymbolScale()
+  await getSymbolScale()
   getCoinInfo()
-  getSymbol()
+  await getSymbol()
   getPlate()
   getPlateFull()
   getTrade()
@@ -1477,7 +1561,7 @@ const getCNYRate = () => {
 }
 
 const getSymbolScale = () => {
-  silentPost(host + api.market.symbolInfo, { symbol: currentCoin.symbol })
+  return silentPost(host + api.market.symbolInfo, { symbol: currentCoin.symbol })
     .then(response => {
       const resp = unwrapPayload(response)
       if (resp) {
@@ -1522,8 +1606,13 @@ const getWallet = () => {
     .then(response => {
       const account = unwrapPayload(response)
       if (account) {
-        wallet.base = account.usd || 0
-        wallet.coin = account.coin || 0
+        const balances = pickWalletBalances({
+          wallets: account,
+          baseSymbol: currentCoin.base,
+          coinSymbol: currentCoin.coin
+        })
+        wallet.base = balances.base
+        wallet.coin = balances.coin
       }
     })
 }
@@ -1559,6 +1648,7 @@ const cancel = (index) => {
       const resp = response.data
       if (resp.code === 0) {
         ElMessage.success('撤单成功')
+        getWallet()
         getCurrentOrder()
         getHistoryOrder()
       } else {
@@ -1568,27 +1658,29 @@ const cancel = (index) => {
 }
 
 const buyWithLimitPrice = () => {
-  if (!form.buy.limitAmount) {
+  const limitAmount = toOrderNumber(form.buy.limitAmount)
+  const limitPrice = toOrderNumber(form.buy.limitPrice)
+  if (limitAmount <= 0) {
     ElMessage.error('请输入买入数量')
     return
   }
 
-  const maxAmount = wallet.base / form.buy.limitPrice
-  if (form.buy.limitAmount > maxAmount) {
+  const maxAmount = wallet.base / limitPrice
+  if (limitAmount > maxAmount) {
     ElMessage.error('买入数量超过可用余额')
     return
   }
 
   buying.value = true
 
-  const params = {
+  const params = buildOrderPayload({
     symbol: currentCoin.symbol,
-    price: form.buy.limitPrice,
-    amount: form.buy.limitAmount,
+    price: limitPrice,
+    amount: limitAmount,
     direction: 'BUY',
     type: 'LIMIT_PRICE',
     useDiscount: 0
-  }
+  })
 
   post(host + api.exchange.order, params)
     .then(response => {
@@ -1613,19 +1705,20 @@ const buyWithLimitPrice = () => {
 }
 
 const buyWithMarketPrice = () => {
-  if (!form.buy.marketAmount) {
+  const marketAmount = toOrderNumber(form.buy.marketAmount)
+  if (marketAmount <= 0) {
     ElMessage.error('请输入买入金额')
     return
   }
 
   buying.value = true
 
-  const params = {
+  const params = buildOrderPayload({
     symbol: currentCoin.symbol,
-    amount: form.buy.marketAmount,
+    amount: marketAmount,
     direction: 'BUY',
     type: 'MARKET_PRICE'
-  }
+  })
 
   post(host + api.exchange.order, params)
     .then(response => {
@@ -1650,20 +1743,22 @@ const buyWithMarketPrice = () => {
 }
 
 const sellLimitPrice = () => {
-  if (!form.sell.limitAmount) {
+  const limitAmount = toOrderNumber(form.sell.limitAmount)
+  const limitPrice = toOrderNumber(form.sell.limitPrice)
+  if (limitAmount <= 0) {
     ElMessage.error('请输入卖出数量')
     return
   }
 
   selling.value = true
 
-  const params = {
+  const params = buildOrderPayload({
     symbol: currentCoin.symbol,
-    price: form.sell.limitPrice,
-    amount: form.sell.limitAmount,
+    price: limitPrice,
+    amount: limitAmount,
     direction: 'SELL',
     type: 'LIMIT_PRICE'
-  }
+  })
 
   post(host + api.exchange.order, params)
     .then(response => {
@@ -1688,19 +1783,20 @@ const sellLimitPrice = () => {
 }
 
 const sellMarketPrice = () => {
-  if (!form.sell.marketAmount) {
+  const marketAmount = toOrderNumber(form.sell.marketAmount)
+  if (marketAmount <= 0) {
     ElMessage.error('请输入卖出数量')
     return
   }
 
   selling.value = true
 
-  const params = {
+  const params = buildOrderPayload({
     symbol: currentCoin.symbol,
-    amount: form.sell.marketAmount,
+    amount: marketAmount,
     direction: 'SELL',
     type: 'MARKET_PRICE'
-  }
+  })
 
   post(host + api.exchange.order, params)
     .then(response => {
@@ -1864,48 +1960,42 @@ $night-color: #fff;
     width: 99%;
     margin-left: 0.5%;
     display: flex;
-    align-items: flex-start;
+    align-items: stretch;
     margin-top: 5px;
     max-width: 100%;
     overflow-x: hidden;
+    gap: 5px;
+    height: calc(100vh - 200px);
 
     .left {
       flex: 0 0 20%;
       border-radius: 0px;
-      margin-right: 10px;
+      margin-right: 0;
       min-width: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
 
-      .handlers {
-        font-size: 0;
-        padding: 10px 20px;
+      .plate-handlers {
+        position: relative;
         background-color: #192330;
+        border-bottom: 1px solid #27313e;
+        font-size: 0;
+        height: 40px;
+        line-height: 40px;
+        flex-shrink: 0;
 
-        .handler {
-          display: inline-block;
-          margin-right: 10px;
-          width: 20px;
-          height: 20px;
-          background-size: 100% 100%;
+        > span {
+          font-size: 14px;
+          padding: 0 20px;
           cursor: pointer;
+          display: inline-block;
+          color: #8f9ca5;
 
-          &.handler-all {
-            background-image: url("../../assets/images/exchange/plate_all.png");
-            &.active {
-              background-image: url("../../assets/images/exchange/plate_all_active.png");
-            }
-          }
-          &.handler-green {
-            background-image: url("../../assets/images/exchange/plate_green.png");
-            &.active {
-              background-image: url("../../assets/images/exchange/plate_green_active.png");
-            }
-          }
-          &.handler-red {
-            background-image: url("../../assets/images/exchange/plate_red.png");
-            &.active {
-              background-image: url("../../assets/images/exchange/plate_red_active.png");
-            }
+          &.active {
+            color: #fff;
+            border-bottom: 2px solid #f0a70a;
           }
         }
       }
@@ -1913,16 +2003,40 @@ $night-color: #fff;
       .plate-nowprice {
         text-align: center;
         background-color: #27313e;
-        line-height: 1;
         display: flex;
-        align-items: center;
-        height: 40px;
+        flex-direction: column;
         justify-content: center;
+        min-height: 42px;
+        padding: 3px 10px;
         font-size: 14px;
         font-weight: 500;
+        gap: 1px;
+
+        .plate-nowprice__labels,
+        .plate-nowprice__value {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+        }
+
+        .plate-nowprice__label {
+          color: #c7cce6;
+          font-size: 12px;
+          letter-spacing: 0.3px;
+        }
+
+        .plate-nowprice__labels {
+          font-size: 12px;
+        }
+
+        .plate-nowprice__value {
+          justify-content: center;
+          line-height: 1;
+        }
 
         .price {
-          font-size: 18px;
+          font-size: 17px;
           margin-right: 10px;
         }
 
@@ -1940,29 +2054,55 @@ $night-color: #fff;
       margin-right: 5px;
       min-width: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+
+      .symbol {
+        flex-shrink: 0;
+      }
 
       .imgtable {
         height: 350px;
         position: relative;
         overflow: hidden;
         margin-bottom: 5px;
+        flex-shrink: 0;
+
+        .chart-panel {
+          height: calc(100% - 40px);
+        }
 
         .handler {
-          position: absolute;
-          top: 10px;
-          right: 40px;
-          z-index: 1000;
+          height: 40px;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          padding: 6px 16px;
+          background-color: #192330;
+          border-top: 1px solid #223047;
+          position: relative;
+          z-index: 2;
 
           > span {
             background-color: #2c3b59;
             color: #c7cce6;
-            padding: 4px 8px;
+            padding: 5px 10px;
             cursor: pointer;
             font-size: 13px;
-            opacity: 0.5;
+            opacity: 1;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            line-height: 1;
+
+            & + span {
+              margin-left: 8px;
+            }
 
             &.active {
-              opacity: 1;
+              color: #fff;
+              background-color: #3a4a6a;
+              border-color: #66789d;
             }
           }
         }
@@ -1970,6 +2110,11 @@ $night-color: #fff;
 
       .trade_wrap {
         background-color: #192330;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+
         .trade_menu {
           position: relative;
           background-color: #192330;
@@ -1977,7 +2122,25 @@ $night-color: #fff;
           font-size: 0;
           height: 40px;
           line-height: 40px;
+          flex-shrink: 0;
+        }
 
+        .trade_bd {
+          flex: 1;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          padding-bottom: 8px;
+
+          // 限价/市价网格容器
+          .trade-grid {
+            padding: 8px;
+            margin-bottom: 0;
+          }
+        }
+
+        .trade_menu {
           > span {
             font-size: 16px;
             padding: 11px 20px;
@@ -1992,6 +2155,27 @@ $night-color: #fff;
 
         .trade_panel {
           position: relative;
+
+          .trade-form-title {
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+          }
+
+          .buy-title {
+            color: #ff7a7a;
+          }
+
+          .sell-title {
+            color: #5ec66b;
+          }
+
+          .trade-hint {
+            margin: -4px 0 10px;
+            font-size: 12px;
+            color: #7d8aa6;
+          }
 
           .mask {
             position: absolute;
@@ -2022,14 +2206,40 @@ $night-color: #fff;
 
     .right {
       flex: 0 0 19%;
-      margin-right: 5px;
+      margin-right: 0;
       min-width: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
 
       .coin-menu {
-        height: 785px;
         background-color: #192330;
-        margin-bottom: 10px;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+
+        > div:first-child {
+          flex-shrink: 0;
+        }
+
+        .sc_filter {
+          flex-shrink: 0;
+        }
+
+        .el-table {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+
+          :deep(.el-table__body-wrapper) {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+          }
+        }
       }
     }
   }
@@ -2068,12 +2278,14 @@ $night-color: #fff;
     }
   }
 
+  // 委托订单区域
   .order {
     width: 98.6%;
     margin-left: 0.5%;
-    min-height: 227px;
     margin-bottom: 10px;
-    margin-top: 10px;
+    margin-top: 5px;
+    flex-shrink: 0;
+    border-top: 1px solid #27313e;
 
     .order-handler {
       background-color: #192330;
@@ -2085,7 +2297,7 @@ $night-color: #fff;
         display: inline-block;
         color: #fff;
         cursor: pointer;
-        line-height: 40px;
+        line-height: 36px;
         background-color: #192330;
 
         &.active {
@@ -2097,7 +2309,44 @@ $night-color: #fff;
 
     .table {
       background-color: #192330;
+
+      :deep(.el-table__body-wrapper) {
+        max-height: 200px;
+        overflow-y: auto;
+      }
     }
+  }
+
+  .balance-label {
+    color: #7d8aa6;
+  }
+
+  .balance-value {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .balance-unit {
+    color: #c8d3ea;
+  }
+
+  .order-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .order-status-completed {
+    color: #f0a70a;
+    background: rgba(240, 167, 10, 0.12);
+  }
+
+  .order-status-canceled {
+    color: #9aa3b2;
+    background: rgba(154, 163, 178, 0.14);
   }
 }
 
@@ -2164,6 +2413,56 @@ $night-color: #fff;
           color: #f0a70a;
           background-color: #fff;
         }
+      }
+    }
+  }
+
+  // 日间模式 - 并排交易面板
+  .trade_bd {
+    .trade-grid-item {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+    }
+
+    .hd-compact {
+      &.hd_login {
+        background: #f5f5f5;
+        color: #333;
+      }
+
+      .balance-label {
+        color: #7d8aa6;
+      }
+
+      .balance-value {
+        color: #333;
+        font-weight: 600;
+      }
+
+      .balance-unit {
+        color: #666;
+      }
+    }
+
+    .form-row-inline {
+      .inline-label {
+        color: #7d8aa6;
+      }
+
+      .inline-unit {
+        color: #666;
+      }
+    }
+
+    .form-row-total {
+      border-top: 1px solid #e8e8e8;
+
+      .total-label {
+        color: #7d8aa6;
+      }
+
+      .total-value {
+        color: #333;
       }
     }
   }
@@ -2248,9 +2547,75 @@ $night-color: #fff;
 }
 
 .exchange :deep(.plate-wrap .el-table__body-wrapper) {
-  max-height: 180px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+// 左侧区域 flex 布局
+.plate-wrap {
+  .plate-handlers {
+    flex-shrink: 0;
+  }
+
+  .plate-book {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .plate-table {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    .el-table {
+      flex: 1;
+      min-height: 0;
+    }
+  }
+
+  .plate-nowprice {
+    flex-shrink: 0;
+  }
+
+  .trade-wrap {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: 5px;
+
+    .trade-wrap__header {
+      height: 40px;
+      line-height: 40px;
+      padding: 0 20px;
+      color: #fff;
+      font-size: 14px;
+      background-color: #192330;
+      border-bottom: 1px solid #27313e;
+      flex-shrink: 0;
+    }
+
+    :deep(.trade-wrap__table) {
+      height: auto !important;
+    }
+
+    :deep(.trade-wrap__table .el-table__inner-wrapper) {
+      height: auto;
+    }
+
+    :deep(.trade-wrap__table .el-table__body-wrapper) {
+      flex: none;
+      min-height: auto;
+      max-height: 84px;
+      overflow-y: auto;
+    }
+  }
 }
 
 .exchange :deep(.right .el-table__body-wrapper) {
@@ -2273,6 +2638,10 @@ $night-color: #fff;
   padding-top: 15px;
 }
 
+.favor-icon-active {
+  color: #f0a70a;
+}
+
 // 买卖盘样式
 .buy {
   color: #00b275;
@@ -2282,8 +2651,175 @@ $night-color: #fff;
   color: #f15057;
 }
 
-// 交易表单样式
+// 交易表单样式 - 紧凑型布局
 .trade_bd {
+  // 并排网格布局
+  .trade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px;
+    flex-shrink: 0;
+  }
+
+  .trade-grid-item {
+    background: #1f2a38;
+    border-radius: 4px;
+    padding: 10px;
+    // 固定高度确保左右一致
+    height: 190px;
+    display: flex;
+    flex-direction: column;
+
+    &.trade-grid-buy,
+    &.trade-grid-sell {
+      border: none;
+    }
+  }
+
+  // 紧凑头部
+  .hd-compact {
+    margin: -10px -10px 6px;
+    padding: 6px 10px;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+
+    &.hd_login {
+      background: #27313e;
+      color: #fff;
+    }
+
+    .balance-label {
+      color: #7d8aa6;
+    }
+
+    .balance-value {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .balance-unit {
+      color: #c8d3ea;
+    }
+
+    a {
+      color: #f0a70a;
+      font-size: 10px;
+    }
+  }
+
+  // 标题行
+  .compact-form {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-row-title {
+    margin-bottom: 6px;
+
+    .form-title {
+      font-size: 12px;
+      font-weight: 600;
+
+      &.buy-title {
+        color: #ff7a7a;
+      }
+
+      &.sell-title {
+        color: #5ec66b;
+      }
+    }
+  }
+
+  // 行内表单
+  .form-row-inline {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    position: relative;
+
+    .inline-label {
+      width: 40px;
+      font-size: 11px;
+      color: #546886;
+      flex-shrink: 0;
+    }
+
+    .el-input {
+      flex: 1;
+      margin: 0 6px;
+
+      :deep(.el-input__wrapper) {
+        padding: 0 8px;
+        height: 26px;
+        border-radius: 3px;
+        box-shadow: 0 0 0 1px #324158 inset !important;
+      }
+
+      :deep(.el-input__inner) {
+        font-size: 12px;
+        height: 26px;
+        line-height: 26px;
+        color: #fff;
+      }
+    }
+
+    .inline-unit {
+      width: 35px;
+      font-size: 11px;
+      color: #fff;
+      text-align: right;
+      flex-shrink: 0;
+    }
+  }
+
+  // 合计行
+  .form-row-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    margin: 5px 0;
+    border-top: 1px solid #2a384d;
+
+    .total-label {
+      font-size: 11px;
+      color: #546886;
+    }
+
+    .total-value {
+      font-size: 11px;
+      color: #fff;
+      font-weight: 500;
+    }
+  }
+
+  // 紧凑按钮
+  .btn-compact {
+    width: 100%;
+    height: 28px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: auto;
+    border-radius: 4px;
+
+    &.el-button--success {
+      background: linear-gradient(135deg, #00b275 0%, #009966 100%);
+      border: none;
+    }
+
+    &.el-button--danger {
+      background: linear-gradient(135deg, #f15057 0%, #dd444a 100%);
+      border: none;
+    }
+  }
+
+  // 旧版 panel 样式保留
   .panel {
     padding: 10px;
 

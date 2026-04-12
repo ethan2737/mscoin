@@ -97,6 +97,49 @@ ON DUPLICATE KEY UPDATE
   infolink = VALUES(infolink),
   information = VALUES(information);
 
+INSERT INTO coin (
+  name,
+  can_recharge,
+  can_transfer,
+  can_withdraw,
+  name_cn,
+  sort,
+  status,
+  unit,
+  usd_rate,
+  withdraw_scale,
+  infolink,
+  information
+)
+VALUES
+  ('OKB', 1, 1, 1, 'OKB', 5, 1, 'OKB', 84.06, 8, 'https://www.okx.com/okb', 'Local baseline coin metadata for OKB'),
+  ('Dogecoin', 1, 1, 1, 'Dogecoin', 6, 1, 'DOGE', 0.09215, 8, 'https://dogecoin.com', 'Local baseline coin metadata for DOGE'),
+  ('XRP', 1, 1, 1, 'XRP', 7, 1, 'XRP', 1.3382, 8, 'https://xrpl.org', 'Local baseline coin metadata for XRP'),
+  ('Bitcoin Cash', 1, 1, 1, 'Bitcoin Cash', 8, 1, 'BCH', 438.9, 8, 'https://bch.info', 'Local baseline coin metadata for BCH'),
+  ('1INCH', 1, 1, 1, '1INCH', 9, 1, '1INCH', 0.0920, 8, 'https://1inch.io', 'Local baseline coin metadata for 1INCH'),
+  ('AAVE', 1, 1, 1, 'AAVE', 10, 1, 'AAVE', 90.24, 8, 'https://aave.com', 'Local baseline coin metadata for AAVE'),
+  ('Alchemy Pay', 1, 1, 1, 'Alchemy Pay', 11, 1, 'ACH', 0.005837, 8, 'https://alchemypay.org', 'Local baseline coin metadata for ACH'),
+  ('Cardano', 1, 1, 1, 'Cardano', 12, 1, 'ADA', 0.2501, 8, 'https://cardano.org', 'Local baseline coin metadata for ADA'),
+  ('AEVO', 1, 1, 1, 'AEVO', 13, 1, 'AEVO', 0.1364, 8, 'https://www.aevo.xyz', 'Local baseline coin metadata for AEVO'),
+  ('Adventure Gold', 1, 1, 1, 'Adventure Gold', 14, 1, 'AGLD', 1.48, 8, 'https://www.adventuregold.org', 'Local baseline coin metadata for AGLD'),
+  ('Algorand', 1, 1, 1, 'Algorand', 15, 1, 'ALGO', 0.1672, 8, 'https://algorand.com', 'Local baseline coin metadata for ALGO'),
+  ('ApeCoin', 1, 1, 1, 'ApeCoin', 16, 1, 'APE', 0.0887, 8, 'https://apecoin.com', 'Local baseline coin metadata for APE'),
+  ('API3', 1, 1, 1, 'API3', 17, 1, 'API3', 0.28, 8, 'https://api3.org', 'Local baseline coin metadata for API3'),
+  ('Aptos', 1, 1, 1, 'Aptos', 18, 1, 'APT', 0.8381, 8, 'https://aptoslabs.com', 'Local baseline coin metadata for APT'),
+  ('Arweave', 1, 1, 1, 'Arweave', 19, 1, 'AR', 1.716, 8, 'https://www.arweave.org', 'Local baseline coin metadata for AR'),
+  ('Arbitrum', 1, 1, 1, 'Arbitrum', 20, 1, 'ARB', 0.11132, 8, 'https://arbitrum.io', 'Local baseline coin metadata for ARB'),
+  ('Cosmos', 1, 1, 1, 'Cosmos', 21, 1, 'ATOM', 1.821, 8, 'https://cosmos.network', 'Local baseline coin metadata for ATOM'),
+  ('Binance ETH', 1, 1, 1, 'Binance ETH', 22, 1, 'BETH', 1.0008, 8, 'https://www.binance.com', 'Local baseline coin metadata for BETH'),
+  ('Lido Staked ETH', 1, 1, 1, 'Lido Staked ETH', 23, 1, 'STETH', 0.9993, 8, 'https://lido.fi', 'Local baseline coin metadata for STETH')
+ON DUPLICATE KEY UPDATE
+  name = VALUES(name),
+  name_cn = VALUES(name_cn),
+  status = VALUES(status),
+  usd_rate = VALUES(usd_rate),
+  withdraw_scale = VALUES(withdraw_scale),
+  infolink = VALUES(infolink),
+  information = VALUES(information);
+
 INSERT INTO exchange_coin (
   symbol,
   base_coin_scale,

@@ -339,7 +339,10 @@ export default {
         dateTimeHour: "H",
         dateTimeMinutes: "M",
         dateTimeSeconds: "S",
-        moredetail: "View More"
+        moredetail: "View More",
+        all: "All",
+        buyplate: "Buy",
+        sellplate: "Sell"
     },
     ctc: {
         title: "One-click Sale ● Platform Guarantee ● Security",

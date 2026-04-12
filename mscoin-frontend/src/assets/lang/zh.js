@@ -344,7 +344,10 @@ export default {
         dateTimeHour: "时",
         dateTimeMinutes: "分",
         dateTimeSeconds: "秒",
-        moredetail: "更多详情"
+        moredetail: "更多详情",
+        all: "全部",
+        buyplate: "买盘",
+        sellplate: "卖盘"
     },
     ctc: {
         title: "一键买卖 ● 平台托管 ● 安全放心",
