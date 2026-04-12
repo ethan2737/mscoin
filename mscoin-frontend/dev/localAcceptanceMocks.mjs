@@ -126,9 +126,123 @@ const emptyPlate = {
   bid: { items: [] }
 }
 
+const createCtcCounterpartyInfo = (payMode) => ({
+  bankInfo: {
+    bank: '招商银行',
+    branch: '深圳科技园支行',
+    cardNo: '6222028800012345678'
+  },
+  alipay: {
+    aliNo: 'merchant-alpha@mscoin.test',
+    qrCodeUrl: '/src/assets/images/lang-zh.png'
+  },
+  wechatPay: {
+    wechat: 'merchant-alpha-wechat',
+    qrWeCodeUrl: '/src/assets/images/lang-en.png'
+  },
+  payMode
+})
+
+const createMockSecurityProfile = () => ({
+  username: 'local-tester',
+  level: { id: 1 },
+  realVerified: 1,
+  realAuditing: 0,
+  phoneVerified: 1,
+  fundsVerified: 1,
+  accountVerified: 1,
+  bankVerified: 1,
+  aliVerified: 1,
+  wechatVerified: 1,
+  mobilePhone: '13800000000',
+  realName: '本地测试用户',
+  realNameRejectReason: null
+})
+
+const createMockAccountProfile = () => ({
+  bankVerified: 1,
+  aliVerified: 1,
+  wechatVerified: 1,
+  realName: '本地测试用户',
+  bankInfo: {
+    bank: '招商银行',
+    branch: '深圳科技园支行',
+    cardNo: '6222028800012345678'
+  },
+  alipay: {
+    aliNo: 'local-tester@mscoin.test',
+    qrCodeUrl: '/src/assets/images/lang-zh.png'
+  },
+  wechatPay: {
+    wechat: 'local-tester-wechat',
+    qrWeCodeUrl: '/src/assets/images/lang-en.png'
+  }
+})
+
+const resolveUploadedImageUrl = (kind = 'proof') => kind === 'wechat'
+  ? '/src/assets/images/lang-en.png'
+  : '/src/assets/images/lang-zh.png'
+
+const syncSecurityAccountFlags = (state) => {
+  const accountVerified = state.account.bankVerified === 1 || state.account.aliVerified === 1 || state.account.wechatVerified === 1
+  state.security.accountVerified = accountVerified ? 1 : 0
+  state.security.bankVerified = state.account.bankVerified
+  state.security.aliVerified = state.account.aliVerified
+  state.security.wechatVerified = state.account.wechatVerified
+}
+
+const createCtcOrder = (state, body = {}) => {
+  const now = new Date().toISOString()
+  const id = state.ctc.nextOrderId++
+  const price = Number(body.price || state.ctc.quote.buy)
+  const amount = Number(body.amount || 0)
+  const money = Number((price * amount).toFixed(2))
+  const payMode = body.payType || 'bank'
+  const direction = Number(body.direction || 0)
+  const baseOrder = {
+    id,
+    orderSn: `CTC${String(id).padStart(8, '0')}`,
+    createTime: now,
+    confirmTime: now,
+    currentTime: now,
+    direction,
+    amount,
+    price,
+    money,
+    status: 1,
+    realName: '本地测试用户',
+    cancelReason: '',
+    unit: body.unit || 'USDT'
+  }
+
+  const order = {
+    ...baseOrder,
+    ...createCtcCounterpartyInfo(payMode)
+  }
+
+  state.ctc.orders.unshift(order)
+  return order
+}
+
 export function createLocalAcceptanceMockState() {
   return {
     favorSymbols: new Set(),
+    security: createMockSecurityProfile(),
+    account: createMockAccountProfile(),
+    wallet: {
+      unit: 'USDT',
+      balance: 1250.32,
+      frozenBalance: 0,
+      address: ''
+    },
+    ctc: {
+      quote: {
+        buy: 7.18,
+        sell: 7.11
+      },
+      nextOrderId: 1001,
+      orders: []
+    },
     homepageAdvertisements: [
       {
         id: 11001,
@@ -158,9 +272,207 @@ export function createLocalAcceptanceMockState() {
   }
 }
 
+function ensureLocalAcceptanceMockStateShape(state) {
+  if (!state.security) {
+    state.security = createMockSecurityProfile()
+  }
+
+  if (!state.account) {
+    state.account = createMockAccountProfile()
+  }
+
+  if (!state.wallet) {
+    state.wallet = {
+      unit: 'USDT',
+      balance: 1250.32,
+      frozenBalance: 0,
+      address: ''
+    }
+  }
+
+  if (!state.ctc) {
+    state.ctc = {
+      quote: {
+        buy: 7.18,
+        sell: 7.11
+      },
+      nextOrderId: 1001,
+      orders: []
+    }
+  }
+
+  if (!Array.isArray(state.ctc.orders)) {
+    state.ctc.orders = []
+  }
+
+  if (!state.ctc.quote) {
+    state.ctc.quote = { buy: 7.18, sell: 7.11 }
+  }
+
+  if (typeof state.ctc.nextOrderId !== 'number') {
+    state.ctc.nextOrderId = 1001
+  }
+
+  if (!Array.isArray(state.homepageAdvertisements)) {
+    state.homepageAdvertisements = createLocalAcceptanceMockState().homepageAdvertisements
+  }
+
+  syncSecurityAccountFlags(state)
+  return state
+}
+
+function getSharedLocalAcceptanceMockState() {
+  if (!globalThis.__MSCOIN_LOCAL_ACCEPTANCE_STATE__) {
+    globalThis.__MSCOIN_LOCAL_ACCEPTANCE_STATE__ = createLocalAcceptanceMockState()
+  }
+
+  return ensureLocalAcceptanceMockStateShape(globalThis.__MSCOIN_LOCAL_ACCEPTANCE_STATE__)
+}
+
 export function resolveLocalAcceptanceMock({ method, path, body = {} }, state) {
   if (path === '/uc/ancillary/system/advertise') {
     return ok(state.homepageAdvertisements)
+  }
+
+  if (method === 'POST' && path === '/uc/approve/security/setting') {
+    return ok(state.security)
+  }
+
+  if (method === 'POST' && path === '/uc/approve/account/setting') {
+    return ok(state.account)
+  }
+
+  if (method === 'POST' && path === '/uc/asset/wallet/USDT') {
+    return ok(state.wallet)
+  }
+
+  if (method === 'POST' && path === '/market/ctc-usdt') {
+    return ok(state.ctc.quote)
+  }
+
+  if (method === 'POST' && (
+    path === '/uc/mobile/ctc/code' ||
+    path === '/uc/mobile/bind/code' ||
+    path === '/uc/mobile/update/password/code' ||
+    path === '/uc/mobile/transaction/code'
+  )) {
+    return { code: 0, message: '验证码已发送', data: null }
+  }
+
+  if (method === 'POST' && path === '/uc/upload/oss/image') {
+    const kind = String(body.kind || body.type || '').toLowerCase()
+    return ok(resolveUploadedImageUrl(kind))
+  }
+
+  if (method === 'POST' && path === '/uc/approve/real/name') {
+    state.security.realVerified = 1
+    state.security.realAuditing = 0
+    state.security.realName = body.realName || state.security.realName
+    state.account.realName = state.security.realName
+    return { code: 0, message: '实名认证提交成功', data: null }
+  }
+
+  if (method === 'POST' && path === '/uc/approve/bind/phone') {
+    state.security.phoneVerified = 1
+    state.security.mobilePhone = body.phone || state.security.mobilePhone
+    return { code: 0, message: '手机号绑定成功', data: null }
+  }
+
+  if (method === 'POST' && path === '/uc/approve/update/password') {
+    return { code: 0, message: '登录密码修改成功', data: null }
+  }
+
+  if (method === 'POST' && path === '/uc/approve/update/transaction/password') {
+    state.security.fundsVerified = 1
+    return { code: 0, message: '资金密码设置成功', data: null }
+  }
+
+  if (method === 'POST' && (path === '/uc/approve/bind/bank' || path === '/uc/approve/update/bank')) {
+    state.account.bankVerified = 1
+    state.account.realName = body.realName || state.account.realName
+    state.account.bankInfo = {
+      bank: body.bank || state.account.bankInfo?.bank || '招商银行',
+      branch: body.branch || state.account.bankInfo?.branch || '深圳科技园支行',
+      cardNo: body.cardNo || state.account.bankInfo?.cardNo || '6222028800012345678'
+    }
+    syncSecurityAccountFlags(state)
+    return { code: 0, message: '银行卡保存成功', data: null }
+  }
+
+  if (method === 'POST' && (path === '/uc/approve/bind/ali' || path === '/uc/approve/update/ali')) {
+    state.account.aliVerified = 1
+    state.account.realName = body.realName || state.account.realName
+    state.account.alipay = {
+      aliNo: body.ali || state.account.alipay?.aliNo || 'local-tester@mscoin.test',
+      qrCodeUrl: body.qrCodeUrl || state.account.alipay?.qrCodeUrl || resolveUploadedImageUrl('alipay')
+    }
+    syncSecurityAccountFlags(state)
+    return { code: 0, message: '支付宝保存成功', data: null }
+  }
+
+  if (method === 'POST' && (path === '/uc/approve/bind/wechat' || path === '/uc/approve/update/wechat')) {
+    state.account.wechatVerified = 1
+    state.account.realName = body.realName || state.account.realName
+    state.account.wechatPay = {
+      wechat: body.wechat || state.account.wechatPay?.wechat || 'local-tester-wechat',
+      qrWeCodeUrl: body.qrCodeUrl || state.account.wechatPay?.qrWeCodeUrl || resolveUploadedImageUrl('wechat')
+    }
+    syncSecurityAccountFlags(state)
+    return { code: 0, message: '微信收款方式保存成功', data: null }
+  }
+
+  if (method === 'POST' && path === '/uc/ctc/page-query') {
+    const pageNo = Number(body.pageNo || 1)
+    const pageSize = Number(body.pageSize || 10)
+    const start = Math.max(pageNo - 1, 0) * pageSize
+    const content = state.ctc.orders.slice(start, start + pageSize)
+    return ok({
+      content,
+      totalElements: state.ctc.orders.length
+    })
+  }
+
+  if (method === 'POST' && path === '/uc/ctc/detail') {
+    const order = state.ctc.orders.find((item) => item.id === Number(body.oid))
+    if (!order) {
+      return { code: 1, message: '订单不存在', data: null }
+    }
+
+    return ok({
+      ...order,
+      currentTime: new Date().toISOString()
+    })
+  }
+
+  if (method === 'POST' && path === '/uc/ctc/new-ctc-order') {
+    if (!body.amount || Number(body.amount) <= 0) {
+      return { code: 1, message: '数量必须大于 0', data: null }
+    }
+
+    return ok(createCtcOrder(state, body))
+  }
+
+  if (method === 'POST' && path === '/uc/ctc/pay-ctc-order') {
+    const order = state.ctc.orders.find((item) => item.id === Number(body.oid))
+    if (!order) {
+      return { code: 1, message: '订单不存在', data: null }
+    }
+
+    order.status = 2
+    order.currentTime = new Date().toISOString()
+    return ok(order)
+  }
+
+  if (method === 'POST' && path === '/uc/ctc/cancel-ctc-order') {
+    const order = state.ctc.orders.find((item) => item.id === Number(body.oid))
+    if (!order) {
+      return { code: 1, message: '订单不存在', data: null }
+    }
+
+    order.status = 4
+    order.cancelReason = '用户取消'
+    order.currentTime = new Date().toISOString()
+    return ok(order)
   }
 
   if (method === 'POST' && path === '/exchange/favor/find') {
@@ -185,7 +497,7 @@ export function resolveLocalAcceptanceMock({ method, path, body = {} }, state) {
 }
 
 export function localAcceptanceMockPlugin() {
-  const state = createLocalAcceptanceMockState()
+  const state = getSharedLocalAcceptanceMockState()
 
   return {
     name: 'local-acceptance-mocks',
@@ -195,7 +507,23 @@ export function localAcceptanceMockPlugin() {
         const path = pathOf(req)
         const requestBodyNeeded = method === 'POST' && (
           path === '/exchange/favor/add' ||
-          path === '/exchange/favor/delete'
+          path === '/exchange/favor/delete' ||
+          path === '/uc/approve/real/name' ||
+          path === '/uc/approve/bind/phone' ||
+          path === '/uc/approve/update/password' ||
+          path === '/uc/approve/update/transaction/password' ||
+          path === '/uc/approve/bind/bank' ||
+          path === '/uc/approve/update/bank' ||
+          path === '/uc/approve/bind/ali' ||
+          path === '/uc/approve/update/ali' ||
+          path === '/uc/approve/bind/wechat' ||
+          path === '/uc/approve/update/wechat' ||
+          path === '/uc/upload/oss/image' ||
+          path === '/uc/ctc/page-query' ||
+          path === '/uc/ctc/detail' ||
+          path === '/uc/ctc/new-ctc-order' ||
+          path === '/uc/ctc/pay-ctc-order' ||
+          path === '/uc/ctc/cancel-ctc-order'
         )
         const body = requestBodyNeeded ? await readJsonBody(req) : {}
         const resolved = resolveLocalAcceptanceMock({ method, path, body }, state)
