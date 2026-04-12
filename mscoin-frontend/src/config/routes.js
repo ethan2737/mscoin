@@ -21,7 +21,7 @@
 //import Login from '../pages/uc/login'
 //import Register from '../pages/uc/register'
 //import FindPwd from '../pages/uc/findpwd'
-//import Exchange from '../pages/exchange/exchange'
+// BB 交易页已统一迁移到 Vue 3，旧 Vue 2 Exchange 页面已移除
 //import Help from '../pages/cms/help'
 //import HelpList from '../pages/cms/HelpList' //帮助分类列表
 //import HelpDetail from '../pages/cms/HelpDetail' //帮助详情
@@ -46,8 +46,8 @@ export default [
     { path: '/reg', component: resolve=>(require(["../pages/uc/MobileRegister"],resolve)) },
     { path: '/app', component: resolve=>(require(["../pages/uc/AppDownload"],resolve)) },
     { path: '/findPwd', component: resolve=>(require(["../pages/uc/findpwd"],resolve)) },
-    { path: '/exchange', component: resolve=>(require(["../pages/exchange/exchange"],resolve)) },
-    { path: '/exchange/:pair', component: resolve=>(require(["../pages/exchange/exchange"],resolve)), name: "ExchangePair"},
+    { path: '/exchange', component: resolve => import('../pages-vue3/exchange/Exchange.vue').then(resolve) },
+    { path: '/exchange/:pair', component: resolve => import('../pages-vue3/exchange/Exchange.vue').then(resolve), name: "ExchangePair"},
     { path: '/swapindex', component: resolve=>(require(["../pages/swapindex/swapindex"],resolve)) },
     { path: '/swapindex/:pair', component: resolve=>(require(["../pages/swapindex/swapindex"],resolve)), name: "SwapPair"},
     { path: '/kline/:pair', component: resolve=>(require(["../pages/swapindex/kline"],resolve)), name: "kline"},
