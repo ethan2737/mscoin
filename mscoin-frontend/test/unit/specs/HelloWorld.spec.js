@@ -12,6 +12,6 @@ test('app shell navigation uses route paths as active menu keys', () => {
 
   assert.match(appSource, /:default-active="activeNav"/)
   assert.match(appSource, /@select="handleNavSelect"/)
-  assert.match(appSource, /store\?\.commit\('navigate', menuPath\)/)
-  assert.match(appSource, /'\/exchange': '\/exchange'/)
+  assert.match(appSource, /import \{ resolveTopNavByPath \} from '\.\/pages-vue3\/otc\/route-helpers'/)
+  assert.match(appSource, /store\?\.commit\('navigate', resolveTopNavByPath\(path\)\)/)
 })

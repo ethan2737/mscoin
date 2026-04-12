@@ -70,6 +70,7 @@ import { ref, reactive, inject, onMounted } from 'vue'
 import { ElMessage, ElLink } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { buildOtcChatPath, buildOtcCheckUserPath } from '../otc/route-helpers'
 
 const router = inject('router')
 
@@ -178,11 +179,11 @@ const handleTabClick = (tab) => {
 }
 
 const goChat = (tradeId) => {
-  router.push(`/chat?tradeId=${tradeId}`)
+  router.push(buildOtcChatPath(tradeId))
 }
 
 const goCheckUser = (id) => {
-  router.push(`/checkuser?id=${id}`)
+  router.push(buildOtcCheckUserPath(id))
 }
 
 onMounted(() => {

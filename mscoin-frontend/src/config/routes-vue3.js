@@ -108,14 +108,20 @@ export default [
   { path: '/about', alias: '/about-us', component: AboutUs },
 
   // OTC 交易
-  { path: '/otc', component: OtcMain },
-  { path: '/otc/trade', redirect: '/otc/trade/usdt' },
-  { path: '/otc/trade/:pathMatch(.*)*', component: OtcTrade },
+  {
+    path: '/otc',
+    component: OtcMain,
+    children: [
+      { path: '', redirect: '/otc/trade/usdt' },
+      { path: 'trade', redirect: '/otc/trade/usdt' },
+      { path: 'trade/:unit', component: OtcTrade }
+    ]
+  },
   { path: '/otc/tradeInfo', component: OtcTradeInfo },
-  { path: '/checkuser', component: OtcCheckUser },
-  { path: '/chat', component: OtcChat },
-  { path: '/otc/checkuser/:id', redirect: to => `/checkuser?id=${to.params.id}` },
-  { path: '/otc/chat/:id', redirect: to => `/chat?tradeId=${to.params.id}` },
+  { path: '/otc/checkuser/:id', component: OtcCheckUser },
+  { path: '/otc/chat/:id', component: OtcChat },
+  { path: '/checkuser', redirect: to => to.query.id ? `/otc/checkuser/${encodeURIComponent(to.query.id)}` : '/otc/trade/usdt' },
+  { path: '/chat', redirect: to => to.query.tradeId ? `/otc/chat/${encodeURIComponent(to.query.tradeId)}` : '/otc/trade/usdt' },
   { path: '/otc/ad/publish', component: OtcAdPublish },
   { path: '/otc/myad', component: OtcMyAd },
 

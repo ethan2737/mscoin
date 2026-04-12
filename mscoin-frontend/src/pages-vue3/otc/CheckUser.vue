@@ -137,10 +137,12 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElTabs, ElTabPane, ElButton } from 'element-plus'
 import axios from 'axios'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { buildOtcTradeInfoPath, resolveMemberIdFromRoute } from './route-helpers'
 
 const store = useStore()
 const router = useRouter()
+const route = useRoute()
 
 const host = ''
 
@@ -209,7 +211,7 @@ const handleBuy = (row) => {
       router.push('/uc/safe')
     }, 2000)
   } else {
-    router.push('/otc/tradeInfo?tradeId=' + row.advertiseId)
+    router.push(buildOtcTradeInfoPath(row.advertiseId))
   }
 }
 
@@ -222,13 +224,13 @@ const handleSell = (row) => {
       router.push('/uc/safe')
     }, 2000)
   } else {
-    router.push('/otc/tradeInfo?tradeId=' + row.advertiseId)
+    router.push(buildOtcTradeInfoPath(row.advertiseId))
   }
 }
 
 const getAdv = () => {
   axios.post(`${host}/otc/advertise/member`, {
-    name: router.currentRoute.value.query.id
+    name: resolveMemberIdFromRoute(route)
   }, {
     withCredentials: true,
     headers: {

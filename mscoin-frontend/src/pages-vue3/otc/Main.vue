@@ -70,6 +70,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
@@ -90,10 +91,9 @@ const isLogin = computed(() => {
 
 const goBusiness = () => {
   if (isLogin.value) {
-    router.push('/identbusiness')
+    router.push('/uc/ident/business')
   } else {
-    // 使用 ElMessage 需要导入，这里简化处理
-    console.log('请先登录')
+    ElMessage.warning('请先登录')
   }
 }
 
@@ -107,7 +107,7 @@ const handleMenuSelect = (menuName) => {
 }
 
 const activeMenu = () => {
-  let coin = route.params.pathMatch || 'USDT'
+  let coin = route.params.unit || 'USDT'
   coin = coin.toUpperCase()
   let index = 0
   coins.value.forEach((item, i) => {

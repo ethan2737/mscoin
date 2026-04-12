@@ -135,9 +135,11 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElTabs, ElTabPane, ElButton, ElPagination } from 'element-plus'
 import axios from 'axios'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { buildOtcCheckUserPath, buildOtcTradeInfoPath } from './route-helpers'
 
 const store = useStore()
+const route = useRoute()
 const router = useRouter()
 
 const host = ''
@@ -176,7 +178,7 @@ const advertiment = reactive({
 
 const isLogin = computed(() => store.getters.isLogin)
 const member = computed(() => store.getters.member)
-const coin = computed(() => router.currentRoute.value.params.pathMatch)
+const coin = computed(() => route.params.unit)
 const lang = computed(() => store.state.lang)
 
 const getAvatarInitial = (name) => {
@@ -199,7 +201,7 @@ const strpro = (str) => {
 
 const goToCheckUser = (memberName) => {
   if (isLogin.value) {
-    router.push('/checkuser?id=' + memberName)
+    router.push(buildOtcCheckUserPath(memberName))
   } else {
     router.push('/login')
   }
@@ -214,7 +216,7 @@ const handleTrade = (row) => {
       router.push('/uc/safe')
     }, 2000)
   } else {
-    router.push('/otc/tradeInfo?tradeId=' + row.advertiseId)
+    router.push(buildOtcTradeInfoPath(row.advertiseId))
   }
 }
 

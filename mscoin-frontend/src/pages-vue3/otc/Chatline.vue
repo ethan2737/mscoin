@@ -99,6 +99,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { ElMessage, ElInput, ElCheckbox, ElIcon } from 'element-plus'
 import { Clock, Warning, Position } from '@element-plus/icons-vue'
 import axios from 'axios'
+import io from 'socket.io-client'
 
 const props = defineProps({
   msg: {
@@ -274,7 +275,11 @@ const getBefore = () => {
 }
 
 const initSocket = () => {
-  socket = io()
+  socket = io(window.location.origin, {
+    autoConnect: false,
+    transports: ['websocket']
+  })
+  socket.connect()
   socket.on('connect', () => {
     console.log('socket connected')
   })

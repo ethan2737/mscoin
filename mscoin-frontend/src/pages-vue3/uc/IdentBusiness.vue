@@ -267,6 +267,12 @@ const islogin = () => {
     headers: { 'x-auth-token': localStorage.getItem('TOKEN') }
   }).then(res => {
     if (res.data.code === 0) {
+      const security = res.data.data || {}
+      if (!res.data.realName && security.realName) {
+        res.data.realName = security.realName
+        res.data.phoneVerified = security.phoneVerified
+        res.data.fundsVerified = security.fundsVerified
+      }
       if (!res.data.realName) {
         ElMessage.warning('请先完成实名认证')
         router.push('/uc/safe')
@@ -276,6 +282,9 @@ const islogin = () => {
       } else if (res.data.fundsVerified === 0) {
         ElMessage.warning('请先设置资金密码')
         router.push('/uc/safe')
+      } else {
+        // 已通过验证，获取商家认证状态
+        getSetting()
       }
     } else {
       ElMessage.error(res.data.message)
@@ -454,7 +463,6 @@ watch(lang, () => {
 
 onMounted(() => {
   islogin()
-  getSetting()
   getAuthFound()
 })
 </script>
