@@ -18,8 +18,15 @@ function normalizePathSegment(value) {
   return encodeURIComponent(String(value ?? '').trim())
 }
 
-export function buildOtcChatPath(tradeId) {
-  return `/otc/chat/${normalizePathSegment(tradeId)}`
+export function buildOtcChatPath(tradeId, options = {}) {
+  const basePath = `/otc/chat/${normalizePathSegment(tradeId)}`
+  const source = String(options.source || '').trim()
+
+  if (!source) {
+    return basePath
+  }
+
+  return `${basePath}?source=${normalizePathSegment(source)}`
 }
 
 export function buildOtcCheckUserPath(memberId) {

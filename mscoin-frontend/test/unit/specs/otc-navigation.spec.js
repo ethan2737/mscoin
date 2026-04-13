@@ -11,6 +11,7 @@ test('OTC helper builds namespaced detail routes instead of legacy global chat r
   const { buildOtcChatPath, buildOtcCheckUserPath } = await import(helperModuleUrl)
 
   assert.equal(buildOtcChatPath('OTC00005002'), '/otc/chat/OTC00005002')
+  assert.equal(buildOtcChatPath('OTC00005002', { source: 'trade' }), '/otc/chat/OTC00005002?source=trade')
   assert.equal(buildOtcCheckUserPath('merchant_001'), '/otc/checkuser/merchant_001')
 })
 

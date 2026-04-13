@@ -179,7 +179,7 @@ const handleTabClick = (tab) => {
 }
 
 const goChat = (tradeId) => {
-  router.push(buildOtcChatPath(tradeId))
+  router.push(buildOtcChatPath(tradeId, { source: 'order' }))
 }
 
 const goCheckUser = (id) => {

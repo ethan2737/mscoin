@@ -12,7 +12,7 @@
             />
             <span v-else class="avatar-initial">{{ usernameInitial }}</span>
           </div>
-          <div class="merchant-name">{{ maskedUsername }}</div>
+          <div class="merchant-name">{{ advertiseDetail.username }}</div>
         </div>
 
         <div class="merchant-status">
@@ -69,7 +69,7 @@
                   <el-input v-model="buyPrice" @input="handleMoneyChange">
                     <template #prepend>CNY</template>
                   </el-input>
-                  <div class="field-tip">{{ moneyWarning }}</div>
+                  <div class="field-tip">{{ moneyFieldTip }}</div>
                 </el-form-item>
 
                 <div class="trade-switch">⇄</div>
@@ -161,16 +161,9 @@ const tradeAction = computed(() => resolveTradeAction(advertiseDetail.value.adve
 const currentActionLabel = computed(() => t(`otc.tradeinfo.${tradeAction.value.actionKey}`))
 const currentButtonLabel = computed(() => t(`otc.tradeinfo.${tradeAction.value.buttonKey}`))
 const usernameInitial = computed(() => String(advertiseDetail.value.username || '').trim().slice(0, 1))
-const maskedUsername = computed(() => {
-  const username = String(advertiseDetail.value.username || '')
-  if (username.length <= 1) {
-    return username
-  }
-
-  return `${username.slice(0, 1)}${'*'.repeat(username.length - 1)}`
-})
-
 const submitDisabled = computed(() => submitting.value || !buyPrice.value || !buyAmount.value)
+const moneyRangeTip = computed(() => `${advertiseDetail.value.minLimit} - ${advertiseDetail.value.maxLimit} CNY`)
+const moneyFieldTip = computed(() => moneyWarning.value || moneyRangeTip.value)
 
 function validateRange(money) {
   if (money < advertiseDetail.value.minLimit || money > advertiseDetail.value.maxLimit) {
@@ -277,7 +270,7 @@ async function submitOrder() {
     }
 
     ElMessage.success(resp.message)
-    router.push(buildOtcChatPath(resp.data))
+    router.push(buildOtcChatPath(resp.data, { source: 'trade' }))
   } catch {
     ElMessage.error('OTC 下单失败')
   } finally {
@@ -326,8 +319,8 @@ onMounted(() => {
 }
 
 .avatar-shell {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: #fff;
   display: flex;
@@ -343,19 +336,19 @@ onMounted(() => {
 }
 
 .avatar-initial {
-  width: 54px;
-  height: 54px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: #f0a70a;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 18px;
 }
 
 .merchant-name {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -423,6 +416,13 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
+.trade-form-item :deep(.el-input) {
+  --el-input-border-color: #27313e;
+  --el-input-hover-border-color: #27313e;
+  --el-input-focus-border-color: #27313e;
+  --el-fill-color-blank: #111b28;
+}
+
 .trade-switch {
   display: flex;
   align-items: center;
@@ -474,9 +474,20 @@ onMounted(() => {
   box-shadow: inset 0 0 0 1px #27313e;
 }
 
+:deep(.el-input__wrapper:hover),
+:deep(.el-input__wrapper.is-focus) {
+  background: #111b28;
+  box-shadow: inset 0 0 0 1px #27313e !important;
+}
+
 :deep(.el-input-group__prepend) {
   background: #111b28;
   border-color: #27313e;
+  border-right-color: #27313e;
+  box-shadow:
+    inset 0 1px 0 0 #27313e,
+    inset 0 -1px 0 0 #27313e,
+    inset 1px 0 0 0 #27313e;
   color: #96a2b4;
 }
 
