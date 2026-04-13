@@ -1,5 +1,6 @@
 const STATUS_LABELS = {
-  unpaid: '待付款',
+  waitingYourPayment: '待付款',
+  waitingBuyerPayment: '等待买家付款',
   waitingRelease: '待放行',
   waitingReceipt: '待确认收款',
   finished: '已完成',
@@ -10,7 +11,7 @@ const STATUS_LABELS = {
 export function getOrderStatusPresentation({ status, tradeType }) {
   if (status === 1) {
     return {
-      text: STATUS_LABELS.unpaid,
+      text: tradeType === 1 ? STATUS_LABELS.waitingBuyerPayment : STATUS_LABELS.waitingYourPayment,
       actions: tradeType === 0 ? ['confirm-payment', 'cancel-order'] : []
     }
   }

@@ -153,23 +153,27 @@
       </div>
     </div>
 
-    <el-dialog v-model="modal1" :title="$t('otc.chat.tip')">
-      <p class="dialog-warning">{{ $t('otc.chat.msg1') }}</p>
+    <el-dialog v-model="modal1" :title="$t('otc.chat.tip')" class="otc-action-dialog">
+      <div class="dialog-panel">
+        <p class="dialog-warning">{{ $t('otc.chat.msg1') }}</p>
+      </div>
       <template #footer>
         <el-button @click="modal1 = false">{{ text.cancel }}</el-button>
         <el-button type="warning" :loading="confirming" @click="handleConfirmPay">{{ text.confirmPayment }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="modal3" :title="$t('otc.chat.tip')">
-      <p class="dialog-warning">{{ $t('otc.chat.msg3') }}</p>
+    <el-dialog v-model="modal3" :title="$t('otc.chat.tip')" class="otc-action-dialog">
+      <div class="dialog-panel">
+        <p class="dialog-warning">{{ $t('otc.chat.msg3') }}</p>
+      </div>
       <template #footer>
         <el-button @click="modal3 = false">{{ text.keepOrder }}</el-button>
         <el-button type="danger" :loading="confirming" @click="handleCancelOrder()">{{ text.confirmCancel }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="modal4" :title="$t('otc.chat.tip')" @close="onDialog4Close">
+    <el-dialog v-model="modal4" :title="$t('otc.chat.tip')" class="otc-action-dialog" @close="onDialog4Close">
       <el-form :model="formItem" :label-width="80">
         <el-form-item :label="$t('otc.chat.comptype')">
           <el-select v-model="formItem.select">
@@ -193,23 +197,25 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="modal5" :title="$t('otc.chat.tip')">
-      <p class="dialog-warning">
-        {{ $t('otc.chat.msg6') }}<br />
+    <el-dialog v-model="modal5" :title="$t('otc.chat.tip')" class="otc-action-dialog">
+      <div class="dialog-panel">
+        <p class="dialog-warning">
+          {{ $t('otc.chat.msg6') }}
+        </p>
         <el-input
           v-model="fundpwd"
           type="password"
           :placeholder="$t('otc.chat.msg7')"
           class="fundpwd-input"
         />
-      </p>
+      </div>
       <template #footer>
         <el-button @click="modal5 = false">{{ text.cancel }}</el-button>
         <el-button type="warning" :loading="confirming" @click="handleRelease">{{ text.releaseAsset }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="modal6">
+    <el-dialog v-model="modal6" class="otc-action-dialog otc-qrcode-dialog">
       <template #header></template>
       <div class="qrcode-dialog">
         <img class="qrcode-image" :src="payCodeUrl" />
@@ -333,7 +339,8 @@ const text = computed(() => isZh.value ? {
   requestFailed: '请求失败',
   fundPasswordRequired: '请输入资金密码',
   autoCanceled: '订单超时已自动取消',
-  appealDelay: '付款完成 30 分钟后才允许申诉！'
+  appealDelay: '付款完成 30 分钟后才允许申诉！',
+  qrUnavailable: '当前收款方式未配置付款码'
 } : {
   orderDetail: 'Order Detail',
   orderDesk: 'OTC Order Desk',
@@ -366,7 +373,8 @@ const text = computed(() => isZh.value ? {
   requestFailed: 'Request failed',
   fundPasswordRequired: 'Please enter your fund password',
   autoCanceled: 'Order timed out and was canceled automatically.',
-  appealDelay: 'Appeal is available 30 minutes after payment is completed.'
+  appealDelay: 'Appeal is available 30 minutes after payment is completed.',
+  qrUnavailable: 'No payment QR code is configured for this method.'
 })
 const otherSidePath = computed(() => buildOtcCheckUserPath(msg.value.otherSide || ''))
 const breadcrumbEntryLabel = computed(() => route.query.source === 'order' ? text.value.myOrders : text.value.otcTrade)
@@ -417,6 +425,42 @@ const orderRequestConfig = {
 }
 
 const hasAction = (action) => availableActions.value.has(action)
+
+const parseOrderTime = (value) => {
+  const rawValue = String(value || '').trim()
+  if (!rawValue) {
+    return Number.NaN
+  }
+
+  const directTime = new Date(rawValue).getTime()
+  if (Number.isFinite(directTime)) {
+    return directTime
+  }
+
+  const legacyTime = new Date(rawValue.replace(/-/g, '/')).getTime()
+  if (Number.isFinite(legacyTime)) {
+    return legacyTime
+  }
+
+  return Number.NaN
+}
+
+const resolveQrPreviewUrl = (value) => {
+  const rawValue = String(value || '').trim()
+  if (!rawValue) {
+    return ''
+  }
+
+  if (/^(https?:|data:|blob:)/i.test(rawValue)) {
+    return rawValue
+  }
+
+  if (rawValue.startsWith('/')) {
+    return rawValue
+  }
+
+  return `/${rawValue.replace(/^\.?\//, '')}`
+}
 
 const syncChatShellHeight = () => {
   if (typeof window === 'undefined' || window.innerWidth <= 1200) {
@@ -612,7 +656,13 @@ const appearOrder = () => {
 }
 
 const showQRCode = (type) => {
-  payCodeUrl.value = type === 1 ? alipay.value.qrCodeUrl : wechatPay.value.qrWeCodeUrl
+  const previewUrl = resolveQrPreviewUrl(type === 1 ? alipay.value?.qrCodeUrl : wechatPay.value?.qrWeCodeUrl)
+  if (!previewUrl) {
+    ElMessage.info(text.value.qrUnavailable)
+    return
+  }
+
+  payCodeUrl.value = previewUrl
   modal6.value = true
 }
 
@@ -624,7 +674,7 @@ const resetStatus = () => {
 }
 
 const getReserveTime = () => {
-  const createTime = new Date((msg.value.createTime || '').replace(/-/g, '/')).getTime()
+  const createTime = parseOrderTime(msg.value.createTime)
   const timeLimit = parseInt(msg.value.timeLimit, 10)
 
   if (!Number.isFinite(createTime) || !Number.isFinite(timeLimit)) {
@@ -1219,27 +1269,67 @@ onBeforeUnmount(() => {
 }
 
 .dialog-warning {
+  margin: 0;
   color: var(--color-danger);
   font-weight: 600;
   font-size: 15px;
+  line-height: 1.7;
 }
 
 .fundpwd-input {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
-:deep(.el-dialog) {
-  background: var(--bg-secondary);
+.dialog-panel {
+  padding: 18px 20px;
+  border: 1px solid rgba(240, 172, 25, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(14, 20, 31, 0.96), rgba(10, 15, 24, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+:deep(.el-overlay) {
+  background: rgba(2, 6, 14, 0.72) !important;
+}
+
+:deep(.otc-action-dialog) {
+  background-color: #121927 !important;
+  background-image: none !important;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48);
 }
 
-:deep(.el-dialog__title) {
+:deep(.otc-action-dialog .el-dialog__title) {
   color: var(--text-primary);
 }
 
-:deep(.el-dialog__body) {
+:deep(.otc-action-dialog .el-dialog__header) {
+  margin: 0;
+  padding: 18px 22px 8px;
+  background-color: #121927 !important;
+}
+
+:deep(.otc-action-dialog .el-dialog__body) {
+  padding: 12px 22px 18px;
+  background-color: #121927 !important;
   color: var(--text-secondary);
+}
+
+:deep(.otc-action-dialog .el-dialog__footer) {
+  padding: 0 22px 22px;
+  background-color: #121927 !important;
+}
+
+:deep(.otc-action-dialog .el-dialog__headerbtn),
+:deep(.otc-action-dialog .el-dialog__close) {
+  color: var(--text-secondary) !important;
+}
+
+:deep(.otc-action-dialog .el-dialog__headerbtn:hover),
+:deep(.otc-action-dialog .el-dialog__close:hover) {
+  color: var(--text-primary) !important;
 }
 
 .qrcode-dialog {

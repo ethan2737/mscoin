@@ -470,7 +470,8 @@ onBeforeUnmount(() => {
 }
 
 .message-bubble {
-  padding: 14px 18px;
+  min-height: 40px;
+  padding: 10px 16px;
   border-radius: 18px 18px 18px 8px;
   background: linear-gradient(135deg, #edf1f6, #e5e9ef);
   color: #253243;
@@ -478,6 +479,7 @@ onBeforeUnmount(() => {
   word-break: break-word;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   transition: transform 150ms ease;
+  box-sizing: border-box;
 }
 
 .message-bubble:hover {
@@ -546,8 +548,8 @@ onBeforeUnmount(() => {
 
 .user-avatar-public {
   background: #fff;
-  height: 52px;
-  width: 52px;
+  height: 35px;
+  width: 35px;
   box-shadow: 0 1px 5px 0 rgba(71, 78, 114, 0.24);
   position: relative;
   border-radius: 50%;
@@ -558,13 +560,14 @@ onBeforeUnmount(() => {
 
 .user-avatar-in {
   background: #f0a70a;
-  height: 42px;
-  width: 42px;
+  height: 28px;
+  width: 28px;
   color: #fff;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 12px;
 }
 
 .chat-card__messages::-webkit-scrollbar {
