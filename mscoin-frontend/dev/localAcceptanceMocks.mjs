@@ -4,8 +4,107 @@ function sendJson(res, statusCode, payload) {
   res.end(JSON.stringify(payload))
 }
 
+const PERPETUAL_MOCK_PATHS = new Set([
+  '/swap/contract-coin/info/1',
+  '/swap/symbol-thumb',
+  '/swap/exchange-plate-mini',
+  '/swap/exchange-plate-full',
+  '/swap/latest-trade',
+  '/swap/history',
+  '/swap/order/position',
+  '/swap/order-entrust/current',
+  '/swap/order-entrust/history',
+  '/swap/contract-leverage',
+  '/uc/asset/contract-wallet/USDT',
+  '/uc/contract/current',
+  '/uc/contract/history',
+  '/uc/contract/coin/thumb'
+])
+
 function ok(data) {
   return { code: 0, message: 'success', data }
+}
+
+export function shouldEnablePerpetualMocks() {
+  const value = String(process.env.MSCOIN_ENABLE_PERPETUAL_MOCKS || '').trim().toLowerCase()
+  return value === '1' || value === 'true' || value === 'on'
+}
+
+export function resolvePerpetualAcceptanceMock({ method, path }) {
+  if (!shouldEnablePerpetualMocks() || !PERPETUAL_MOCK_PATHS.has(path)) {
+    return null
+  }
+
+  if (method === 'GET' && path === '/swap/contract-coin/info/1') {
+    return ok({
+      id: 1,
+      baseSymbol: 'USDT',
+      coinSymbol: 'BTC',
+      type: 'ALWAYS',
+      coinScale: 4,
+      baseCoinScale: 4,
+      shareNumber: 0.001,
+      takerFee: 0.0005,
+      makerFee: 0.0002,
+      enableMarketBuy: 1,
+      enableMarketSell: 1,
+      exchangeable: 1
+    })
+  }
+
+  if (method === 'POST' && path === '/swap/symbol-thumb') {
+    return swapThumb
+  }
+
+  if (method === 'POST' && path === '/swap/exchange-plate-mini') {
+    return emptyPlate
+  }
+
+  if (method === 'POST' && path === '/swap/exchange-plate-full') {
+    return emptyPlate
+  }
+
+  if (method === 'POST' && path === '/swap/latest-trade') {
+    return []
+  }
+
+  if ((method === 'GET' || method === 'POST') && path === '/swap/history') {
+    return { s: 'no_data' }
+  }
+
+  if (method === 'POST' && path === '/swap/order/position') {
+    return ok([])
+  }
+
+  if (method === 'POST' && path === '/swap/order-entrust/current') {
+    return { content: [], totalElements: 0, number: 0 }
+  }
+
+  if (method === 'POST' && path === '/swap/order-entrust/history') {
+    return { content: [], totalElements: 0, number: 0 }
+  }
+
+  if (method === 'GET' && path === '/swap/contract-leverage') {
+    return ok({ leverage: 10 })
+  }
+
+  if (method === 'POST' && path === '/uc/asset/contract-wallet/USDT') {
+    return ok({ base: 0, frozen: 0, profit: 0 })
+  }
+
+  if (method === 'POST' && path === '/uc/contract/current') {
+    return { content: [], totalElements: 0, number: 0 }
+  }
+
+  if (method === 'POST' && path === '/uc/contract/history') {
+    return { content: [], totalElements: 0, number: 0 }
+  }
+
+  if (method === 'POST' && path === '/uc/contract/coin/thumb') {
+    return [{ id: 1, name: 'BTC/USDT' }]
+  }
+
+  return null
 }
 
 function pathOf(req) {
@@ -862,6 +961,11 @@ export function localAcceptanceMockPlugin() {
           return sendJson(res, 200, resolved)
         }
 
+        const perpetualResolved = resolvePerpetualAcceptanceMock({ method, path, body }, state)
+        if (perpetualResolved) {
+          return sendJson(res, 200, perpetualResolved)
+        }
+
         if (method === 'POST' && path === '/otc/coin') {
           return sendJson(res, 200, ok(otcCoins))
         }
@@ -878,77 +982,8 @@ export function localAcceptanceMockPlugin() {
           return sendJson(res, 200, ok(miningItems[0]))
         }
 
-        if (method === 'GET' && path === '/swap/contract-coin/info/1') {
-          return sendJson(res, 200, ok({
-            id: 1,
-            baseSymbol: 'USDT',
-            coinSymbol: 'BTC',
-            type: 'ALWAYS',
-            coinScale: 4,
-            baseCoinScale: 4,
-            shareNumber: 0.001,
-            takerFee: 0.0005,
-            makerFee: 0.0002,
-            enableMarketBuy: 1,
-            enableMarketSell: 1,
-            exchangeable: 1
-          }))
-        }
-
-        if (method === 'POST' && path === '/swap/symbol-thumb') {
-          return sendJson(res, 200, swapThumb)
-        }
-
-        if (method === 'POST' && path === '/swap/exchange-plate-mini') {
-          return sendJson(res, 200, emptyPlate)
-        }
-
-        if (method === 'POST' && path === '/swap/exchange-plate-full') {
-          return sendJson(res, 200, emptyPlate)
-        }
-
-        if (method === 'POST' && path === '/swap/latest-trade') {
-          return sendJson(res, 200, [])
-        }
-
-        if ((method === 'GET' || method === 'POST') && path === '/swap/history') {
-          return sendJson(res, 200, { s: 'no_data' })
-        }
-
-        if (method === 'POST' && path === '/swap/order/position') {
-          return sendJson(res, 200, ok([]))
-        }
-
-        if (method === 'POST' && path === '/swap/order-entrust/current') {
-          return sendJson(res, 200, { content: [], totalElements: 0, number: 0 })
-        }
-
-        if (method === 'POST' && path === '/swap/order-entrust/history') {
-          return sendJson(res, 200, { content: [], totalElements: 0, number: 0 })
-        }
-
-        if (method === 'GET' && path === '/swap/contract-leverage') {
-          return sendJson(res, 200, ok({ leverage: 10 }))
-        }
-
-        if (method === 'POST' && path === '/uc/asset/contract-wallet/USDT') {
-          return sendJson(res, 200, ok({ base: 0, frozen: 0, profit: 0 }))
-        }
-
         if (method === 'POST' && path === '/uc/asset/wallet/KICK') {
           return sendJson(res, 200, ok({ balance: 0 }))
-        }
-
-        if (method === 'POST' && path === '/uc/contract/current') {
-          return sendJson(res, 200, { content: [], totalElements: 0 })
-        }
-
-        if (method === 'POST' && path === '/uc/contract/history') {
-          return sendJson(res, 200, { content: [], totalElements: 0 })
-        }
-
-        if (method === 'POST' && path === '/uc/contract/coin/thumb') {
-          return sendJson(res, 200, [{ id: 1, name: 'BTC/USDT' }])
         }
 
         if (method === 'GET' && path === '/uc/crowdfunding/totalAmount') {

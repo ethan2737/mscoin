@@ -201,14 +201,13 @@ const getList = (pageNo) => {
   })
   .then(response => {
     const resp = response.data
-    if (resp.code === 0) {
+    const pageData = resp?.data?.content ? resp.data : resp
+    if (pageData) {
       loading.value = false
-      if (resp.data) {
-        total.value = resp.data.totalElements
-        tableRecord.value = resp.data.content
-      }
+      total.value = pageData.totalElements || 0
+      tableRecord.value = pageData.content || []
     } else {
-      ElMessage.error(resp.message)
+      ElMessage.error(resp?.message || '获取账单记录失败')
       loading.value = false
     }
   })

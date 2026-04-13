@@ -148,6 +148,7 @@ const formItem = reactive({
 })
 
 const lang = computed(() => store.state.lang)
+const memberId = computed(() => store.getters.member?.id || store.state.member?.id || 0)
 
 const getWay = (direction, entrustType) => {
   if (direction === '1') {
@@ -235,6 +236,7 @@ const refresh = () => {
   const endTime = rangeDate && rangeDate[1] ? new Date(rangeDate[1]).getTime() : ''
 
   const params = {}
+  params.memberId = memberId.value
   if (contractCoinId) params.contractCoinId = contractCoinId
   if (direction) params.direction = direction
   if (type) params.type = type

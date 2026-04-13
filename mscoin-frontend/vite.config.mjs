@@ -30,6 +30,18 @@ export default defineConfig({
     port: 3000,
     host: true,
     proxy: {
+      '/uc/contract': {
+        target: 'http://127.0.0.1:8086',
+        changeOrigin: true
+      },
+      '/uc/contract-wallet': {
+        target: 'http://127.0.0.1:8086',
+        changeOrigin: true
+      },
+      '/uc/asset/contract-transaction/all': {
+        target: 'http://127.0.0.1:8086',
+        changeOrigin: true
+      },
       '/uc': {
         target: 'http://127.0.0.1:8888',
         changeOrigin: true
@@ -51,7 +63,7 @@ export default defineConfig({
         changeOrigin: true
       },
       '/swap': {
-        target: 'http://127.0.0.1:8890',
+        target: 'http://127.0.0.1:8086',
         changeOrigin: true
       },
       '/socket.io': {

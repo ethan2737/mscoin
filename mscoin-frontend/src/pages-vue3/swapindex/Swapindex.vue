@@ -883,6 +883,7 @@ const host = runtime.host
 const api = runtime.api
 const silentPost = (url, payload = {}) => axios.post(url, payload).catch(() => null)
 const silentGet = (url) => axios.get(url).catch(() => null)
+const unwrapResult = (response) => response?.data?.data ?? response?.data ?? {}
 
 // 响应式数据
 const skin = ref('night')
@@ -1131,19 +1132,22 @@ const xxlever2 = (value) => {
 }
 
 const getLeverage = () => {
-  axios.get(`${host}${api.swap.leverage}?symbol=${currentCoin.symbol}`)
+  axios.post(`${host}${api.swap.leverage}`, {
+    memberId: memberId.value,
+    contractCoinId: currentCoin.id
+  })
     .then(response => {
-      const resp = response.data
-      form.leverage = resp.data.leverage
-      if (resp.data.leverage === 1) {
+      const resp = unwrapResult(response)
+      form.leverage = resp.leverage
+      if (resp.leverage === 1) {
         form.leverageAdjustVal2 = 1
-      } else if (resp.data.leverage === 2) {
+      } else if (resp.leverage === 2) {
         form.leverageAdjustVal2 = 2
-      } else if (resp.data.leverage === 5) {
+      } else if (resp.leverage === 5) {
         form.leverageAdjustVal2 = 3
-      } else if (resp.data.leverage === 10) {
+      } else if (resp.leverage === 10) {
         form.leverageAdjustVal2 = 4
-      } else if (resp.data.leverage === 20) {
+      } else if (resp.leverage === 20) {
         form.leverageAdjustVal2 = 5
       }
     })
@@ -1162,7 +1166,11 @@ const quickClose = (order) => {
       type: 'warning'
     }
   ).then(() => {
-    axios.post(`${host}${api.swap.quickClose}${order.id}`)
+    axios.post(`${host}${api.swap.quickClose}${order.contractCoinId || currentCoin.id}`, {
+      memberId: memberId.value,
+      contractCoinId: order.contractCoinId || currentCoin.id,
+      price: currentCoin.close
+    })
       .then(response => {
         const resp = response.data
         if (resp.code === 0) {
@@ -1204,17 +1212,13 @@ const closeOrder = (direction) => {
   }
   const triggerType = form.triggerPrice <= currentCoin.close ? 1 : 2
   axios.post(`${host}${api.swap.addOrderEntrust}`, {
+    memberId: memberId.value,
     contractCoinId: currentCoin.id,
-    symbol: currentCoin.symbol,
-    entrustType: form.entrustType,
-    type: form.type,
-    patterns: form.patterns,
+    entrustType: form.type === '2' ? 1 : 2,
+    type: form.entrustType,
     leverage: form.leverage,
-    marketPrice: form.market ? 1 : 0,
-    entrustPrice: form.market ? null : form.limitPrice,
-    triggerPrice: form.triggerPrice,
-    triggerType,
-    share: parseInt(form.limitAmount),
+    price: form.market ? currentCoin.close : Number(form.limitPrice || 0),
+    amount: Number(form.limitAmount || 0),
     direction
   }).then(response => {
     const resp = response.data
@@ -1269,20 +1273,14 @@ const openOrder = (direction) => {
 }
 
 const doOpen = (direction) => {
-  const triggerType = form.triggerPrice <= currentCoin.close ? 1 : 2
   axios.post(`${host}${api.swap.addOrderEntrust}`, {
+    memberId: memberId.value,
     contractCoinId: currentCoin.id,
-    symbol: currentCoin.symbol,
-    entrustType: form.entrustType,
-    type: form.type,
-    holdTime: form.time,
-    patterns: form.patterns,
+    entrustType: form.type === '2' ? 1 : 2,
+    type: form.entrustType,
     leverage: form.leverage,
-    marketPrice: form.market ? 1 : 0,
-    entrustPrice: form.market ? null : form.limitPrice,
-    triggerPrice: form.triggerPrice,
-    triggerType,
-    share: parseInt(form.limitAmount),
+    price: form.market ? currentCoin.close : Number(form.limitPrice || 0),
+    amount: Number(form.limitAmount || 0),
     direction
   }).then(response => {
     const resp = response.data
@@ -1377,19 +1375,21 @@ const getWallet = () => {
 }
 
 const getCurrentPosition = () => {
-  const params = { contractCoinId: currentCoin.id }
+  const params = { memberId: memberId.value, contractCoinId: currentCoin.id }
   currentPosition.rows = []
   axios.post(`${host}${api.swap.position}`, params)
     .then(response => {
-      const resp = response.data
-      if (resp.data && resp.data.length > 0) {
-        currentPosition.rows = resp.data.map(e => ({ ...e, profit: 0.0 }))
+      const resp = unwrapResult(response)
+      const rows = resp.list || resp
+      if (rows && rows.length > 0) {
+        currentPosition.rows = rows.map(e => ({ ...e, profit: 0.0 }))
       }
     })
 }
 
 const getCurrentOrder = () => {
   const params = {
+    memberId: memberId.value,
     pageNo: 0,
     pageSize: 100,
     contractCoinId: currentCoin.id,
@@ -1398,9 +1398,10 @@ const getCurrentOrder = () => {
   currentOrder.rows = []
   axios.post(`${host}${api.swap.current}`, params)
     .then(response => {
-      const resp = response.data
-      if (resp.content && resp.content.length > 0) {
-        currentOrder.rows = resp.content
+      const resp = unwrapResult(response)
+      const rows = resp.content || resp.list || []
+      if (rows.length > 0) {
+        currentOrder.rows = rows
       }
     })
 }
@@ -1413,6 +1414,7 @@ const getHistoryOrder = (pageNo) => {
   }
   historyOrder.rows = []
   const params = {
+    memberId: memberId.value,
     pageNo,
     pageSize: historyOrder.pageSize,
     contractCoinId: currentCoin.id,
@@ -1420,11 +1422,12 @@ const getHistoryOrder = (pageNo) => {
   }
   axios.post(`${host}${api.swap.history}`, params)
     .then(response => {
-      const resp = response.data
-      if (resp.content && resp.content.length > 0) {
-        historyOrder.total = resp.totalElements
-        historyOrder.page = resp.number
-        historyOrder.rows = resp.content
+      const resp = unwrapResult(response)
+      const rows = resp.content || resp.list || []
+      if (rows.length > 0) {
+        historyOrder.total = resp.totalElements ?? rows.length
+        historyOrder.page = resp.number ?? pageNo
+        historyOrder.rows = rows
       }
     })
 }
@@ -1515,7 +1518,8 @@ const adjustLeverage = () => {
     return
   }
   axios.post(`${host}${api.swap.leverage}`, {
-    symbol: currentCoin.symbol,
+    memberId: memberId.value,
+    contractCoinId: currentCoin.id,
     leverage: form.leverageAdjustVal
   }).then(response => {
     const resp = response.data

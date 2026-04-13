@@ -110,12 +110,14 @@
 /**
  * Vue 3 迁移 - 合约资产页面
  */
-import { ref, reactive, computed, inject, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { useStore } from 'vuex'
 
 const host = ''
+const store = useStore()
 
 const direction = ref(true)
 const loading = ref(true)
@@ -129,6 +131,7 @@ const transfer = reactive({
   balance: 0,
   mainBalance: 0
 })
+const memberId = computed(() => store.getters.member?.id || store.state.member?.id || 0)
 
 const toFloor = (number, scale = 8) => {
   if (Number(number) === 0) return 0
@@ -169,9 +172,10 @@ const doTransfer = () => {
   }
 
   axios.post(`${host}/uc/contract-wallet/transfer`, {
+    memberId: memberId.value,
     unit: transfer.coin.unit,
     amount: transferAmount.value,
-    direction: direction.value ? 1 : 2
+    type: direction.value ? 1 : 2
   }, {
     withCredentials: true,
     headers: {
@@ -181,7 +185,7 @@ const doTransfer = () => {
   })
   .then(response => {
     const resp = response.data
-    if (resp.code === 0) {
+    if (resp.code === 0 || resp.success === true) {
       ElMessage.success($t('uc.finance.money.transfersuccess'))
       transferShow.value = false
       transfer.coin = null
@@ -197,7 +201,9 @@ const doTransfer = () => {
 }
 
 const getMoney = () => {
-  axios.post(`${host}/uc/contract-wallet`, {}, {
+  axios.post(`${host}/uc/contract-wallet`, {
+    memberId: memberId.value
+  }, {
     withCredentials: true,
     headers: {
       'x-auth-token': localStorage.getItem('TOKEN')
@@ -205,8 +211,9 @@ const getMoney = () => {
   })
   .then(response => {
     const resp = response.data
-    if (resp.code === 0) {
-      tableMoney.value = resp.data
+    const rows = Array.isArray(resp?.data) ? resp.data : (Array.isArray(resp) ? resp : [])
+    if (Array.isArray(rows)) {
+      tableMoney.value = rows
       for (let i = 0; i < tableMoney.value.length; i++) {
         tableMoney.value[i].coinType = tableMoney.value[i].coin.unit
       }
