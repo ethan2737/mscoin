@@ -83,6 +83,43 @@ export async function establishAuthenticatedSession({
   return member
 }
 
+export async function syncAuthenticatedMember({
+  axiosInstance,
+  memberInfoUrl,
+  storage = localStorage,
+  tokenKey = 'TOKEN',
+  memberKey = 'MEMBER',
+  store
+}) {
+  const token = storage.getItem(tokenKey)
+  const storedMember = getStoredMember({ storage, memberKey })
+
+  if (!token || !axiosInstance || !memberInfoUrl) {
+    return storedMember
+  }
+
+  try {
+    const response = await axiosInstance.post(memberInfoUrl, {}, {
+      headers: { 'x-auth-token': token }
+    })
+
+    if (response?.data?.code === 0 && response.data.data) {
+      const member = {
+        ...storedMember,
+        ...response.data.data,
+        token
+      }
+      storage.setItem(memberKey, JSON.stringify(member))
+      store?.commit?.('setMember', member)
+      return member
+    }
+  } catch (error) {
+    // Keep the locally recovered member when the refresh endpoint is unavailable.
+  }
+
+  return storedMember
+}
+
 export function clearAuthenticatedSession({
   storage = localStorage,
   tokenKey = 'TOKEN',

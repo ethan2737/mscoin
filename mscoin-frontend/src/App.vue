@@ -367,7 +367,8 @@ import { ElMessage, ElMenu, ElSubMenu, ElMenuItem, ElDropdown, ElDropdownMenu, E
 import { Clock, Menu, ArrowDown, User, Coin, Switch, SwitchButton } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { runtimeContract } from './config/runtime-vue3'
-import { establishAuthenticatedSession, clearAuthenticatedSession } from './utils/auth-session'
+import { establishAuthenticatedSession, clearAuthenticatedSession, syncAuthenticatedMember } from './utils/auth-session'
+import { resolveTopNavByPath } from './pages-vue3/otc/route-helpers'
 
 // 使用 vue-i18n
 const { t: $t, locale } = useI18n()
@@ -452,11 +453,20 @@ const changelanguage = (name) => {
 }
 
 // 初始化
-const initialize = () => {
+const initialize = async () => {
   store?.commit('navigate', 'nav-index')
   store?.commit('recoveryMember')
   store?.commit('initLang')
   store?.commit('initLoginTimes')
+
+  await syncAuthenticatedMember({
+    axiosInstance: axios,
+    memberInfoUrl: runtimeContract.api.uc.memberInfo,
+    storage: localStorage,
+    tokenKey: runtimeContract.tokenKey,
+    memberKey: runtimeContract.memberKey,
+    store
+  })
 
   // 同步 i18n locale
   const currentLang = store?.state.lang || '简体中文'
@@ -543,34 +553,7 @@ const handleNavSelect = (index) => {
  * 解决快速点击导航时菜单状态与实际路由不同步的问题
  */
 const syncActiveNav = (path) => {
-  // 使用完整路径作为菜单索引，与 el-menu-item 的 index 匹配
-  const navMap = {
-    '/index': '/',
-    '/': '/',
-    '/exchange': '/exchange',
-    '/ctc': '/ctc',
-    '/otc': '/otc/trade/usdt',
-    '/otc/trade': '/otc/trade/usdt',
-    '/otc/trade/usdt': '/otc/trade/usdt',
-    '/swapindex': '/swapindex/1',
-    '/swapindex/1': '/swapindex/1',
-    '/swapindex/2': '/swapindex/2',
-    '/activity': '/activity',
-    '/lab': '/activity',
-    '/mining': '/mining',
-    '/crowdfunding': '/crowdfunding'
-  }
-
-  // 精确匹配或前缀匹配
-  for (const [routePath, menuPath] of Object.entries(navMap)) {
-    if (path === routePath || path.startsWith(routePath + '/') || path.startsWith(routePath + '?')) {
-      store?.commit('navigate', menuPath)
-      return
-    }
-  }
-
-  // 默认设置为首页
-  store?.commit('navigate', '/')
+  store?.commit('navigate', resolveTopNavByPath(path))
 }
 
 // 路由监听

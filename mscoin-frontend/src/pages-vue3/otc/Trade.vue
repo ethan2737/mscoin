@@ -3,22 +3,24 @@
     <section class="list-content">
       <el-tabs v-model="tabPage" @tab-change="handleTabChange">
         <el-tab-pane :label="$t('otc.buyin')" name="buy">
-          <div class="table-responsive list-table">
-            <el-table :data="advertiment.ask.rows" v-loading="loading" border>
+          <div class="table-responsive list-table otc-offer-board">
+            <el-table :data="advertiment.ask.rows" v-loading="loading" class="offer-table">
               <el-table-column :label="$t('otc.merchant')" min-width="180">
                 <template #default="{ row }">
-                  <div style="display: flex; align-items: center;">
+                  <div class="merchant-cell">
                     <div class="user-face user-avatar-public">
-                      <img v-if="row.avatar" :src="row.avatar" style="width: 45px; height: 45px; border-radius: 50%;" />
+                      <img v-if="row.avatar" :src="row.avatar" class="merchant-avatar-image" />
                       <span v-else class="user-avatar-in">{{ getAvatarInitial(row.memberName) }}</span>
                     </div>
-                    <div style="margin-left: 10px;">
-                      <el-button type="link" @click="goToCheckUser(row.memberName)" style="padding: 0;">
-                        {{ strpro(row.memberName) }}
+                    <div class="merchant-meta">
+                      <el-button type="link" class="merchant-link" @click="goToCheckUser(row.memberName)">
+                        {{ row.memberName }}
                       </el-button>
-                      <div v-if="row.level === 2" style="display: inline-block;">
-                        <img src="../../assets/images/business_v.png" style="height: 20px;" />
-                      </div>
+                      <img
+                        v-if="row.level === 2"
+                        src="../../assets/images/business_v.png"
+                        class="merchant-badge"
+                      />
                     </div>
                   </div>
                 </template>
@@ -40,7 +42,7 @@
                 <template #default="{ row }">
                   <el-button
                     :type="row.advertiseType === 0 ? 'danger' : 'success'"
-                    link
+                    class="trade-action"
                     @click="handleTrade(row)"
                   >
                     {{ row.advertiseType === 0 ? $t('otc.sell') : $t('otc.buy') }}
@@ -48,8 +50,8 @@
                 </template>
               </el-table-column>
             </el-table>
-            <div class="page_change" style="margin: 10px; overflow: hidden;">
-              <div style="float: right;">
+            <div class="page_change">
+              <div class="page_change_inner">
                 <el-pagination
                   v-if="advertiment.ask.totalElement > 0"
                   layout="prev, pager, next"
@@ -63,22 +65,24 @@
           </div>
         </el-tab-pane>
         <el-tab-pane :label="$t('otc.sellout')" name="sell">
-          <div class="table-responsive list-table">
-            <el-table :data="advertiment.bid.rows" v-loading="loading" border>
+          <div class="table-responsive list-table otc-offer-board">
+            <el-table :data="advertiment.bid.rows" v-loading="loading" class="offer-table">
               <el-table-column :label="$t('otc.merchant')" min-width="180">
                 <template #default="{ row }">
-                  <div style="display: flex; align-items: center;">
+                  <div class="merchant-cell">
                     <div class="user-face user-avatar-public">
-                      <img v-if="row.avatar" :src="row.avatar" style="width: 45px; height: 45px; border-radius: 50%;" />
+                      <img v-if="row.avatar" :src="row.avatar" class="merchant-avatar-image" />
                       <span v-else class="user-avatar-in">{{ getAvatarInitial(row.memberName) }}</span>
                     </div>
-                    <div style="margin-left: 10px;">
-                      <el-button type="link" @click="goToCheckUser(row.memberName)" style="padding: 0;">
-                        {{ strpro(row.memberName) }}
+                    <div class="merchant-meta">
+                      <el-button type="link" class="merchant-link" @click="goToCheckUser(row.memberName)">
+                        {{ row.memberName }}
                       </el-button>
-                      <div v-if="row.level === 2" style="display: inline-block;">
-                        <img src="../../assets/images/business_v.png" style="height: 20px;" />
-                      </div>
+                      <img
+                        v-if="row.level === 2"
+                        src="../../assets/images/business_v.png"
+                        class="merchant-badge"
+                      />
                     </div>
                   </div>
                 </template>
@@ -100,7 +104,7 @@
                 <template #default="{ row }">
                   <el-button
                     :type="row.advertiseType === 0 ? 'danger' : 'success'"
-                    link
+                    class="trade-action"
                     @click="handleTrade(row)"
                   >
                     {{ row.advertiseType === 0 ? $t('otc.sell') : $t('otc.buy') }}
@@ -108,8 +112,8 @@
                 </template>
               </el-table-column>
             </el-table>
-            <div class="page_change" style="margin: 10px; overflow: hidden;">
-              <div style="float: right;">
+            <div class="page_change">
+              <div class="page_change_inner">
                 <el-pagination
                   v-if="advertiment.bid.totalElement > 0"
                   layout="prev, pager, next"
@@ -135,9 +139,11 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElTable, ElTableColumn, ElTabs, ElTabPane, ElButton, ElPagination } from 'element-plus'
 import axios from 'axios'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { buildOtcCheckUserPath, buildOtcTradeInfoPath } from './route-helpers'
 
 const store = useStore()
+const route = useRoute()
 const router = useRouter()
 
 const host = ''
@@ -176,30 +182,16 @@ const advertiment = reactive({
 
 const isLogin = computed(() => store.getters.isLogin)
 const member = computed(() => store.getters.member)
-const coin = computed(() => router.currentRoute.value.params.pathMatch)
+const coin = computed(() => route.params.unit)
 const lang = computed(() => store.state.lang)
 
 const getAvatarInitial = (name) => {
   return (name + '').replace(/^\s+|\s+$/g, '').slice(0, 1)
 }
 
-const strpro = (str) => {
-  let newStr = str
-  str = str.slice(1)
-  const re = /[\D\d]*/g
-  const str2 = str.replace(re, function (s) {
-    let result = ''
-    for (let i = 0; i < s.length; i++) {
-      result += '*'
-    }
-    return result
-  })
-  return newStr.slice(0, 1) + str2
-}
-
 const goToCheckUser = (memberName) => {
   if (isLogin.value) {
-    router.push('/checkuser?id=' + memberName)
+    router.push(buildOtcCheckUserPath(memberName))
   } else {
     router.push('/login')
   }
@@ -214,7 +206,7 @@ const handleTrade = (row) => {
       router.push('/uc/safe')
     }, 2000)
   } else {
-    router.push('/otc/tradeInfo?tradeId=' + row.advertiseId)
+    router.push(buildOtcTradeInfoPath(row.advertiseId))
   }
 }
 
@@ -289,68 +281,170 @@ onMounted(() => {
   padding-right: 0;
 
   .list-content {
-    color: #fff;
+    color: #dfe7f5;
 
     :deep(.el-tabs) {
       .el-tabs__header {
+        margin-bottom: 18px;
         border-bottom: none;
 
         .el-tabs__nav-wrap::after {
           display: none;
         }
 
+        .el-tabs__nav-wrap {
+          padding: 0 18px;
+        }
+
         .el-tabs__item {
+          min-height: 42px;
+          border-radius: 999px;
+          background: transparent;
+          color: #8d9bb0;
+          font-size: 15px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+
           &:hover {
             color: #f0ac19;
+            background: transparent;
           }
 
           &.is-active {
             color: #f0ac19;
+            background: transparent;
           }
         }
 
         .el-tabs__nav {
+          gap: 12px;
+
           .el-tabs__active-bar {
             background: #f0ac19;
+            height: 3px;
+            border-radius: 999px;
           }
         }
       }
 
       .el-tabs__content {
-        .el-tabpane {
-          .el-table {
-            background: transparent;
-
-            th.el-table__cell {
-              background: #27313e;
-              color: #fff;
-            }
-
-            td.el-table__cell {
-              background: transparent;
-              color: #fff;
-            }
-
-            .el-button--link {
-              color: #f0a70a;
-            }
-          }
-
-          .page_change {
-            margin: 10px;
-            overflow: hidden;
-          }
-        }
+        overflow: visible;
       }
     }
   }
 }
 
-.user-face.user-avatar-public {
-  background: #fff;
+.otc-offer-board {
+  padding: 16px 18px 20px;
+  border: 1px solid rgba(96, 118, 145, 0.22);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(34, 45, 60, 0.96) 0%, rgba(21, 29, 40, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 18px 40px rgba(5, 10, 18, 0.22);
+
+  :deep(.el-table) {
+    --el-table-tr-bg-color: transparent;
+    --el-table-bg-color: transparent;
+    --el-bg-color: transparent;
+    --el-fill-color-lighter: rgba(255, 255, 255, 0.02);
+    --el-table-border-color: rgba(92, 112, 138, 0.18);
+    --el-table-row-hover-bg-color: rgba(240, 172, 25, 0.08);
+    color: #f4f7fb;
+    background: transparent;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  :deep(.el-table__inner-wrapper),
+  :deep(.el-table__header-wrapper),
+  :deep(.el-table__body-wrapper),
+  :deep(.el-table__empty-block) {
+    background: transparent;
+  }
+
+  :deep(th.el-table__cell) {
+    background: rgba(255, 255, 255, 0.04);
+    color: #8d9bb0;
+    border-bottom-color: rgba(92, 112, 138, 0.24);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  :deep(td.el-table__cell) {
+    background: transparent;
+    color: #f4f7fb;
+    border-bottom-color: rgba(92, 112, 138, 0.14);
+  }
+
+  :deep(.el-table__row:last-child td.el-table__cell) {
+    border-bottom: none;
+  }
+}
+
+.merchant-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.merchant-avatar-image {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  height: 45px;
-  width: 45px;
+  object-fit: cover;
+}
+
+.merchant-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.merchant-link {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  color: #f7fbff;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.merchant-link:hover {
+  color: #f0ac19;
+}
+
+.merchant-badge {
+  height: 14px;
+}
+
+.trade-action {
+  min-width: 72px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.page_change {
+  margin-top: 18px;
+}
+
+.page_change_inner {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.user-face.user-avatar-public {
+  background: linear-gradient(180deg, #f8fbff 0%, #dbe5f4 100%);
+  border-radius: 50%;
+  height: 32px;
+  width: 32px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -361,12 +455,13 @@ onMounted(() => {
   .user-avatar-in {
     background: #f0a70a;
     border-radius: 50%;
-    height: 35px;
-    width: 35px;
+    height: 24px;
+    width: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
+    font-size: 12px;
   }
 }
 </style>
@@ -378,6 +473,26 @@ onMounted(() => {
       th.el-table__cell,
       td.el-table__cell {
         text-align: center;
+      }
+    }
+
+    .page_change {
+      .el-pagination {
+        --el-pagination-bg-color: transparent;
+        --el-pagination-button-color: #dfe7f5;
+        --el-pagination-hover-color: #f0ac19;
+      }
+
+      .btn-prev,
+      .btn-next,
+      .number {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 10px;
+      }
+
+      .number.is-active {
+        background: rgba(240, 172, 25, 0.16);
+        color: #f0ac19;
       }
     }
   }

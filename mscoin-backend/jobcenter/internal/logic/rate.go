@@ -55,6 +55,7 @@ func (r *Rate) CnyUsdRate() {
 		r.wg.Done()
 		return
 	}
+	if len(result.Data) == 0 { log.Println("exchange rate data is empty"); r.wg.Done(); return }
 	cny := result.Data[0].UsdCny
 	//存入redis
 	r.ch.Set("USDT::CNY::RATE", cny)

@@ -30,13 +30,21 @@ async function readJsonBody(req) {
   }
 }
 
-const otcCoins = [{ unit: 'USDT' }]
+const otcCoins = [{
+  id: 1,
+  unit: 'USDT',
+  marketPrice: 7.12
+}]
 
 const otcAdverts = [
   {
     advertiseId: 9001,
     advertiseType: 1,
+    coinId: 1,
+    otcCoinId: 1,
+    unit: 'USDT',
     memberName: 'merchant-alpha',
+    username: 'merchant-alpha',
     avatar: '',
     level: 2,
     transactions: 128,
@@ -44,12 +52,22 @@ const otcAdverts = [
     remainAmount: 5000,
     minLimit: 100,
     maxLimit: 5000,
-    price: 7.15
+    price: 7.15,
+    number: 5000,
+    timeLimit: 30,
+    remark: '工作时间内优先处理，支持银行卡与支付宝。',
+    emailVerified: 1,
+    phoneVerified: 1,
+    idCardVerified: 1
   },
   {
     advertiseId: 9002,
     advertiseType: 0,
+    coinId: 1,
+    otcCoinId: 1,
+    unit: 'USDT',
     memberName: 'merchant-beta',
+    username: 'merchant-beta',
     avatar: '',
     level: 2,
     transactions: 86,
@@ -57,9 +75,36 @@ const otcAdverts = [
     remainAmount: 3200,
     minLimit: 200,
     maxLimit: 3200,
-    price: 7.08
+    price: 7.08,
+    number: 3200,
+    timeLimit: 20,
+    remark: '仅支持实名收付款，夜间回复略慢。',
+    emailVerified: 1,
+    phoneVerified: 1,
+    idCardVerified: 1
   }
 ]
+
+const otcMerchantProfiles = {
+  'merchant-alpha': {
+    username: 'merchant-alpha',
+    avatar: '',
+    emailVerified: 1,
+    phoneVerified: 1,
+    realVerified: 1,
+    createTime: '2026-03-01 10:00:00',
+    transactions: 128
+  },
+  'merchant-beta': {
+    username: 'merchant-beta',
+    avatar: '',
+    emailVerified: 1,
+    phoneVerified: 1,
+    realVerified: 1,
+    createTime: '2026-03-15 18:30:00',
+    transactions: 86
+  }
+}
 
 const miningItems = [
   {
@@ -224,11 +269,89 @@ const createCtcOrder = (state, body = {}) => {
   return order
 }
 
+const getOtcAdvertById = (state, advertiseId) => state.otc.adverts.find((item) => item.advertiseId === Number(advertiseId))
+
+const buildOtcPreOrderDetail = (advert) => {
+  if (!advert) {
+    return null
+  }
+
+  return {
+    ...advert,
+    username: advert.username || advert.memberName,
+    number: advert.number || advert.remainAmount
+  }
+}
+
+const buildOtcOrderDetail = (order) => {
+  if (!order) {
+    return null
+  }
+
+  return {
+    ...order,
+    orderId: order.orderSn,
+    otherSide: order.otherSide,
+    myId: 20001,
+    hisId: order.otherSide === 'merchant-alpha' ? 30001 : 30002,
+    memberMobile: '13800000000',
+    payInfo: {
+      realName: '本地测试用户',
+      bankInfo: {
+        bank: '招商银行',
+        branch: '深圳科技园支行',
+        cardNo: '6222028800012345678'
+      },
+      alipay: {
+        aliNo: 'merchant-alpha@mscoin.test',
+        qrCodeUrl: '/src/assets/images/lang-zh.png'
+      },
+      wechatPay: {
+        wechat: 'merchant-alpha-wechat',
+        qrWeCodeUrl: '/src/assets/images/lang-en.png'
+      }
+    }
+  }
+}
+
+const createOtcOrder = (state, body = {}, direction = 'buy') => {
+  const advert = getOtcAdvertById(state, body.id)
+  if (!advert) {
+    return null
+  }
+
+  const orderSn = `OTC${String(state.otc.nextOrderId++).padStart(8, '0')}`
+  const order = {
+    id: state.otc.nextOrderId,
+    orderSn,
+    createTime: new Date().toISOString(),
+    payTime: new Date().toISOString(),
+    status: 1,
+    type: direction === 'buy' ? 0 : 1,
+    amount: Number(body.amount || 0),
+    money: Number(body.money || 0),
+    price: Number(body.price || advert.price),
+    unit: advert.unit,
+    commission: 0,
+    timeLimit: advert.timeLimit,
+    otherSide: advert.memberName,
+    name: advert.memberName
+  }
+
+  state.otc.orders.unshift(order)
+  return order
+}
+
 export function createLocalAcceptanceMockState() {
   return {
     favorSymbols: new Set(),
     security: createMockSecurityProfile(),
     account: createMockAccountProfile(),
+    business: {
+      certifiedBusinessStatus: 0,
+      detail: '',
+      reason: ''
+    },
     wallet: {
       unit: 'USDT',
       balance: 1250.32,
@@ -241,6 +364,12 @@ export function createLocalAcceptanceMockState() {
         sell: 7.11
       },
       nextOrderId: 1001,
+      orders: []
+    },
+    otc: {
+      coins: otcCoins.map((item) => ({ ...item })),
+      adverts: otcAdverts.map((item) => ({ ...item })),
+      nextOrderId: 5001,
       orders: []
     },
     homepageAdvertisements: [
@@ -290,6 +419,14 @@ function ensureLocalAcceptanceMockStateShape(state) {
     }
   }
 
+  if (!state.business) {
+    state.business = {
+      certifiedBusinessStatus: 0,
+      detail: '',
+      reason: ''
+    }
+  }
+
   if (!state.ctc) {
     state.ctc = {
       quote: {
@@ -299,6 +436,31 @@ function ensureLocalAcceptanceMockStateShape(state) {
       nextOrderId: 1001,
       orders: []
     }
+  }
+
+  if (!state.otc) {
+    state.otc = {
+      coins: otcCoins.map((item) => ({ ...item })),
+      adverts: otcAdverts.map((item) => ({ ...item })),
+      nextOrderId: 5001,
+      orders: []
+    }
+  }
+
+  if (!Array.isArray(state.otc.coins)) {
+    state.otc.coins = otcCoins.map((item) => ({ ...item }))
+  }
+
+  if (!Array.isArray(state.otc.adverts)) {
+    state.otc.adverts = otcAdverts.map((item) => ({ ...item }))
+  }
+
+  if (!Array.isArray(state.otc.orders)) {
+    state.otc.orders = []
+  }
+
+  if (typeof state.otc.nextOrderId !== 'number') {
+    state.otc.nextOrderId = 5001
   }
 
   if (!Array.isArray(state.ctc.orders)) {
@@ -338,8 +500,32 @@ export function resolveLocalAcceptanceMock({ method, path, body = {} }, state) {
     return ok(state.security)
   }
 
+  if (method === 'POST' && path === '/uc/member/my-info') {
+    return ok({
+      ...state.security,
+      ...state.account,
+      id: 20001,
+      username: state.security.username,
+      mobilePhone: state.security.mobilePhone
+    })
+  }
+
   if (method === 'POST' && path === '/uc/approve/account/setting') {
     return ok(state.account)
+  }
+
+  if (method === 'GET' && path === '/uc/approve/business/setting') {
+    return ok(state.business)
+  }
+
+  if (method === 'GET' && path === '/uc/approve/business-auth-deposit/list') {
+    return ok([
+      {
+        id: 1,
+        amount: 500,
+        coin: { unit: 'USDT' }
+      }
+    ])
   }
 
   if (method === 'POST' && path === '/uc/asset/wallet/USDT') {
@@ -370,6 +556,19 @@ export function resolveLocalAcceptanceMock({ method, path, body = {} }, state) {
     state.security.realName = body.realName || state.security.realName
     state.account.realName = state.security.realName
     return { code: 0, message: '实名认证提交成功', data: null }
+  }
+
+  if (method === 'POST' && path === '/uc/approve/certified/business/apply') {
+    state.business.certifiedBusinessStatus = 2
+    state.business.detail = '本地验收环境自动审核通过'
+    state.business.reason = ''
+    return { code: 0, message: '商家认证申请已通过', data: null }
+  }
+
+  if (method === 'POST' && path === '/uc/approve/cancel/business') {
+    state.business.certifiedBusinessStatus = 5
+    state.business.detail = body.detail || '用户主动撤销商家认证'
+    return { code: 0, message: '商家撤销申请已提交', data: null }
   }
 
   if (method === 'POST' && path === '/uc/approve/bind/phone') {
@@ -475,6 +674,120 @@ export function resolveLocalAcceptanceMock({ method, path, body = {} }, state) {
     return ok(order)
   }
 
+  if (method === 'POST' && (path === '/otc/coin' || path === '/otc/coin/all')) {
+    return ok(state.otc.coins)
+  }
+
+  if (method === 'POST' && (path === '/otc/advertise/list' || path === '/otc/advertise/page-by-unit')) {
+    const advertiseType = Number(body.advertiseType)
+    const context = state.otc.adverts.filter((item) => item.advertiseType === advertiseType)
+    return ok({ context, totalElement: context.length })
+  }
+
+  if (method === 'POST' && path === '/otc/order/pre') {
+    const advert = buildOtcPreOrderDetail(getOtcAdvertById(state, body.id))
+    if (!advert) {
+      return { code: 1, message: '广告不存在', data: null }
+    }
+
+    return ok(advert)
+  }
+
+  if (method === 'POST' && path === '/otc/order/buy') {
+    const order = createOtcOrder(state, body, 'buy')
+    if (!order) {
+      return { code: 1, message: '广告不存在', data: null }
+    }
+
+    return { code: 0, message: '下单成功', data: order.orderSn }
+  }
+
+  if (method === 'POST' && path === '/otc/order/sell') {
+    const order = createOtcOrder(state, body, 'sell')
+    if (!order) {
+      return { code: 1, message: '广告不存在', data: null }
+    }
+
+    return { code: 0, message: '下单成功', data: order.orderSn }
+  }
+
+  if (method === 'POST' && path === '/otc/order/detail') {
+    const order = state.otc.orders.find((item) => item.orderSn === body.orderSn)
+    if (!order) {
+      return { code: 1, message: '订单不存在', data: null }
+    }
+
+    return ok(buildOtcOrderDetail(order))
+  }
+
+  if (method === 'POST' && path === '/otc/order/self') {
+    const status = Number(body.status)
+    const filteredOrders = state.otc.orders.filter((item) => item.status === status || Number.isNaN(status))
+    return ok({
+      content: filteredOrders,
+      totalPages: filteredOrders.length > 0 ? 1 : 0,
+      totalElements: filteredOrders.length
+    })
+  }
+
+  if (method === 'POST' && path === '/otc/order/pay') {
+    const order = state.otc.orders.find((item) => item.orderSn === body.orderSn)
+    if (!order) {
+      return { code: 1, message: '订单不存在', data: null }
+    }
+
+    order.status = 2
+    order.payTime = new Date().toISOString()
+    return { code: 0, message: '已标记付款', data: null }
+  }
+
+  if (method === 'POST' && path === '/otc/order/cancel') {
+    const order = state.otc.orders.find((item) => item.orderSn === body.orderSn)
+    if (!order) {
+      return { code: 1, message: '订单不存在', data: null }
+    }
+
+    order.status = 0
+    return { code: 0, message: '订单已取消', data: null }
+  }
+
+  if (method === 'POST' && path === '/otc/order/appeal') {
+    const order = state.otc.orders.find((item) => item.orderSn === body.orderSn)
+    if (!order) {
+      return { code: 1, message: '订单不存在', data: null }
+    }
+
+    order.status = 4
+    return { code: 0, message: '申诉已提交', data: null }
+  }
+
+  if (method === 'POST' && path === '/otc/order/release') {
+    const order = state.otc.orders.find((item) => item.orderSn === body.orderSn)
+    if (!order) {
+      return { code: 1, message: '订单不存在', data: null }
+    }
+
+    order.status = 3
+    return { code: 0, message: '订单已放行', data: null }
+  }
+
+  if (method === 'POST' && path === '/otc/advertise/member') {
+    const profile = otcMerchantProfiles[body.name]
+    if (!profile) {
+      return { code: 1, message: '商家不存在', data: null }
+    }
+
+    return ok({
+      ...profile,
+      buy: state.otc.adverts.filter((item) => item.memberName === body.name && item.advertiseType === 0),
+      sell: state.otc.adverts.filter((item) => item.memberName === body.name && item.advertiseType === 1)
+    })
+  }
+
+  if (method === 'POST' && path === '/chat/getHistoryMessage') {
+    return { totalPage: 0, data: [] }
+  }
+
   if (method === 'POST' && path === '/exchange/favor/find') {
     return ok(Array.from(state.favorSymbols).map((symbol) => ({ symbol })))
   }
@@ -506,9 +819,26 @@ export function localAcceptanceMockPlugin() {
         const method = (req.method || 'GET').toUpperCase()
         const path = pathOf(req)
         const requestBodyNeeded = method === 'POST' && (
+          path === '/otc/coin' ||
+          path === '/otc/coin/all' ||
+          path === '/otc/advertise/list' ||
+          path === '/otc/advertise/page-by-unit' ||
+          path === '/otc/order/pre' ||
+          path === '/otc/order/buy' ||
+          path === '/otc/order/sell' ||
+          path === '/otc/order/detail' ||
+          path === '/otc/order/self' ||
+          path === '/otc/order/pay' ||
+          path === '/otc/order/cancel' ||
+          path === '/otc/order/appeal' ||
+          path === '/otc/order/release' ||
+          path === '/otc/advertise/member' ||
+          path === '/chat/getHistoryMessage' ||
           path === '/exchange/favor/add' ||
           path === '/exchange/favor/delete' ||
           path === '/uc/approve/real/name' ||
+          path === '/uc/approve/certified/business/apply' ||
+          path === '/uc/approve/cancel/business' ||
           path === '/uc/approve/bind/phone' ||
           path === '/uc/approve/update/password' ||
           path === '/uc/approve/update/transaction/password' ||

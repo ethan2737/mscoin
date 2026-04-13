@@ -23,6 +23,16 @@ test('login flow establishes authenticated session before redirecting to the pro
   )
 })
 
+test('app shell refreshes cached member profile from member-info after recovering local session', () => {
+  const helperSource = readSource('../../../src/utils/auth-session.js')
+  const appSource = readSource('../../../src/App.vue')
+
+  assert.match(helperSource, /export async function syncAuthenticatedMember/)
+  assert.match(helperSource, /Keep the locally recovered member when the refresh endpoint is unavailable/)
+  assert.match(appSource, /await syncAuthenticatedMember\(/)
+  assert.match(appSource, /memberInfoUrl: runtimeContract\.api\.uc\.memberInfo/)
+})
+
 test('logout flow clears cached auth state and redirects protected pages back through login', () => {
   const helperSource = readSource('../../../src/utils/auth-session.js')
   const appSource = readSource('../../../src/App.vue')

@@ -137,6 +137,81 @@ test('ctc dependency mocks expose verified security state and account bindings',
   assert.equal(wallet.data.balance, 1250.32)
 })
 
+test('member info and merchant certification mocks expose otc entry prerequisites', async () => {
+  const { createLocalAcceptanceMockState, resolveLocalAcceptanceMock } = await import(mockModuleUrl)
+
+  const state = createLocalAcceptanceMockState()
+
+  const memberInfo = resolveLocalAcceptanceMock({
+    method: 'POST',
+    path: '/uc/member/my-info'
+  }, state)
+  const businessSetting = resolveLocalAcceptanceMock({
+    method: 'GET',
+    path: '/uc/approve/business/setting'
+  }, state)
+  const depositList = resolveLocalAcceptanceMock({
+    method: 'GET',
+    path: '/uc/approve/business-auth-deposit/list'
+  }, state)
+
+  assert.equal(memberInfo.code, 0)
+  assert.equal(memberInfo.data.realName, '本地测试用户')
+  assert.equal(memberInfo.data.realVerified, 1)
+  assert.equal(businessSetting.code, 0)
+  assert.equal(businessSetting.data.certifiedBusinessStatus, 0)
+  assert.equal(depositList.code, 0)
+  assert.equal(depositList.data[0].coin.unit, 'USDT')
+})
+
+test('otc mocks support trade list, pre-order, order creation and detail lookup', async () => {
+  const { createLocalAcceptanceMockState, resolveLocalAcceptanceMock } = await import(mockModuleUrl)
+
+  const state = createLocalAcceptanceMockState()
+  const advertList = resolveLocalAcceptanceMock({
+    method: 'POST',
+    path: '/otc/advertise/list',
+    body: { advertiseType: 1 }
+  }, state)
+
+  assert.equal(advertList.code, 0)
+  assert.equal(advertList.data.context.length > 0, true)
+
+  const preOrder = resolveLocalAcceptanceMock({
+    method: 'POST',
+    path: '/otc/order/pre',
+    body: { id: advertList.data.context[0].advertiseId }
+  }, state)
+
+  assert.equal(preOrder.code, 0)
+  assert.equal(preOrder.data.unit, 'USDT')
+
+  const created = resolveLocalAcceptanceMock({
+    method: 'POST',
+    path: '/otc/order/buy',
+    body: {
+      id: preOrder.data.advertiseId,
+      coinId: preOrder.data.coinId,
+      price: preOrder.data.price,
+      money: 200,
+      amount: 28.16901408
+    }
+  }, state)
+
+  assert.equal(created.code, 0)
+  assert.equal(created.data.startsWith('OTC'), true)
+
+  const detail = resolveLocalAcceptanceMock({
+    method: 'POST',
+    path: '/otc/order/detail',
+    body: { orderSn: created.data }
+  }, state)
+
+  assert.equal(detail.code, 0)
+  assert.equal(detail.data.orderSn, created.data)
+  assert.equal(detail.data.payInfo.bankInfo.bank, '招商银行')
+})
+
 test('account and safe mocks can persist development changes', async () => {
   const { createLocalAcceptanceMockState, resolveLocalAcceptanceMock } = await import(mockModuleUrl)
 

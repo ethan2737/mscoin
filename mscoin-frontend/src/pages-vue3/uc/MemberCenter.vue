@@ -271,15 +271,18 @@
               </el-menu-item>
             </el-sub-menu>
 
-            <el-sub-menu index="4" v-if="false">
+            <el-sub-menu index="4">
               <template #title>
                 <span class="isclick"></span>
                 <span class="content">{{ otcTitle }}</span>
               </template>
               <el-menu-item index="4-1">
-                <router-link to="/uc/ad">{{ myadTitle }}</router-link>
+                <router-link to="/uc/ident/business">商家认证</router-link>
               </el-menu-item>
               <el-menu-item index="4-2">
+                <router-link to="/uc/ad">{{ myadTitle }}</router-link>
+              </el-menu-item>
+              <el-menu-item index="4-3">
                 <router-link to="/uc/order">{{ myorderTitle }}</router-link>
               </el-menu-item>
             </el-sub-menu>
@@ -394,6 +397,22 @@
           </el-menu-item>
         </el-sub-menu>
 
+        <el-sub-menu index="4">
+          <template #title>
+            <span class="isclick"></span>
+            <span class="content">{{ otcTitle }}</span>
+          </template>
+          <el-menu-item index="4-1">
+            <router-link to="/uc/ident/business">商家认证</router-link>
+          </el-menu-item>
+          <el-menu-item index="4-2">
+            <router-link to="/uc/ad">{{ myadTitle }}</router-link>
+          </el-menu-item>
+          <el-menu-item index="4-3">
+            <router-link to="/uc/order">{{ myorderTitle }}</router-link>
+          </el-menu-item>
+        </el-sub-menu>
+
         <el-sub-menu index="5">
           <template #title>
             <span class="isclick"></span>
@@ -496,11 +515,12 @@ const routeArr = reactive({
   '/uc/contract/entrust/current': '7-1',
   '/uc/contract/entrust/history': '7-2',
   '/uc/crowdfunding/list': '8-1',
-  '/uc/ad': '4-1',
-  '/uc/order': '4-2',
+  '/uc/ident/business': '4-1',
+  '/uc/ad': '4-2',
+  '/uc/order': '4-3',
   '/uc/withdraw/address': '2-4',
-  '/uc/ad/create': '4-3',
-  '/uc/ad/update': '4-4',
+  '/uc/ad/create': '4-2',
+  '/uc/ad/update': '4-2',
   '/uc/innovation/myorders': '5-1',
   '/uc/innovation/myminings': '5-2'
 })
@@ -534,7 +554,9 @@ const link = (code) => {
     '2-1': '/uc/money',
     '3-1': '/uc/entrust/current',
     '7-1': '/uc/contract/entrust/current',
-    '4-1': '/uc/ad',
+    '4-1': '/uc/ident/business',
+    '4-2': '/uc/ad',
+    '4-3': '/uc/order',
     '5-1': '/uc/innovation/myorders',
     '5-2': '/uc/innovation/myminings',
     '8-1': '/uc/crowdfunding/list'
