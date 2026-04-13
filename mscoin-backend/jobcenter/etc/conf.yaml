@@ -28,3 +28,18 @@ MarketRpc:
     Key: market.rpc
 Bitcoin:
   Address: http://127.0.0.1:18332
+SwapKline:
+  ApiKey: "d5a748c6-214d-4fae-bef3-d32368ecbbe8"
+  SecretKey: "004148A48D9335E147963C6F5B9C4E63"
+  Pass: "Mszlu!@#$56789"
+  Host: "https://www.okx.com"
+  Proxy: "http://localhost:10809"
+SwapLiquidation:
+  ApiKey: "d5a748c6-214d-4fae-bef3-d32368ecbbe8"
+  SecretKey: "004148A48D9335E147963C6F5B9C4E63"
+  Pass: "Mszlu!@#$56789"
+  Host: "https://www.okx.com"
+  Proxy: "http://localhost:10809"
+  LiquidationRatio: 0.8
+Mysql:
+  DataSource: "root:root@tcp(localhost:33306)/mscoin?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai"

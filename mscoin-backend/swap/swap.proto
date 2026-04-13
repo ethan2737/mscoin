@@ -1,0 +1,238 @@
+syntax = "proto3";
+
+package swap;
+
+option go_package = "./swap";
+
+// 获取合约信息请求
+message GetContractInfoRequest {
+  int32 id = 1;
+}
+
+// 合约信息响应
+message ContractInfoResponse {
+  int32 id = 1;
+  string symbol = 2;
+  int32 contract_type = 3;
+  int32 price_precision = 4;
+  int32 quantity_precision = 5;
+  double share_number = 6;
+  double maker_fee = 7;
+  double taker_fee = 8;
+  int32 min_leverage = 9;
+  int32 max_leverage = 10;
+  int32 status = 11;
+}
+
+// 获取合约列表请求
+message GetContractListRequest {
+}
+
+// 合约列表响应
+message ContractListResponse {
+  repeated ContractInfoResponse list = 1;
+}
+
+// 获取持仓请求
+message GetPositionRequest {
+  int64 member_id = 1;
+  int32 contract_coin_id = 2;
+}
+
+// 持仓信息
+message PositionInfo {
+  int64 id = 1;
+  int64 member_id = 2;
+  int32 contract_coin_id = 3;
+  int32 direction = 4;
+  int32 leverage = 5;
+  double size = 6;
+  double entry_price = 7;
+  double margin = 8;
+  double unrealized_pnl = 9;
+  double liquidation_price = 10;
+}
+
+// 持仓响应
+message PositionResponse {
+  repeated PositionInfo list = 1;
+}
+
+// 获取当前委托请求
+message GetCurrentOrderRequest {
+  int64 member_id = 1;
+  int32 contract_coin_id = 2;
+}
+
+// 委托信息
+message OrderInfo {
+  int64 id = 1;
+  int64 member_id = 2;
+  int32 contract_coin_id = 3;
+  int32 entrust_type = 4;
+  int32 type = 5;
+  int32 direction = 6;
+  int32 leverage = 7;
+  double price = 8;
+  double amount = 9;
+  double deal_amount = 10;
+  int32 status = 11;
+  double deal_amount_usdt = 12;
+  double fee = 13;
+  string fee_unit = 14;
+  double profit = 15;
+}
+
+// 当前委托响应
+message CurrentOrderResponse {
+  repeated OrderInfo list = 1;
+}
+
+// 获取历史委托请求
+message GetHistoryOrderRequest {
+  int64 member_id = 1;
+  int32 contract_coin_id = 2;
+  int64 start_time = 3;
+  int64 end_time = 4;
+}
+
+// 历史委托响应
+message HistoryOrderResponse {
+  repeated OrderInfo list = 1;
+}
+
+// 获取杠杆设置请求
+message GetLeverageRequest {
+  int64 member_id = 1;
+  int32 contract_coin_id = 2;
+}
+
+// 杠杆响应
+message LeverageResponse {
+  int32 leverage = 1;
+}
+
+// 添加委托请求
+message AddOrderRequest {
+  int64 member_id = 1;
+  int32 contract_coin_id = 2;
+  int32 entrust_type = 3;
+  int32 type = 4;
+  int32 direction = 5;
+  int32 leverage = 6;
+  double price = 7;
+  double amount = 8;
+}
+
+// 添加委托响应
+message AddOrderResponse {
+  int64 order_id = 1;
+}
+
+// 撤销委托请求
+message CancelOrderRequest {
+  int64 order_id = 1;
+  int64 member_id = 2;
+}
+
+// 撤销委托响应
+message CancelOrderResponse {
+  bool success = 1;
+}
+
+// 闪电平仓请求
+message QuickCloseRequest {
+  int64 position_id = 1;
+  int64 member_id = 2;
+  int32 contract_coin_id = 3;
+  double price = 4;
+}
+
+// 闪电平仓响应
+message QuickCloseResponse {
+  bool success = 1;
+}
+
+// 获取钱包请求
+message GetWalletRequest {
+  int64 member_id = 1;
+  string unit = 2;
+}
+
+// 钱包信息
+message WalletInfo {
+  int64 id = 1;
+  int64 member_id = 2;
+  string unit = 3;
+  double balance = 4;
+  double frozen = 5;
+  double main_balance = 6;
+}
+
+// 钱包响应
+message GetWalletResponse {
+  WalletInfo wallet = 1;
+}
+
+// 资金划转请求
+message TransferRequest {
+  int64 member_id = 1;
+  string unit = 2;
+  double amount = 3;
+  int32 direction = 4;
+}
+
+// 资金划转响应
+message TransferResponse {
+  bool success = 1;
+}
+
+// 获取合约账单请求
+message GetTransactionsRequest {
+  int64 member_id = 1;
+  string unit = 2;
+  int64 start_time = 3;
+  int64 end_time = 4;
+  int32 type = 5;
+}
+
+// 账单信息
+message TransactionInfo {
+  int64 id = 1;
+  int64 member_id = 2;
+  string unit = 3;
+  int32 type = 4;
+  double amount = 5;
+  double balance = 6;
+  int64 related_order_id = 7;
+  string remark = 8;
+}
+
+// 合约账单响应
+message GetTransactionsResponse {
+  repeated TransactionInfo list = 1;
+}
+
+// 合约信息服务
+service SwapService {
+  rpc GetContractInfo(GetContractInfoRequest) returns (ContractInfoResponse);
+  rpc GetContractList(GetContractListRequest) returns (ContractListResponse);
+  rpc GetPosition(GetPositionRequest) returns (PositionResponse);
+  rpc GetCurrentOrder(GetCurrentOrderRequest) returns (CurrentOrderResponse);
+  rpc GetHistoryOrder(GetHistoryOrderRequest) returns (HistoryOrderResponse);
+  rpc GetLeverage(GetLeverageRequest) returns (LeverageResponse);
+}
+
+// 委托下单服务
+service OrderEntrustService {
+  rpc AddOrder(AddOrderRequest) returns (AddOrderResponse);
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+  rpc QuickClose(QuickCloseRequest) returns (QuickCloseResponse);
+}
+
+// 资产服务
+service ContractWalletService {
+  rpc GetWallet(GetWalletRequest) returns (GetWalletResponse);
+  rpc Transfer(TransferRequest) returns (TransferResponse);
+  rpc GetTransactions(GetTransactionsRequest) returns (GetTransactionsResponse);
+}

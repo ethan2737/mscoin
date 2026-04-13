@@ -34,6 +34,31 @@ func (k *KlineDao) DeleteGtTime(ctx context.Context, time int64, symbol string, 
 	return nil
 }
 
+func (k *KlineDao) SaveBatchSwap(ctx context.Context, data []*model.SwapKline, symbol, period string) error {
+	collection := k.db.Collection("swap_klines")
+	ds := make([]interface{}, len(data))
+	for i, v := range data {
+		v.Period = period
+		ds[i] = v
+	}
+	_, err := collection.InsertMany(ctx, ds)
+	return err
+}
+
+func (k *KlineDao) DeleteGtTimeSwap(ctx context.Context, time int64, symbol string, period string) error {
+	collection := k.db.Collection("swap_klines")
+	deleteResult, err := collection.DeleteMany(ctx, bson.D{
+		{"time", bson.D{{"$gte", time}}},
+		{"period", period},
+		{"symbol", symbol},
+	})
+	if err != nil {
+		return err
+	}
+	log.Printf("swap %s %s 删除了%d条数据 \n", symbol, period, deleteResult.DeletedCount)
+	return nil
+}
+
 func NewKlineDao(db *mongo.Database) *KlineDao {
 	return &KlineDao{
 		db: db,

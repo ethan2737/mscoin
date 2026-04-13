@@ -1,13 +1,15 @@
-go 1.20
+go 1.25.6
 
 use (
+	./exchange
+	./exchange-api
 	./grpc-common
 	./jobcenter
 	./market
 	./market-api
 	./mscoin-common
+	./swap
+	./swap-api
 	./ucenter
 	./ucenter-api
-	./exchange-api
-	./exchange
 )

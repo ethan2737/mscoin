@@ -33,6 +33,26 @@ func (d *KlineDomain) SaveBatch(data [][]string, symbol string, period string) {
 	}
 }
 
+func (d *KlineDomain) SaveSwapKline(data [][]string, symbol string, period string) {
+	if len(data) == 0 {
+		return
+	}
+
+	klines := make([]*model.SwapKline, len(data))
+	for i, v := range data {
+		klines[i] = model.NewSwapKline(v, period)
+	}
+	err := d.klineRepo.DeleteGtTimeSwap(context.Background(), klines[len(data)-1].Time, symbol, period)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = d.klineRepo.SaveBatchSwap(context.Background(), klines, symbol, period)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func NewKlineDomain(cli *database.MongoClient) *KlineDomain {
 	return &KlineDomain{
 		klineRepo: dao.NewKlineDao(cli.Db),

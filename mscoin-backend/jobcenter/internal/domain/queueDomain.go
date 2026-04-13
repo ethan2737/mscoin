@@ -26,6 +26,18 @@ func (d *QueueDomain) Send1mKline(data []string, symbol string) {
 	log.Println("=================发送数据成功==============")
 }
 
+func (d *QueueDomain) SendSwapKline(data []string, symbol string) {
+	kline := model.NewSwapKline(data, "1m")
+	bytes, _ := json.Marshal(kline)
+	msg := database.KafkaData{
+		Topic: "SWAP_KLINE_1M",
+		Data:  bytes,
+		Key:   []byte(symbol),
+	}
+	d.kafkaCli.Send(msg)
+	log.Println("=================发送 swap kline 数据成功==============")
+}
+
 func (d *QueueDomain) SendRecharge(value float64, address string, time int64) {
 	data := make(map[string]any)
 	data["value"] = value

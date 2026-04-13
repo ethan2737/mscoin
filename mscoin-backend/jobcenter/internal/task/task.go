@@ -64,6 +64,16 @@ func (t *Task) Run() {
 	t.s.Every(10).Minute().Do(func() {
 		logic.NewBitCoin(t.ctx.Cache, t.ctx.AssetRpc, t.ctx.MongoClient, t.ctx.KafkaClient).Do(t.ctx.BitCoinAddress)
 	})
+
+	// Swap 永续合约定时任务
+	// Swap K 线任务 - 每分钟执行一次
+	t.s.Every(1).Minute().Do(func() {
+		logic.NewSwapKline(t.ctx.Config.SwapKline, t.ctx.MarketRpc, t.ctx.MongoClient, t.ctx.KafkaClient, t.ctx.Cache).Do("1m")
+	})
+	// Swap 强平扫描任务 - 每 5 秒执行一次
+	t.s.Every(5).Second().Do(func() {
+		logic.NewSwapLiquidation(t.ctx.Config.SwapLiquidation, t.ctx.MarketRpc, t.ctx.SwapPositionModel, t.ctx.SwapWalletModel, t.ctx.SwapCoinModel, t.ctx.Cache).Scan()
+	})
 }
 
 func (t *Task) runInitialMarketWarmup() {

@@ -87,3 +87,40 @@ services:
       ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
     volumes:
       - ${KAFKA_DIR}/data:/var/lib/kafka/data
+
+  # Swap 永续合约 gRPC 服务
+  swap:
+    container_name: swap
+    build:
+      context: .
+      dockerfile: Dockerfile.swap
+    restart: always
+    ports:
+      - "8085:8085"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./swap/etc:/app/etc
+    depends_on:
+      - mysql
+      - Redis
+      - Etcd
+      - mongo
+
+  # Swap API HTTP 服务
+  swap-api:
+    container_name: swap-api
+    build:
+      context: .
+      dockerfile: Dockerfile.swap-api
+    restart: always
+    ports:
+      - "8086:8086"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./swap-api/etc:/app/etc
+    depends_on:
+      - swap
+      - Etcd
+      - mongo
