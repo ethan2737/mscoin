@@ -135,6 +135,38 @@ router.afterEach((to, from) => {
 // 创建 Vuex 4.x store
 const store = createStore(storeConfig)
 
+// 配置 axios 拦截器 - 添加 token 头
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem(runtimeContract.tokenKey)
+    if (token) {
+      config.headers['x-auth-token'] = token
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+axios.interceptors.response.use(
+  (response) => {
+    // 检查响应头中是否有新的 token
+    const xAuthToken = response.headers.get('x-auth-token')
+    if (xAuthToken != null && xAuthToken !== '') {
+      localStorage.setItem(runtimeContract.tokenKey, xAuthToken)
+    }
+
+    // 处理未登录情况
+    const data = response.data
+    if (data && (data.code === 4000 || data.code === 3000)) {
+      store.commit('setMember', null)
+      router.push('/login')
+    }
+
+    return response
+  },
+  (error) => Promise.reject(error)
+)
+
 // 提供 store, router 和 i18n 给 Composition API 使用
 app.provide('store', store)
 app.provide('router', router)

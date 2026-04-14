@@ -2,20 +2,20 @@ package model
 
 import (
 	"context"
-	"time"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"time"
 )
 
 type ContractTransaction struct {
-	Id            int64     `db:"id"`
-	MemberId      int64     `db:"member_id"`
-	Unit          string    `db:"unit"`
-	Type          int32     `db:"type"`
-	Amount        float64   `db:"amount"`
-	Balance       float64   `db:"balance"`
-	RelatedOrderId int64    `db:"related_order_id"`
-	Remark        string    `db:"remark"`
-	CreatedAt     time.Time `db:"created_at"`
+	Id             int64     `db:"id"`
+	MemberId       int64     `db:"member_id"`
+	Unit           string    `db:"unit"`
+	Type           int32     `db:"type"`
+	Amount         float64   `db:"amount"`
+	Balance        float64   `db:"balance"`
+	RelatedOrderId int64     `db:"related_order_id"`
+	Remark         string    `db:"remark"`
+	CreatedAt      time.Time `db:"created_at"`
 }
 
 type ContractTransactionModel interface {
@@ -52,7 +52,7 @@ func (m *defaultContractTransactionModel) Insert(ctx context.Context, tx *Contra
 }
 
 func (m *defaultContractTransactionModel) FindOne(ctx context.Context, id int64) (*ContractTransaction, error) {
-	query := `SELECT id, member_id, unit, type, amount, balance, related_order_id, remark, created_at FROM contract_transactions WHERE id = ?`
+	query := `SELECT id, member_id, unit, type, amount, balance, IFNULL(related_order_id, 0) AS related_order_id, remark, created_at FROM contract_transactions WHERE id = ?`
 	var resp ContractTransaction
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	if err != nil {
@@ -65,7 +65,7 @@ func (m *defaultContractTransactionModel) FindOne(ctx context.Context, id int64)
 }
 
 func (m *defaultContractTransactionModel) FindByMemberId(ctx context.Context, memberId int64, startTime, endTime time.Time, txType int32, limit, offset int64) ([]*ContractTransaction, error) {
-	query := `SELECT id, member_id, unit, type, amount, balance, related_order_id, remark, created_at FROM contract_transactions WHERE member_id = ?`
+	query := `SELECT id, member_id, unit, type, amount, balance, IFNULL(related_order_id, 0) AS related_order_id, remark, created_at FROM contract_transactions WHERE member_id = ?`
 	args := []interface{}{memberId}
 
 	if !startTime.IsZero() {

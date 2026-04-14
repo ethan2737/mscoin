@@ -17,6 +17,21 @@ type Kline struct {
 	Turnover     float64 `bson:"turnover,omitempty"` //成交额
 }
 
+// SwapKline 永续合约 K 线
+type SwapKline struct {
+	Symbol       string  `bson:"symbol,omitempty"`
+	Period       string  `bson:"period,omitempty"`
+	OpenPrice    float64 `bson:"openPrice,omitempty"`
+	HighestPrice float64 `bson:"highestPrice,omitempty"`
+	LowestPrice  float64 `bson:"lowestPrice,omitempty"`
+	ClosePrice   float64 `bson:"closePrice,omitempty"`
+	Time         int64   `bson:"time,omitempty"`
+	Count        float64 `bson:"count,omitempty"`    // 成交笔数
+	Volume       float64 `bson:"volume,omitempty"`   // 成交量
+	Turnover     float64 `bson:"turnover,omitempty"` // 成交额
+	TimeStr      string  `bson:"timeStr,omitempty"`
+}
+
 func (*Kline) Table(symbol, period string) string {
 	return "exchange_kline_" + symbol + "_" + period
 }

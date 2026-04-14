@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -61,7 +62,7 @@ func TestContractWalletLogicTransactionPassesFiltersToDao(t *testing.T) {
 		PageSize:  5,
 		StartTime: "1712822400000",
 		EndTime:   "1712995200000",
-		Type:      2,
+		Type:      json.RawMessage("2"),
 	})
 
 	require.NoError(t, err)

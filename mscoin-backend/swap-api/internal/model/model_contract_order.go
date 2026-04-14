@@ -2,8 +2,8 @@ package model
 
 import (
 	"context"
-	"time"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"time"
 )
 
 type ContractOrder struct {
@@ -75,9 +75,15 @@ func (m *defaultContractOrderModel) FindOne(ctx context.Context, id int64) (*Con
 }
 
 func (m *defaultContractOrderModel) FindByMemberId(ctx context.Context, memberId int64, status int32) ([]*ContractOrder, error) {
-	query := `SELECT id, member_id, contract_coin_id, entrust_type, type, direction, leverage, price, amount, deal_amount, status, deal_amount_usdt, fee, fee_unit, profit, created_at, updated_at FROM contract_orders WHERE member_id = ? AND status = ?`
 	var resp []*ContractOrder
-	err := m.conn.QueryRowsCtx(ctx, &resp, query, memberId, status)
+	var err error
+	if status == 0 {
+		query := `SELECT id, member_id, contract_coin_id, entrust_type, type, direction, leverage, price, amount, deal_amount, status, deal_amount_usdt, fee, fee_unit, profit, created_at, updated_at FROM contract_orders WHERE member_id = ?`
+		err = m.conn.QueryRowsCtx(ctx, &resp, query, memberId)
+	} else {
+		query := `SELECT id, member_id, contract_coin_id, entrust_type, type, direction, leverage, price, amount, deal_amount, status, deal_amount_usdt, fee, fee_unit, profit, created_at, updated_at FROM contract_orders WHERE member_id = ? AND status = ?`
+		err = m.conn.QueryRowsCtx(ctx, &resp, query, memberId, status)
+	}
 	if err != nil {
 		if err == sqlx.ErrNotFound {
 			return []*ContractOrder{}, nil

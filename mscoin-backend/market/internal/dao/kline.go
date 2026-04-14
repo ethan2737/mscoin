@@ -76,6 +76,35 @@ func (k *KlineDao) FindBySymbolTime(ctx context.Context, symbol, period string, 
 	}
 	return
 }
+
+// FindSwapKlineBySymbolTime 查询永续合约 K 线
+func (k *KlineDao) FindSwapKlineBySymbolTime(ctx context.Context, symbol, period string, from, end int64, sort string) ([]*model.SwapKline, error) {
+	sortInt := -1
+	if "asc" == sort {
+		sortInt = 1
+	}
+	collection := k.db.Collection("swap_klines")
+	cur, err := collection.Find(ctx,
+		bson.D{
+			{"symbol", symbol},
+			{"period", period},
+			{"time", bson.D{{"$gte", from}, {"$lte", end}}},
+		},
+		&options.FindOptions{
+			Sort: bson.D{{"time", sortInt}},
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	var list []*model.SwapKline
+	err = cur.All(ctx, &list)
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
 func NewKlineDao(db *mongo.Database) *KlineDao {
 	return &KlineDao{
 		db: db,

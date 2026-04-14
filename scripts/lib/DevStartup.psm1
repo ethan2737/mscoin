@@ -92,11 +92,18 @@ function Get-MscoinAppServiceDefinitions {
             DependsOn = @('exchange')
         }
         [pscustomobject]@{
+            Name = 'swap-api'
+            Port = 8086
+            WorkingDirectory = $backendRoot
+            Command = 'go run swap-api/main.go -f swap-api/etc/conf.yaml'
+            DependsOn = @('market', 'mysql', 'redis', 'etcd', 'mongo')
+        }
+        [pscustomobject]@{
             Name = 'frontend'
             Port = 3000
             WorkingDirectory = $frontendRoot
             Command = 'pnpm run dev'
-            DependsOn = @('ucenter-api', 'market-api', 'exchange-api')
+            DependsOn = @('ucenter-api', 'market-api', 'exchange-api', 'swap-api')
         }
     )
 }

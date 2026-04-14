@@ -1,11 +1,18 @@
 <template>
   <div class="container swap" :class="skin">
     <div class="main">
-      <div style="display: flex; flex: 0 0 69%; flex-wrap: wrap; justify-content: space-between;">
+      <div class="trade-workspace">
         <!-- 右侧：币种列表 -->
-        <div class="right">
-          <div class="coin-menu">
-            <div style="padding: 8px 10px; height: 48px">
+        <div class="right market-rail">
+          <div class="coin-menu panel-shell">
+            <div class="panel-header panel-header-compact market-rail-header">
+              <div>
+                <span class="panel-kicker">Perpetual</span>
+                <strong>{{ $t('service.ExchangeNum') }}</strong>
+              </div>
+              <span class="panel-meta">{{ dataIndex.length }}</span>
+            </div>
+            <div class="panel-toolbar market-search">
               <el-input
                 v-model="searchKey"
                 :placeholder="$t('common.searchplaceholder')"
@@ -52,8 +59,9 @@
         <!-- 中间：K 线图和交易区 -->
         <div class="center">
           <!-- 币种信息 -->
-          <div class="symbol">
-            <div class="item" style="margin-left: 10px">
+          <div class="symbol panel-shell market-overview">
+            <div class="item symbol-primary">
+              <span class="panel-kicker">Contract</span>
               <span class="coin">{{ currentCoin.name }}</span>
               <el-popover trigger="hover" :width="300" placement="bottom-start">
                 <template #reference>
@@ -95,7 +103,7 @@
           </div>
 
           <!-- K 线图和深度图 -->
-          <div class="imgtable">
+          <div class="imgtable panel-shell chart-shell">
             <div class="handler">
               <span @click="changeImgTable('k')" :class="{ active: currentImgTable === 'k' }">{{ $t('swap.kline') }}</span>
               <span @click="changeImgTable('s')" :class="{ active: currentImgTable === 's' }">{{ $t('swap.depth') }}</span>
@@ -106,8 +114,8 @@
         </div>
 
         <!-- 底部：订单记录 -->
-        <div style="width: 100%; margin-top: 5px; flex: 0 0 100%">
-          <div class="order" style="margin-right: 5px; min-height: 352px">
+        <div class="workspace-orders">
+          <div class="order panel-shell ledger-panel">
             <div class="order-handler">
               <span @click="changeOrder('currentPositions')" :class="{ active: selectedOrder === 'currentPositions' }">
                 {{ $t('swap.currentposition') }}
@@ -434,7 +442,13 @@
       </div>
 
       <!-- 左侧：盘口和交易表单 -->
-      <div class="left plate-wrap" style="position: relative; flex: 0 0 18%">
+      <div class="left plate-wrap orderbook-area panel-shell">
+        <div class="panel-header panel-header-compact">
+          <div>
+            <span class="panel-kicker">Order Book</span>
+            <strong>{{ $t('swap.depth') }}</strong>
+          </div>
+        </div>
         <!-- 盘口选择器 -->
         <div class="handlers">
           <span @click="changePlate('all')" class="handler handler-all" :class="{ active: selectedPlate === 'all' }"></span>
@@ -533,8 +547,11 @@
         </el-table>
 
         <!-- 开仓/平仓表单 -->
-        <div class="order" style="margin-top: 5px; background-color: #192330; min-height: 352px">
-          <div v-if="currentCoin.type === 'ALWAYS'" class="order-handler" style="border-bottom: 1px solid rgb(39, 49, 62)">
+      </div>
+
+      <div class="trade-form-area">
+        <div class="order panel-shell trade-form-panel">
+          <div v-if="currentCoin.type === 'ALWAYS'" class="order-handler trade-form-header">
             <span
               :style="{ width: currentCoin.type === 'ALWAYS' ? '50%' : '100%', textAlign: 'center' }"
               @click="entrustChange(1)"
@@ -552,7 +569,7 @@
             </span>
           </div>
           <div class="table open-close">
-            <div class="open" style="text-align: center; margin-top: 10px">
+            <div class="open trade-form-body">
               <el-radio-group v-model="form.type" type="button" size="default">
                 <el-radio label="2">{{ $t('swap.limited_price') }}</el-radio>
                 <el-radio label="3">{{ $t('swap.trigger_price') }}</el-radio>
@@ -740,12 +757,16 @@
       </div>
 
       <!-- 左侧底部：成交记录和账户信息 -->
-      <div class="left plate-wrap" style="position: relative; flex: 0 0 13%">
-        <div style="background-color: #192330; height: 40px; line-height: 40px; padding-left: 5px; color: #61688a; font-size: 13px">
-          <span>{{ $t('swap.latestdeal') }}</span>
-        </div>
-        <div class="trade-wrap">
-          <el-table :data="trade.rows" height="472" :no-data-text="$t('common.nodata')">
+      <div class="left plate-wrap side-rail">
+        <div class="trade-wrap panel-shell latest-trade-panel">
+          <div class="panel-header panel-header-compact">
+            <div>
+              <span class="panel-kicker">Tape</span>
+              <strong>{{ $t('swap.latestdeal') }}</strong>
+            </div>
+            <span class="panel-meta">{{ trade.rows.length }}</span>
+          </div>
+          <el-table :data="trade.rows" height="430" :no-data-text="$t('common.nodata')">
             <el-table-column label="价格">
               <template #default="{ row }">
                 <span :class="row.direction === 'BUY' ? 'buy' : 'sell'">{{ row.price }}</span>
@@ -765,10 +786,13 @@
         </div>
 
         <!-- 我的合约账户 -->
-        <div class="order" style="margin-top: 5px; min-height: 352px; background-color: #192330; color: #61688a">
-          <div style="height: 33px; line-height: 33px; padding-left: 10px; border-bottom: 1px solid #27313e; font-size: 14px">
-            <span style="color: #fff">{{ $t('swap.myswapaccount') }}</span>
-            <router-link class="linkmore" to="/uc/contract-money" style="margin-right: 10px">
+        <div class="order panel-shell account-panel">
+          <div class="panel-header panel-header-compact account-panel-header">
+            <div>
+              <span class="panel-kicker">Assets</span>
+              <strong>{{ $t('swap.myswapaccount') }}</strong>
+            </div>
+            <router-link class="linkmore" to="/uc/contract-money">
               {{ $t('swap.zijinhuazhuan') }}
             </router-link>
           </div>
@@ -884,13 +908,38 @@ const api = runtime.api
 const silentPost = (url, payload = {}) => axios.post(url, payload).catch(() => null)
 const silentGet = (url) => axios.get(url).catch(() => null)
 const unwrapResult = (response) => response?.data?.data ?? response?.data ?? {}
+const unwrapList = (response) => {
+  const payload = unwrapResult(response)
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload.list)) return payload.list
+  if (Array.isArray(payload.content)) return payload.content
+  return []
+}
+const normalizeTradePlate = (payload) => {
+  const source = payload?.data ?? payload ?? {}
+  const askItems = source.ask?.items || source.asks || []
+  const bidItems = source.bid?.items || source.bids || []
+  const ask = source.ask || {
+    direction: 'SELL',
+    items: askItems,
+    highestPrice: askItems.length > 0 ? askItems[askItems.length - 1].price : 0,
+    lowestPrice: askItems.length > 0 ? askItems[0].price : 0
+  }
+  const bid = source.bid || {
+    direction: 'BUY',
+    items: bidItems,
+    highestPrice: bidItems.length > 0 ? bidItems[0].price : 0,
+    lowestPrice: bidItems.length > 0 ? bidItems[bidItems.length - 1].price : 0
+  }
+  return { ask, bid }
+}
 
 // 响应式数据
 const skin = ref('night')
 const currentImgTable = ref('k')
 const selectedOrder = ref('currentPositions')
 const selectedPlate = ref('all')
-const selectedType = ref('2')
+const selectedType = ref(2)
 const CNYRate = ref(null)
 const datafeed = ref(null)
 const defaultPath = ref(1)
@@ -1361,11 +1410,16 @@ const sellPlate = (currentRow) => {
 }
 
 const getWallet = () => {
-  axios.post(`${host}${api.uc.contractWallet}USDT`, {})
+  axios.post(`${host}/uc/contract-wallet`, {
+    memberId: memberId.value
+  })
     .then(response => {
-      const resp = response.data
-      wallet.base = resp.data.balance
-      wallet.frozen = resp.data.frozenBalance
+      const rows = unwrapList(response)
+      const usdtWallet = rows.find(item => item?.coin?.unit === 'USDT') || rows[0]
+      if (usdtWallet) {
+        wallet.base = Number(usdtWallet.balance || 0)
+        wallet.frozen = Number(usdtWallet.frozenBalance || 0)
+      }
     })
   axios.post(`${host}${api.uc.wallet}KICK`, {})
     .then(response => {
@@ -1390,11 +1444,11 @@ const getCurrentPosition = () => {
 const getCurrentOrder = () => {
   const params = {
     memberId: memberId.value,
-    pageNo: 0,
-    pageSize: 100,
-    contractCoinId: currentCoin.id,
-    type: selectedType.value
-  }
+      pageNo: 0,
+      pageSize: 100,
+      contractCoinId: currentCoin.id,
+      type: Number(selectedType.value)
+    }
   currentOrder.rows = []
   axios.post(`${host}${api.swap.current}`, params)
     .then(response => {
@@ -1416,10 +1470,10 @@ const getHistoryOrder = (pageNo) => {
   const params = {
     memberId: memberId.value,
     pageNo,
-    pageSize: historyOrder.pageSize,
-    contractCoinId: currentCoin.id,
-    type: selectedType.value
-  }
+      pageSize: historyOrder.pageSize,
+      contractCoinId: currentCoin.id,
+      type: Number(selectedType.value)
+    }
   axios.post(`${host}${api.swap.history}`, params)
     .then(response => {
       const resp = unwrapResult(response)
@@ -1550,17 +1604,20 @@ const getCoin = (symbol) => {
 }
 
 const getSymbol = () => {
-  silentPost(`${host}${api.swap.thumb}`, { type: currentCoin.type })
+  silentGet(`${host}${api.swap.thumb}?type=${currentCoin.type}`)
     .then(response => {
-      if (!response?.data || !Array.isArray(response.data)) return
-      const resp = response.data
+      // 响应结构是 {code: 0, message: 'success', data: [...]}
+      const apiResponse = response?.data?.data || response?.data
+      if (!apiResponse || !Array.isArray(apiResponse)) return
+      const resp = apiResponse
       // 先清空已有数据
+      coins.USDT = []
+      coins.USDT2 = []
+      coins._map = {}
       for (let i = 0; i < resp.length; i++) {
         const coin = resp[i]
-        coin.base = resp[i].symbol.split('/')[1]
         coins[coin.base] = []
         coins[coin.base + '2'] = []
-        coins._map = []
       }
       for (let i = 0; i < resp.length; i++) {
         const coin = resp[i]
@@ -1615,7 +1672,7 @@ const getPlate = (str = '') => {
       if (!response?.data) return
       plate.askRows = []
       plate.bidRows = []
-      const resp = response.data
+      const resp = normalizeTradePlate(response.data)
       if (resp.ask && resp.ask.items) {
         for (let i = 0; i < resp.ask.items.length; i++) {
           if (i === 0) {
@@ -1698,7 +1755,7 @@ const getPlateFull = () => {
   silentPost(`${host}${api.swap.platefull}`, params)
     .then(response => {
       if (!response?.data) return
-      const resp = response.data
+      const resp = normalizeTradePlate(response.data)
       resp.skin = skin.value
       if (depthGraphRef.value && depthGraphRef.value.draw) {
         depthGraphRef.value.draw(resp)
@@ -1710,9 +1767,9 @@ const getTrade = () => {
   const params = { symbol: currentCoin.symbol, size: 20 }
   silentPost(`${host}${api.swap.trade}`, params)
     .then(response => {
-      if (!response?.data || !Array.isArray(response.data)) return
+      if (!response?.data) return
       trade.rows = []
-      const resp = response.data
+      const resp = unwrapList(response)
       for (let i = 0; i < resp.length; i++) {
         trade.rows.push(resp[i])
       }
@@ -1897,13 +1954,14 @@ const loadTradingView = () => {
 }
 
 const getKline = async () => {
-  if (isLocalAcceptanceHost) {
-    const container = document.getElementById('swap_kline_container')
-    if (container) {
-      container.innerHTML = '<div style="height:500px;display:flex;align-items:center;justify-content:center;color:#8f9ca5;background:#192330;">本地开发环境使用静态图表占位，合约行情联调已降级为页面级验收。</div>'
-    }
-    return
-  }
+  // 本地环境也显示真实 K 线图，用于测试
+  // if (isLocalAcceptanceHost) {
+  //   const container = document.getElementById('swap_kline_container')
+  //   if (container) {
+  //     container.innerHTML = '<div style="height:500px;display:flex;align-items:center;justify-content:center;color:#8f9ca5;background:#192330;">本地开发环境使用静态图表占位，合约行情联调已降级为页面级验收。</div>'
+  //   }
+  //   return
+  // }
 
   const config = {
     autosize: true,
@@ -2181,19 +2239,44 @@ onBeforeUnmount(() => {
 @import '../../assets/css/swap.css';
 
 .container.swap {
+  --swap-surface: #16202b;
+  --swap-surface-strong: #192330;
+  --swap-surface-soft: #223041;
+  --swap-border: rgba(115, 138, 166, 0.16);
+  --swap-text-main: #f4f7fb;
+  --swap-text-muted: #8a98ad;
+  --swap-accent: #f0a70a;
+  --swap-shadow: 0 18px 48px rgba(3, 10, 18, 0.32);
   color: #fff;
-  background-color: #0b1520;
-  padding-top: 60px;
+  background:
+    radial-gradient(circle at top left, rgba(240, 167, 10, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(0, 178, 117, 0.08), transparent 22%),
+    linear-gradient(180deg, #0b1520 0%, #0d1722 38%, #101b27 100%);
+  padding: 72px 16px 24px;
 
   .main {
-    width: 99%;
-    margin-left: 0.3%;
-    display: flex;
-    margin-top: 5px;
+    width: min(100%, 1680px);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr) 340px;
+    grid-template-areas:
+      'market chart orderbook'
+      'tradeform side side'
+      'orders orders orders';
+    gap: 14px;
+    align-items: start;
+
+    .trade-workspace {
+      display: contents;
+    }
+
+    .market-rail {
+      grid-area: market;
+      min-width: 0;
+    }
 
     .left {
-      border-radius: 0px;
-      margin-right: 5px;
+      min-width: 0;
       overflow: hidden;
 
       .handlers {
@@ -2234,17 +2317,19 @@ onBeforeUnmount(() => {
 
       .plate-nowprice {
         text-align: center;
-        background-color: #27313e;
+        background: linear-gradient(180deg, rgba(41, 52, 68, 0.92), rgba(25, 35, 48, 0.92));
         line-height: 1;
         display: flex;
         align-items: center;
-        height: 40px;
+        height: 52px;
         justify-content: center;
         font-size: 14px;
         font-weight: 500;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 
         .price {
-          font-size: 18px;
+          font-size: 22px;
           margin-right: 10px;
         }
 
@@ -2252,36 +2337,44 @@ onBeforeUnmount(() => {
           font-size: 12px;
           margin-left: 10px;
           font-weight: 400;
-          color: rgba(219, 222, 246, 0.3);
+          color: rgba(219, 222, 246, 0.45);
         }
       }
     }
 
     .center {
-      flex: 0 0 76%;
-      margin-right: 5px;
+      grid-area: chart;
+      min-width: 0;
 
       .imgtable {
-        height: 446px;
+        height: 518px;
         position: relative;
         overflow: hidden;
 
         .handler {
           position: absolute;
-          top: 10px;
-          right: 40px;
+          top: 18px;
+          right: 22px;
           z-index: 1000;
+          display: flex;
+          gap: 8px;
 
           > span {
-            background-color: #2c3b59;
+            background-color: rgba(44, 59, 89, 0.72);
             color: #c7cce6;
-            padding: 4px 8px;
+            padding: 6px 10px;
             cursor: pointer;
             font-size: 13px;
-            opacity: 0.5;
+            opacity: 0.72;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            transition: all 0.2s ease;
 
             &.active {
               opacity: 1;
+              border-color: rgba(240, 167, 10, 0.35);
+              background: rgba(240, 167, 10, 0.16);
+              color: #fff2ca;
             }
           }
         }
@@ -2289,13 +2382,11 @@ onBeforeUnmount(() => {
     }
 
     .right {
-      flex: 0 0 23%;
+      min-width: 0;
 
       .coin-menu {
         overflow: hidden;
-        height: 512px;
-        background-color: #192330;
-        border-radius: 0px;
+        min-height: 100%;
       }
     }
   }
@@ -2303,34 +2394,42 @@ onBeforeUnmount(() => {
   .symbol {
     display: flex;
     justify-content: space-between;
-    padding: 15px 30px;
-    margin-bottom: 5px;
+    padding: 18px 22px;
+    margin-bottom: 0;
     align-items: center;
-    background-color: #192330;
+    background-color: transparent;
     line-height: 1;
-    border-radius: 0px;
+    gap: 18px;
+    flex-wrap: wrap;
 
     .item {
+      min-width: 0;
+
       .price-cny {
         font-size: 12px;
-        color: #546886;
+        color: var(--swap-text-muted);
       }
 
       .coin {
-        font-size: 20px;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
       }
 
       .text {
         width: 100%;
         display: block;
-        font-size: 12px;
-        color: #999;
-        margin-bottom: 5px;
+        font-size: 11px;
+        color: var(--swap-text-muted);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
       }
 
       .num {
-        font-size: 12px;
+        font-size: 16px;
         color: #fff;
+        font-weight: 600;
       }
 
       > img {
@@ -2340,30 +2439,36 @@ onBeforeUnmount(() => {
         cursor: pointer;
       }
     }
+
+    .symbol-primary {
+      min-width: 180px;
+    }
   }
 
   .order {
     min-height: 227px;
-    margin-bottom: 10px;
+    margin-bottom: 0;
     overflow: hidden;
 
     .order-handler {
-      background-color: #192330;
+      background-color: transparent;
       font-size: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 
       > span {
-        padding: 0 20px;
-        font-size: 14px;
+        padding: 0 18px;
+        font-size: 13px;
         display: inline-block;
-        color: #fff;
+        color: var(--swap-text-muted);
         cursor: pointer;
-        line-height: 30px;
-        background-color: #192330;
+        line-height: 42px;
+        background-color: transparent;
+        transition: color 0.2s ease, border-color 0.2s ease;
 
         &.active {
-          color: #f0a70a;
-          background-color: #27313e;
-          border-bottom: 2px solid #f0a70a;
+          color: #f7fafc;
+          background-color: transparent;
+          border-bottom: 2px solid var(--swap-accent);
         }
 
         &:first-child {
@@ -2376,10 +2481,168 @@ onBeforeUnmount(() => {
       }
     }
   }
+
+  .panel-shell {
+    background: linear-gradient(180deg, rgba(24, 32, 43, 0.96), rgba(20, 28, 39, 0.96));
+    border: 1px solid var(--swap-border);
+    border-radius: 18px;
+    box-shadow: var(--swap-shadow);
+    backdrop-filter: blur(10px);
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+    strong {
+      display: block;
+      font-size: 14px;
+      color: var(--swap-text-main);
+      font-weight: 600;
+    }
+  }
+
+  .panel-header-compact {
+    padding: 14px 16px;
+  }
+
+  .panel-toolbar {
+    padding: 12px 14px;
+  }
+
+  .panel-kicker {
+    display: inline-block;
+    margin-bottom: 4px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--swap-accent);
+  }
+
+  .panel-meta {
+    font-size: 12px;
+    color: var(--swap-text-muted);
+  }
+
+  .market-search {
+    padding-bottom: 8px;
+  }
+
+  .chart-shell {
+    padding-top: 0;
+  }
+
+  .workspace-orders {
+    grid-area: orders;
+    min-width: 0;
+  }
+
+  .ledger-panel {
+    min-height: 352px;
+  }
+
+  .side-rail {
+    grid-area: side;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .trade-wrap {
+    overflow: hidden;
+  }
+
+  .orderbook-area {
+    grid-area: orderbook;
+    overflow: hidden;
+  }
+
+  .trade-form-area {
+    grid-area: tradeform;
+    min-width: 0;
+  }
+
+  .trade-form-panel {
+    min-height: 352px;
+  }
+
+  .trade-form-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .trade-form-body {
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .account-panel {
+    min-height: 352px;
+    color: var(--swap-text-muted);
+    order: 1;
+  }
+
+  .account-panel-header {
+    .linkmore {
+      margin-right: 0;
+      line-height: 1.4;
+    }
+  }
+
+  .latest-trade-panel {
+    min-height: 352px;
+    order: 2;
+  }
+
+  .latest-trade-table {
+    overflow: hidden;
+  }
+
+  .market-overview {
+    padding-bottom: 8px;
+  }
+
+  .summary-market-table {
+    padding: 0 12px 12px;
+  }
+
+  .market-list-cell,
+  .market-list-price {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0;
+  }
+
+  .market-list-cell {
+    align-items: flex-start;
+  }
+
+  .market-list-price {
+    align-items: flex-end;
+  }
+
+  .market-list-name {
+    font-size: 14px;
+    color: #f2f5fa;
+  }
+
+  .market-list-volume {
+    font-size: 12px;
+    color: var(--swap-text-muted);
+  }
+
+  .chart-shell {
+    overflow: hidden;
+  }
 }
 
 // 白天模式
-.exchange.day {
+.container.swap.day {
   color: #333;
   background-color: #fff;
 
@@ -2447,8 +2710,118 @@ onBeforeUnmount(() => {
   }
 }
 
+.container.swap {
+  :deep(.el-table) {
+    --el-table-border-color: transparent;
+    --el-table-header-bg-color: transparent;
+    --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.03);
+    --el-table-tr-bg-color: transparent;
+    --el-table-bg-color: transparent;
+    --el-table-text-color: #d5dceb;
+    --el-table-header-text-color: #7f8ea3;
+  }
+
+  :deep(.el-table th.el-table__cell) {
+    height: 42px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  :deep(.el-table td.el-table__cell) {
+    height: 42px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-input-number__decrease),
+  :deep(.el-input-number__increase),
+  :deep(.el-input-number .el-input__wrapper) {
+    background: rgba(8, 14, 22, 0.86);
+    box-shadow: inset 0 0 0 1px rgba(115, 138, 166, 0.18);
+    color: #fff;
+  }
+
+  :deep(.el-radio-button__inner) {
+    background: rgba(10, 16, 24, 0.88);
+    border-color: rgba(115, 138, 166, 0.18);
+    color: var(--swap-text-muted);
+  }
+
+  :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+    background: rgba(240, 167, 10, 0.16);
+    border-color: rgba(240, 167, 10, 0.45);
+    color: #fff3d0;
+    box-shadow: none;
+  }
+}
+
 #swap_kline_container {
-  background: #192330;
+  background: transparent;
+}
+
+@media (max-width: 1440px) {
+  .container.swap {
+    .main {
+      grid-template-columns: 280px minmax(0, 1fr) 300px;
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .container.swap {
+    .main {
+      width: 100%;
+      grid-template-areas:
+        'market chart'
+        'orderbook chart'
+        'tradeform side'
+        'orders orders';
+      grid-template-columns: 320px minmax(0, 1fr);
+    }
+
+    .side-rail {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .container.swap {
+    padding: 68px 10px 20px;
+
+    .main,
+    .main {
+      gap: 10px;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'market'
+        'chart'
+        'orderbook'
+        'tradeform'
+        'side'
+        'orders';
+    }
+
+    .symbol {
+      padding: 16px;
+    }
+
+    .main .center .imgtable {
+      height: 420px;
+    }
+
+    .panel-header,
+    .panel-toolbar {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .side-rail {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
 }
 
 .coin-info {

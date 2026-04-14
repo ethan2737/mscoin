@@ -2,12 +2,14 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
 
 	"mscoin-common/pages"
 	"swap-api/internal/dao"
+	"swap-api/internal/model"
 	"swap-api/internal/svc"
 	"swap-api/internal/types"
 )
@@ -32,6 +34,20 @@ func (l *ContractWalletLogic) Info(req *types.ContractWalletReq) ([]*types.Contr
 	wallets, err := l.walletDao.GetByMemberId(l.ctx, req.MemberId)
 	if err != nil {
 		return nil, err
+	}
+	// 如果钱包不存在，自动初始化 USDT 合约钱包
+	if len(wallets) == 0 {
+		initWallet := &model.ContractWallet{
+			MemberId:    req.MemberId,
+			Unit:        "USDT",
+			Balance:     0,
+			Frozen:      0,
+			MainBalance: 0,
+		}
+		if err := l.walletDao.Upsert(l.ctx, initWallet); err != nil {
+			return nil, err
+		}
+		wallets = append(wallets, initWallet)
 	}
 	return buildWalletItems(wallets), nil
 }
@@ -87,23 +103,7 @@ func (l *ContractWalletLogic) Transaction(req *types.ContractTransactionReq) (*p
 		endTime = parseRequestTime(req.EndTime, endTime)
 	}
 
-	txType := int32(-1)
-	switch value := req.Type.(type) {
-	case int:
-		txType = int32(value)
-	case int32:
-		txType = value
-	case int64:
-		txType = int32(value)
-	case float64:
-		txType = int32(value)
-	case string:
-		if value != "" {
-			if parsed, err := strconv.ParseInt(value, 10, 32); err == nil {
-				txType = int32(parsed)
-			}
-		}
-	}
+	txType := parseTransactionType(req.Type)
 
 	offset := int64((pageNo - 1) * pageSize)
 	transactions, err := l.transactionDao.GetByMemberId(l.ctx, req.MemberId, startTime, endTime, txType, int64(pageSize), offset)
@@ -128,4 +128,24 @@ func parseRequestTime(raw string, fallback time.Time) time.Time {
 		return parsed
 	}
 	return fallback
+}
+
+func parseTransactionType(raw json.RawMessage) int32 {
+	if len(raw) == 0 || string(raw) == `""` || string(raw) == "null" {
+		return -1
+	}
+
+	var number int32
+	if err := json.Unmarshal(raw, &number); err == nil {
+		return number
+	}
+
+	var text string
+	if err := json.Unmarshal(raw, &text); err == nil && text != "" {
+		if parsed, err := strconv.ParseInt(text, 10, 32); err == nil {
+			return int32(parsed)
+		}
+	}
+
+	return -1
 }

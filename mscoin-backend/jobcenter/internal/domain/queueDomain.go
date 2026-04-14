@@ -27,7 +27,7 @@ func (d *QueueDomain) Send1mKline(data []string, symbol string) {
 }
 
 func (d *QueueDomain) SendSwapKline(data []string, symbol string) {
-	kline := model.NewSwapKline(data, "1m")
+	kline := model.NewSwapKline(data, symbol, "1m")
 	bytes, _ := json.Marshal(kline)
 	msg := database.KafkaData{
 		Topic: "SWAP_KLINE_1M",

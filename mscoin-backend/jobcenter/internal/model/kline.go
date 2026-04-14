@@ -46,6 +46,7 @@ type OkxKlineRes struct {
 
 // SwapKline 永续合约 K 线
 type SwapKline struct {
+	Symbol       string  `bson:"symbol,omitempty"`
 	Period       string  `bson:"period,omitempty"`
 	OpenPrice    float64 `bson:"openPrice,omitempty"`
 	HighestPrice float64 `bson:"highestPrice,omitempty"`
@@ -63,9 +64,10 @@ func (*SwapKline) Table(symbol, period string) string {
 	return "swap_klines"
 }
 
-func NewSwapKline(data []string, period string) *SwapKline {
+func NewSwapKline(data []string, symbol string, period string) *SwapKline {
 	toInt64 := tools.ToInt64(data[0])
 	return &SwapKline{
+		Symbol:       symbol,
 		Time:         toInt64,
 		Period:       period,
 		OpenPrice:    tools.ToFloat64(data[1]),

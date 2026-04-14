@@ -40,7 +40,7 @@ func (d *KlineDomain) SaveSwapKline(data [][]string, symbol string, period strin
 
 	klines := make([]*model.SwapKline, len(data))
 	for i, v := range data {
-		klines[i] = model.NewSwapKline(v, period)
+		klines[i] = model.NewSwapKline(v, symbol, period)
 	}
 	err := d.klineRepo.DeleteGtTimeSwap(context.Background(), klines[len(data)-1].Time, symbol, period)
 	if err != nil {

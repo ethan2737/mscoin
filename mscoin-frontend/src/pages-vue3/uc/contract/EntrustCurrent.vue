@@ -196,6 +196,14 @@ const formItem = reactive({
 
 const lang = computed(() => store.state.lang)
 const memberId = computed(() => store.getters.member?.id || store.state.member?.id || 0)
+const unwrapResult = (response) => response?.data?.data ?? response?.data ?? {}
+const unwrapList = (response) => {
+  const payload = unwrapResult(response)
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload.content)) return payload.content
+  if (Array.isArray(payload.list)) return payload.list
+  return []
+}
 
 const getWay = (direction, entrustType) => {
   if (direction === '1') {
@@ -283,11 +291,10 @@ const refresh = () => {
       'x-auth-token': localStorage.getItem('TOKEN')
     }
   }).then(response => {
-    const resp = response.data
-    if (resp.content && resp.content.length > 0) {
-      total.value = resp.totalElements
-      orders.value = resp.content
-    }
+    const resp = unwrapResult(response)
+    const rows = unwrapList(response)
+    total.value = resp.totalElements ?? rows.length
+    orders.value = rows
     loading.value = false
   }).catch(() => {
     loading.value = false
@@ -303,10 +310,7 @@ const getSymbol = () => {
       'x-auth-token': localStorage.getItem('TOKEN')
     }
   }).then(response => {
-    const resp = response.data
-    if (resp && resp.length > 0) {
-      symbol.value = resp
-    }
+    symbol.value = unwrapList(response)
   }).catch(() => {
     console.error('获取币种列表失败')
   })

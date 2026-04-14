@@ -8,13 +8,14 @@ import (
 
 type Config struct {
 	rest.RestConf
-	Mysql       MysqlConfig
-	CacheRedis  redis.RedisConf
-	Mongo       MongoConfig
-	SwapRpc     zrpc.RpcClientConf
-	MarketRpc   zrpc.RpcClientConf
-	UcenterRpc  zrpc.RpcClientConf
-	JWT         AuthConfig
+	Mysql            MysqlConfig
+	MarketApiBaseURL string
+	CacheRedis       redis.RedisConf
+	Mongo            MongoConfig
+	SwapRpc          zrpc.RpcClientConf
+	MarketRpc        zrpc.RpcClientConf
+	UcenterRpc       zrpc.RpcClientConf
+	JWT              AuthConfig
 }
 
 type AuthConfig struct {

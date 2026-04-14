@@ -2,9 +2,11 @@ package svc
 
 import (
 	"context"
+	"grpc-common/market/mclient"
 	"log"
 	"swap-api/internal/config"
 	"swap-api/internal/dao"
+	"swap-api/internal/marketdata"
 	"swap-api/internal/model"
 
 	"github.com/zeromicro/go-zero/core/stores/redis"
@@ -12,8 +14,6 @@ import (
 	"github.com/zeromicro/go-zero/zrpc"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type ServiceContext struct {
@@ -41,9 +41,10 @@ type ServiceContext struct {
 	MongoDb     *mongo.Database
 
 	// RPC Clients
-	SwapConn    *grpc.ClientConn
-	MarketConn  *grpc.ClientConn
-	UcenterConn *grpc.ClientConn
+	SwapClient       zrpc.Client
+	MarketRpc        mclient.Market
+	MarketDataClient marketdata.Client
+	UcenterClient    zrpc.Client
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -76,16 +77,15 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		log.Fatalf("failed to ping mongo: %v", err)
 	}
 
-	// 初始化 RPC 连接 (延迟连接)
-	var swapConn, marketConn, ucenterConn *grpc.ClientConn
+	// 初始化 RPC 客户端
+	var swapClient, ucenterClient zrpc.Client
+	var marketRpc mclient.Market
 	if !c.SwapRpc.NonBlock {
-		swapConn = createGrpcConn(c.SwapRpc)
+		swapClient = zrpc.MustNewClient(c.SwapRpc)
 	}
-	if !c.MarketRpc.NonBlock {
-		marketConn = createGrpcConn(c.MarketRpc)
-	}
+	marketRpc = mclient.NewMarket(zrpc.MustNewClient(c.MarketRpc))
 	if !c.UcenterRpc.NonBlock {
-		ucenterConn = createGrpcConn(c.UcenterRpc)
+		ucenterClient = zrpc.MustNewClient(c.UcenterRpc)
 	}
 
 	return &ServiceContext{
@@ -103,21 +103,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Redis:                    r,
 		MongoClient:              client,
 		MongoDb:                  client.Database(c.Mongo.DataBase),
-		SwapConn:                 swapConn,
-		MarketConn:               marketConn,
-		UcenterConn:              ucenterConn,
+		SwapClient:               swapClient,
+		MarketRpc:                marketRpc,
+		MarketDataClient:         marketdata.New(c.MarketApiBaseURL),
+		UcenterClient:            ucenterClient,
 	}
-}
-
-func createGrpcConn(cfg zrpc.RpcClientConf) *grpc.ClientConn {
-	conn, err := grpc.Dial(
-		cfg.Endpoints[0],
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.WaitForReady(true)),
-	)
-	if err != nil {
-		log.Printf("failed to dial grpc: %v", err)
-		return nil
-	}
-	return conn
 }

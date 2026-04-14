@@ -77,7 +77,8 @@ func (d *MarketDomain) HistoryKline(
 	from int64,
 	to int64,
 	period string) ([]*market.History, error) {
-	klines, err := d.klineRepo.FindBySymbolTime(ctx, symbol, period, from, to, "asc")
+	// 查询永续合约 K 线数据
+	klines, err := d.klineRepo.FindSwapKlineBySymbolTime(ctx, symbol, period, from, to, "asc")
 	if err != nil {
 		return nil, err
 	}

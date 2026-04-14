@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"swap-api/internal/logic"
@@ -52,7 +53,9 @@ func (h *ContractWalletHandler) Transfer(w http.ResponseWriter, r *http.Request)
 
 func (h *ContractWalletHandler) Transaction(w http.ResponseWriter, r *http.Request) {
 	var req types.ContractTransactionReq
-	if err := httpx.ParseJsonBody(r, &req); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.UseNumber()
+	if err := decoder.Decode(&req); err != nil {
 		httpx.ErrorCtx(r.Context(), w, err)
 		return
 	}

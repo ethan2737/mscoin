@@ -10,6 +10,7 @@ Etcd:
   Key: swap.rpc
 Mysql:
   DataSource: root:root@tcp(127.0.0.1:33306)/mscoin?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+MarketApiBaseURL: http://127.0.0.1:8889/market
 CacheRedis:
   Host: 127.0.0.1:33679
   Type: node

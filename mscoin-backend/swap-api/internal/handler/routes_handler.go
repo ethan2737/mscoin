@@ -15,9 +15,13 @@ func RegisterHandlers(r *Routers, svcCtx *svc.ServiceContext) {
 	swapGroup.Get("/swap/symbol-thumb", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		NewContractInfoHandler(svcCtx).List(w, r)
 	}))
-	swapGroup.Get("/swap/exchange-plate-mini", exchangePlateMiniHandler(svcCtx))
-	swapGroup.Get("/swap/exchange-plate-full", exchangePlateFullHandler(svcCtx))
-	swapGroup.Get("/swap/latest-trade", latestTradeHandler(svcCtx))
+	swapGroup.Post("/swap/symbol-thumb", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		NewContractInfoHandler(svcCtx).List(w, r)
+	}))
+	swapGroup.Get("/swap/history", klineHistoryHandler(svcCtx))
+	swapGroup.Post("/swap/exchange-plate-mini", exchangePlateMiniHandler(svcCtx))
+	swapGroup.Post("/swap/exchange-plate-full", exchangePlateFullHandler(svcCtx))
+	swapGroup.Post("/swap/latest-trade", latestTradeHandler(svcCtx))
 
 	orderGroup := r.Group()
 	orderGroup.Use(midd.Auth(svcCtx.Config.JWT.AccessSecret))
