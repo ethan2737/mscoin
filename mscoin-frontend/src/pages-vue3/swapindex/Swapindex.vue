@@ -2,8 +2,8 @@
   <div class="container swap" :class="skin">
     <div class="main">
       <div class="trade-workspace">
-        <!-- 右侧：币种列表 -->
-        <div class="right market-rail">
+        <!-- 左侧：币种列表 -->
+        <div class="market-rail">
           <div class="coin-menu panel-shell">
             <div class="panel-header panel-header-compact market-rail-header">
               <div>
@@ -56,7 +56,37 @@
           </div>
         </div>
 
-        <!-- 中间：K 线图和交易区 -->
+        <!-- 左侧中部：最新交易 -->
+        <div class="latest-trade-panel">
+          <div class="trade-wrap panel-shell">
+            <div class="panel-header panel-header-compact">
+              <div>
+                <span class="panel-kicker">Tape</span>
+                <strong>{{ $t('swap.latestdeal') }}</strong>
+              </div>
+              <span class="panel-meta">{{ trade.rows.length }}</span>
+            </div>
+            <el-table :data="trade.rows" height="430" :no-data-text="$t('common.nodata')">
+              <el-table-column label="价格">
+                <template #default="{ row }">
+                  <span :class="row.direction === 'BUY' ? 'buy' : 'sell'">{{ row.price }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="数量">
+                <template #default="{ row }">
+                  {{ row.amount?.toFixed(4) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="时间">
+                <template #default="{ row }">
+                  {{ timeFormat(row.time) }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+
+        <!-- 中间：K 线图、账户信息和交易表单 -->
         <div class="center">
           <!-- 币种信息 -->
           <div class="symbol panel-shell market-overview">
@@ -110,6 +140,261 @@
             </div>
             <div id="swap_kline_container" :class="{ hidden: currentImgTable === 's' }"></div>
             <DepthGraph :class="{ hidden: currentImgTable === 'k' }" ref="depthGraphRef" />
+          </div>
+
+          <!-- 我的合约账户 -->
+          <div class="account-panel-wrapper">
+            <div class="order panel-shell account-panel">
+              <div class="panel-header panel-header-compact account-panel-header">
+                <div>
+                  <span class="panel-kicker">Assets</span>
+                  <strong>{{ $t('swap.myswapaccount') }}</strong>
+                </div>
+                <router-link class="linkmore" to="/uc/contract-money">
+                  {{ $t('swap.zijinhuazhuan') }}
+                </router-link>
+              </div>
+              <div class="table swap-my-account">
+                <div class="account-item">
+                  <div>{{ $t('swap.accountquanyi') }}</div>
+                  <div style="font-size: 12px">
+                    <span>{{ (wallet.base + wallet.frozen)?.toFixed(baseCoinScale) }}(USD)</span>
+                  </div>
+                </div>
+                <div class="account-item">
+                  <div>{{ $t('swap.profitandloss') }}</div>
+                  <div style="font-size: 12px">
+                    <span>{{ wallet.profit?.toFixed(baseCoinScale) }}</span>
+                  </div>
+                </div>
+                <div class="account-item">
+                  <div>{{ $t('swap.principalAmount') }}</div>
+                  <div style="font-size: 12px">
+                    <span>{{ wallet.base?.toFixed(baseCoinScale) }}(USD)</span>
+                  </div>
+                </div>
+                <div class="account-item">
+                  <div>{{ $t('swap.positionAmount') }}</div>
+                  <div style="font-size: 12px">
+                    <span>{{ positionNum }}</span>
+                  </div>
+                </div>
+                <div class="account-item">
+                  <div>{{ $t('swap.frozenAmount') }}</div>
+                  <div style="font-size: 12px">
+                    <span>{{ wallet.frozen?.toFixed(baseCoinScale) }}(USD)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 开仓/平仓表单 -->
+          <div class="trade-form-panel-wrapper">
+            <div class="order panel-shell trade-form-panel">
+              <div v-if="currentCoin.type === 'ALWAYS'" class="order-handler trade-form-header">
+                <span
+                  :style="{ width: currentCoin.type === 'ALWAYS' ? '50%' : '100%', textAlign: 'center' }"
+                  @click="entrustChange(1)"
+                  :class="{ active: form.entrustType === 1 }"
+                >
+                  {{ $t('swap.open') }}
+                </span>
+                <span
+                  v-if="currentCoin.type === 'ALWAYS'"
+                  style="width: 50%; text-align: center"
+                  @click="entrustChange(2)"
+                  :class="{ active: form.entrustType === 2 }"
+                >
+                  {{ $t('swap.close') }}
+                </span>
+              </div>
+              <div class="table open-close">
+                <div class="open trade-form-body">
+                  <el-radio-group v-model="form.type" type="button" size="default">
+                    <el-radio label="2">{{ $t('swap.limited_price') }}</el-radio>
+                    <el-radio label="3">{{ $t('swap.trigger_price') }}</el-radio>
+                  </el-radio-group>
+
+                  <!-- 账户保证金 -->
+                  <div class="account-item" style="width: 90%; margin-top: 10px; height: 32px; padding-bottom: 5px">
+                    <div style="width: 35%; text-align: left">{{ $t('swap.accountmargin') }}</div>
+                    <div class="margin" style="width: 65%; justify-content: space-between; text-align: right; display: flex">
+                      <el-button
+                        @click="showAdjustLeverage(1)"
+                        size="small"
+                        style="flex: 0 0 47%; border: none; background: rgb(240 172 25); color: #000; padding: 0 10px"
+                      >
+                        {{ form.leverage }}X
+                      </el-button>
+                    </div>
+                  </div>
+
+                  <!-- 时间选择（秒合约） -->
+                  <div
+                    v-if="currentCoin.type === 'SECOND'"
+                    class="account-item"
+                    style="width: 90%; margin-top: 10px; height: 32px; padding-bottom: 5px"
+                  >
+                    <div style="width: 35%; text-align: left">{{ $t('swap.time') }}</div>
+                    <div class="margin" style="width: 65%; justify-content: space-between; text-align: right; display: flex">
+                      <el-button
+                        @click="showAdjustTime(1)"
+                        size="small"
+                        style="flex: 0 0 47%; border: none; background: rgb(240 172 25); color: #000; padding: 0 10px"
+                      >
+                        {{ form.time }}S
+                      </el-button>
+                    </div>
+                  </div>
+
+                  <el-form style="width: 90%; margin: 0 auto; margin-top: 18px">
+                    <!-- 触发价格 -->
+                    <el-form-item v-if="form.type === '3'" style="margin-bottom: 18px">
+                      <label class="before" style="float: left; color: #b0b8db; min-width: 58px; text-align: left">
+                        {{ $t('swap.triggerPrice') }}
+                      </label>
+                      <el-input-number
+                        v-model="form.triggerPrice"
+                        style="float: left; width: calc(100% - 60px)"
+                        :min="0"
+                        :precision="baseCoinScale"
+                      />
+                    </el-form-item>
+
+                    <!-- 价格 -->
+                    <el-form-item style="margin-bottom: 18px">
+                      <label class="before" style="float: left; color: #b0b8db; min-width: 58px; text-align: left">
+                        {{ $t('swap.price') }}
+                      </label>
+                      <el-button
+                        v-if="form.market"
+                        @click="form.market = !form.market"
+                        type="primary"
+                        style="float: right; margin-top: 3px; padding: 3px 6px"
+                        shape="circle"
+                        class="operate_btn"
+                      >
+                        {{ $t('swap.price') }}
+                      </el-button>
+                      <el-button
+                        v-else
+                        @click="form.market = !form.market"
+                        type="primary"
+                        style="float: right; margin-top: 3px; padding: 3px 6px"
+                        shape="circle"
+                        class="operate_btn"
+                      >
+                        {{ $t('swap.marketPrice') }}
+                      </el-button>
+                      <el-input-number
+                        v-if="!form.market"
+                        v-model="form.limitPrice"
+                        style="float: left; min-width: 90px"
+                        :min="0"
+                        :precision="baseCoinScale"
+                      />
+                      <el-input
+                        v-else
+                        :value="$t('swap.marketPrice')"
+                        disabled
+                        style="float: left; width: auto"
+                      />
+                    </el-form-item>
+
+                    <!-- 数量 -->
+                    <el-form-item style="margin-bottom: 18px">
+                      <label class="before" style="float: left; color: #b0b8db; min-width: 58px; text-align: left">
+                        {{ $t('swap.num') }}
+                      </label>
+                      <el-input-number
+                        v-model="form.limitAmount"
+                        style="float: left; width: calc(100% - 60px)"
+                        :min="1"
+                        :precision="0"
+                      />
+                    </el-form-item>
+                  </el-form>
+
+                  <!-- 登录后可交易 -->
+                  <template v-if="isLogin">
+                    <template v-if="form.entrustType === 1">
+                      <div class="operate" style="width: 70%; margin: 0 auto">
+                        <div class="operate_details operate_left" style="float: left">
+                          <div class="operate_details1">
+                            <span class="green">{{ $t('swap.canup') }}:</span>
+                            <span class="num">{{ maxOpen }}</span>
+                          </div>
+                          <el-button
+                            @click="openOrder(1)"
+                            type="primary"
+                            shape="circle"
+                            class="open-up operate_btn"
+                          >
+                            {{ $t('swap.openup') }}
+                          </el-button>
+                        </div>
+                        <div class="operate_details operate_right" style="float: right">
+                          <div class="operate_details2">
+                            <span class="red">{{ $t('swap.candown') }}:</span>
+                            <span class="num">{{ maxOpen }}</span>
+                          </div>
+                          <el-button
+                            @click="openOrder(2)"
+                            type="primary"
+                            shape="circle"
+                            class="open-down operate_btn"
+                          >
+                            {{ $t('swap.opendown') }}
+                          </el-button>
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="operate" style="width: 70%; margin: 0 auto">
+                        <div class="operate_details operate_left" style="float: left">
+                          <div class="operate_details1">
+                            <span class="red">{{ $t('swap.canclosedown') }}:</span>
+                            <span class="num">{{ maxCloseSellAmount }}</span>
+                          </div>
+                          <el-button
+                            @click="closeOrder(2)"
+                            type="primary"
+                            shape="circle"
+                            class="open-down operate_btn"
+                          >
+                            {{ $t('swap.closedown') }}
+                          </el-button>
+                        </div>
+                        <div class="operate_details operate_right" style="float: right">
+                          <div class="operate_details2">
+                            <span class="green">{{ $t('swap.cancloseup') }}:</span>
+                            <span class="num">{{ maxCloseBuyAmount }}</span>
+                          </div>
+                          <el-button
+                            @click="closeOrder(1)"
+                            type="primary"
+                            shape="circle"
+                            class="open-up operate_btn"
+                          >
+                            {{ $t('swap.closeup') }}
+                          </el-button>
+                        </div>
+                      </div>
+                    </template>
+                  </template>
+
+                  <!-- 未登录提示 -->
+                  <div v-if="!isLogin" class="operate-login" style="width: 94%; margin-left: 3%">
+                    <span style="display: inline-block; width: 100%; text-align: center; border: 1px solid #232d3a; padding: 5px 0; border-radius: 5px">
+                      {{ $t('common.please') }}
+                      <router-link to="/login"><span style="color: #f0a70a">{{ $t('common.login') }}</span></router-link> /
+                      <router-link to="/register"><span style="color: #00dcff">{{ $t('common.register') }}</span></router-link>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -441,8 +726,8 @@
         </div>
       </div>
 
-      <!-- 左侧：盘口和交易表单 -->
-      <div class="left plate-wrap orderbook-area panel-shell">
+      <!-- 右侧：盘口数据 -->
+      <div class="orderbook-area panel-shell">
         <div class="panel-header panel-header-compact">
           <div>
             <span class="panel-kicker">Order Book</span>
@@ -545,290 +830,6 @@
             </template>
           </el-table-column>
         </el-table>
-
-        <!-- 开仓/平仓表单 -->
-      </div>
-
-      <div class="trade-form-area">
-        <div class="order panel-shell trade-form-panel">
-          <div v-if="currentCoin.type === 'ALWAYS'" class="order-handler trade-form-header">
-            <span
-              :style="{ width: currentCoin.type === 'ALWAYS' ? '50%' : '100%', textAlign: 'center' }"
-              @click="entrustChange(1)"
-              :class="{ active: form.entrustType === 1 }"
-            >
-              {{ $t('swap.open') }}
-            </span>
-            <span
-              v-if="currentCoin.type === 'ALWAYS'"
-              style="width: 50%; text-align: center"
-              @click="entrustChange(2)"
-              :class="{ active: form.entrustType === 2 }"
-            >
-              {{ $t('swap.close') }}
-            </span>
-          </div>
-          <div class="table open-close">
-            <div class="open trade-form-body">
-              <el-radio-group v-model="form.type" type="button" size="default">
-                <el-radio label="2">{{ $t('swap.limited_price') }}</el-radio>
-                <el-radio label="3">{{ $t('swap.trigger_price') }}</el-radio>
-              </el-radio-group>
-
-              <!-- 账户保证金 -->
-              <div class="account-item" style="width: 90%; margin-top: 10px; height: 32px; padding-bottom: 5px">
-                <div style="width: 35%; text-align: left">{{ $t('swap.accountmargin') }}</div>
-                <div class="margin" style="width: 65%; justify-content: space-between; text-align: right; display: flex">
-                  <el-button
-                    @click="showAdjustLeverage(1)"
-                    size="small"
-                    style="flex: 0 0 47%; border: none; background: rgb(240 172 25); color: #000; padding: 0 10px"
-                  >
-                    {{ form.leverage }}X
-                  </el-button>
-                </div>
-              </div>
-
-              <!-- 时间选择（秒合约） -->
-              <div
-                v-if="currentCoin.type === 'SECOND'"
-                class="account-item"
-                style="width: 90%; margin-top: 10px; height: 32px; padding-bottom: 5px"
-              >
-                <div style="width: 35%; text-align: left">{{ $t('swap.time') }}</div>
-                <div class="margin" style="width: 65%; justify-content: space-between; text-align: right; display: flex">
-                  <el-button
-                    @click="showAdjustTime(1)"
-                    size="small"
-                    style="flex: 0 0 47%; border: none; background: rgb(240 172 25); color: #000; padding: 0 10px"
-                  >
-                    {{ form.time }}S
-                  </el-button>
-                </div>
-              </div>
-
-              <el-form style="width: 90%; margin: 0 auto; margin-top: 18px">
-                <!-- 触发价格 -->
-                <el-form-item v-if="form.type === '3'" style="margin-bottom: 18px">
-                  <label class="before" style="float: left; color: #b0b8db; min-width: 58px; text-align: left">
-                    {{ $t('swap.triggerPrice') }}
-                  </label>
-                  <el-input-number
-                    v-model="form.triggerPrice"
-                    style="float: left; width: calc(100% - 60px)"
-                    :min="0"
-                    :precision="baseCoinScale"
-                  />
-                </el-form-item>
-
-                <!-- 价格 -->
-                <el-form-item style="margin-bottom: 18px">
-                  <label class="before" style="float: left; color: #b0b8db; min-width: 58px; text-align: left">
-                    {{ $t('swap.price') }}
-                  </label>
-                  <el-button
-                    v-if="form.market"
-                    @click="form.market = !form.market"
-                    type="primary"
-                    style="float: right; margin-top: 3px; padding: 3px 6px"
-                    shape="circle"
-                    class="operate_btn"
-                  >
-                    {{ $t('swap.price') }}
-                  </el-button>
-                  <el-button
-                    v-else
-                    @click="form.market = !form.market"
-                    type="primary"
-                    style="float: right; margin-top: 3px; padding: 3px 6px"
-                    shape="circle"
-                    class="operate_btn"
-                  >
-                    {{ $t('swap.marketPrice') }}
-                  </el-button>
-                  <el-input-number
-                    v-if="!form.market"
-                    v-model="form.limitPrice"
-                    style="float: left; min-width: 90px"
-                    :min="0"
-                    :precision="baseCoinScale"
-                  />
-                  <el-input
-                    v-else
-                    :value="$t('swap.marketPrice')"
-                    disabled
-                    style="float: left; width: auto"
-                  />
-                </el-form-item>
-
-                <!-- 数量 -->
-                <el-form-item style="margin-bottom: 18px">
-                  <label class="before" style="float: left; color: #b0b8db; min-width: 58px; text-align: left">
-                    {{ $t('swap.num') }}
-                  </label>
-                  <el-input-number
-                    v-model="form.limitAmount"
-                    style="float: left; width: calc(100% - 60px)"
-                    :min="1"
-                    :precision="0"
-                  />
-                </el-form-item>
-              </el-form>
-
-              <!-- 登录后可交易 -->
-              <template v-if="isLogin">
-                <template v-if="form.entrustType === 1">
-                  <div class="operate" style="width: 70%; margin: 0 auto">
-                    <div class="operate_details operate_left" style="float: left">
-                      <div class="operate_details1">
-                        <span class="green">{{ $t('swap.canup') }}:</span>
-                        <span class="num">{{ maxOpen }}</span>
-                      </div>
-                      <el-button
-                        @click="openOrder(1)"
-                        type="primary"
-                        shape="circle"
-                        class="open-up operate_btn"
-                      >
-                        {{ $t('swap.openup') }}
-                      </el-button>
-                    </div>
-                    <div class="operate_details operate_right" style="float: right">
-                      <div class="operate_details2">
-                        <span class="red">{{ $t('swap.candown') }}:</span>
-                        <span class="num">{{ maxOpen }}</span>
-                      </div>
-                      <el-button
-                        @click="openOrder(2)"
-                        type="primary"
-                        shape="circle"
-                        class="open-down operate_btn"
-                      >
-                        {{ $t('swap.opendown') }}
-                      </el-button>
-                    </div>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="operate" style="width: 70%; margin: 0 auto">
-                    <div class="operate_details operate_left" style="float: left">
-                      <div class="operate_details1">
-                        <span class="red">{{ $t('swap.canclosedown') }}:</span>
-                        <span class="num">{{ maxCloseSellAmount }}</span>
-                      </div>
-                      <el-button
-                        @click="closeOrder(2)"
-                        type="primary"
-                        shape="circle"
-                        class="open-down operate_btn"
-                      >
-                        {{ $t('swap.closedown') }}
-                      </el-button>
-                    </div>
-                    <div class="operate_details operate_right" style="float: right">
-                      <div class="operate_details2">
-                        <span class="green">{{ $t('swap.cancloseup') }}:</span>
-                        <span class="num">{{ maxCloseBuyAmount }}</span>
-                      </div>
-                      <el-button
-                        @click="closeOrder(1)"
-                        type="primary"
-                        shape="circle"
-                        class="open-up operate_btn"
-                      >
-                        {{ $t('swap.closeup') }}
-                      </el-button>
-                    </div>
-                  </div>
-                </template>
-              </template>
-
-              <!-- 未登录提示 -->
-              <div v-if="!isLogin" class="operate-login" style="width: 94%; margin-left: 3%">
-                <span style="display: inline-block; width: 100%; text-align: center; border: 1px solid #232d3a; padding: 5px 0; border-radius: 5px">
-                  {{ $t('common.please') }}
-                  <router-link to="/login"><span style="color: #f0a70a">{{ $t('common.login') }}</span></router-link> /
-                  <router-link to="/register"><span style="color: #00dcff">{{ $t('common.register') }}</span></router-link>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 左侧底部：成交记录和账户信息 -->
-      <div class="left plate-wrap side-rail">
-        <div class="trade-wrap panel-shell latest-trade-panel">
-          <div class="panel-header panel-header-compact">
-            <div>
-              <span class="panel-kicker">Tape</span>
-              <strong>{{ $t('swap.latestdeal') }}</strong>
-            </div>
-            <span class="panel-meta">{{ trade.rows.length }}</span>
-          </div>
-          <el-table :data="trade.rows" height="430" :no-data-text="$t('common.nodata')">
-            <el-table-column label="价格">
-              <template #default="{ row }">
-                <span :class="row.direction === 'BUY' ? 'buy' : 'sell'">{{ row.price }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="数量">
-              <template #default="{ row }">
-                {{ row.amount?.toFixed(4) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="时间">
-              <template #default="{ row }">
-                {{ timeFormat(row.time) }}
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-
-        <!-- 我的合约账户 -->
-        <div class="order panel-shell account-panel">
-          <div class="panel-header panel-header-compact account-panel-header">
-            <div>
-              <span class="panel-kicker">Assets</span>
-              <strong>{{ $t('swap.myswapaccount') }}</strong>
-            </div>
-            <router-link class="linkmore" to="/uc/contract-money">
-              {{ $t('swap.zijinhuazhuan') }}
-            </router-link>
-          </div>
-          <div class="table swap-my-account">
-            <div class="account-item">
-              <div>{{ $t('swap.accountquanyi') }}</div>
-              <div style="font-size: 12px">
-                <span>{{ (wallet.base + wallet.frozen)?.toFixed(baseCoinScale) }}(USD)</span>
-              </div>
-            </div>
-            <div class="account-item">
-              <div>{{ $t('swap.profitandloss') }}</div>
-              <div style="font-size: 12px">
-                <span>{{ wallet.profit?.toFixed(baseCoinScale) }}</span>
-              </div>
-            </div>
-            <div class="account-item">
-              <div>{{ $t('swap.principalAmount') }}</div>
-              <div style="font-size: 12px">
-                <span>{{ wallet.base?.toFixed(baseCoinScale) }}(USD)</span>
-              </div>
-            </div>
-            <div class="account-item">
-              <div>{{ $t('swap.positionAmount') }}</div>
-              <div style="font-size: 12px">
-                <span>{{ positionNum }}</span>
-              </div>
-            </div>
-            <div class="account-item">
-              <div>{{ $t('swap.frozenAmount') }}</div>
-              <div style="font-size: 12px">
-                <span>{{ wallet.frozen?.toFixed(baseCoinScale) }}(USD)</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -2259,9 +2260,10 @@ onBeforeUnmount(() => {
     margin: 0 auto;
     display: grid;
     grid-template-columns: 320px minmax(0, 1fr) 340px;
+    grid-template-rows: auto auto 1fr;
     grid-template-areas:
       'market chart orderbook'
-      'tradeform side side'
+      'trade chart orderbook'
       'orders orders orders';
     gap: 14px;
     align-items: start;
@@ -2270,81 +2272,25 @@ onBeforeUnmount(() => {
       display: contents;
     }
 
+    /* 左侧：币种列表 */
     .market-rail {
       grid-area: market;
       min-width: 0;
     }
 
-    .left {
+    /* 左侧中部：最新交易 */
+    .latest-trade-panel {
+      grid-area: trade;
       min-width: 0;
-      overflow: hidden;
-
-      .handlers {
-        font-size: 0;
-        padding: 10px 20px;
-        background-color: #192330;
-        border-top-left-radius: 0px;
-        border-top-right-radius: 0px;
-
-        .handler {
-          display: inline-block;
-          margin-right: 10px;
-          width: 20px;
-          height: 20px;
-          background-size: 100% 100%;
-          cursor: pointer;
-
-          &.handler-all {
-            background-image: url('../../assets/images/exchange/plate_all.png');
-            &.active {
-              background-image: url('../../assets/images/exchange/plate_all_active.png');
-            }
-          }
-          &.handler-green {
-            background-image: url('../../assets/images/exchange/plate_green.png');
-            &.active {
-              background-image: url('../../assets/images/exchange/plate_green_active.png');
-            }
-          }
-          &.handler-red {
-            background-image: url('../../assets/images/exchange/plate_red.png');
-            &.active {
-              background-image: url('../../assets/images/exchange/plate_red_active.png');
-            }
-          }
-        }
-      }
-
-      .plate-nowprice {
-        text-align: center;
-        background: linear-gradient(180deg, rgba(41, 52, 68, 0.92), rgba(25, 35, 48, 0.92));
-        line-height: 1;
-        display: flex;
-        align-items: center;
-        height: 52px;
-        justify-content: center;
-        font-size: 14px;
-        font-weight: 500;
-        border-top: 1px solid rgba(255, 255, 255, 0.04);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-
-        .price {
-          font-size: 22px;
-          margin-right: 10px;
-        }
-
-        .price-cny {
-          font-size: 12px;
-          margin-left: 10px;
-          font-weight: 400;
-          color: rgba(219, 222, 246, 0.45);
-        }
-      }
     }
 
+    /* 中间：K 线图、账户信息和交易表单 */
     .center {
       grid-area: chart;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
 
       .imgtable {
         height: 518px;
@@ -2381,13 +2327,10 @@ onBeforeUnmount(() => {
       }
     }
 
-    .right {
+    /* 右侧：盘口数据 */
+    .orderbook-area {
+      grid-area: orderbook;
       min-width: 0;
-
-      .coin-menu {
-        overflow: hidden;
-        min-height: 100%;
-      }
     }
   }
 
@@ -2545,30 +2488,34 @@ onBeforeUnmount(() => {
     min-height: 352px;
   }
 
-  .side-rail {
-    grid-area: side;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .trade-wrap {
-    overflow: hidden;
-  }
-
   .orderbook-area {
-    grid-area: orderbook;
     overflow: hidden;
-  }
-
-  .trade-form-area {
-    grid-area: tradeform;
-    min-width: 0;
   }
 
   .trade-form-panel {
     min-height: 352px;
+  }
+
+  .latest-trade-panel {
+    grid-area: trade;
+    min-height: 352px;
+  }
+
+  .account-panel-wrapper {
+    min-height: 200px;
+    flex-shrink: 0;
+  }
+
+  .trade-form-panel-wrapper {
+    min-height: 352px;
+    flex-shrink: 0;
+  }
+
+  /* 中间容器内的账户和表单自动在 chart 区域内垂直排列 */
+  .center {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
 
   .trade-form-header {
@@ -2775,14 +2722,13 @@ onBeforeUnmount(() => {
       width: 100%;
       grid-template-areas:
         'market chart'
-        'orderbook chart'
-        'tradeform side'
+        'trade chart'
         'orders orders';
-      grid-template-columns: 320px minmax(0, 1fr);
+      grid-template-columns: 280px minmax(0, 1fr);
     }
 
-    .side-rail {
-      grid-template-columns: minmax(0, 1fr);
+    .orderbook-area {
+      display: none;
     }
   }
 }
@@ -2798,9 +2744,7 @@ onBeforeUnmount(() => {
       grid-template-areas:
         'market'
         'chart'
-        'orderbook'
-        'tradeform'
-        'side'
+        'trade'
         'orders';
     }
 
@@ -2816,10 +2760,6 @@ onBeforeUnmount(() => {
     .panel-toolbar {
       padding-left: 12px;
       padding-right: 12px;
-    }
-
-    .side-rail {
-      grid-template-columns: minmax(0, 1fr);
     }
   }
 }
