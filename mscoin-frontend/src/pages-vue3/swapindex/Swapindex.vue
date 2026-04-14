@@ -2503,6 +2503,7 @@ onBeforeUnmount(() => {
 
   .orderbook-area {
     overflow: hidden;
+    min-height: 1018px;
   }
 
   .trade-form-panel {
