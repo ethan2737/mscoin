@@ -2521,7 +2521,7 @@ onBeforeUnmount(() => {
   }
 
   .account-panel-wrapper {
-    min-height: 200px;
+    min-height: 120px;
     flex-shrink: 0;
   }
 
