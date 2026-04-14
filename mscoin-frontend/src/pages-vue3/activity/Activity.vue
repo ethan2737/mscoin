@@ -501,11 +501,11 @@ onMounted(() => {
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab) {
-  color: #999;
+  color: #ccc;
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab:hover) {
-  color: #f0a70a;
+  color: #fff;
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab-active) {
@@ -822,7 +822,7 @@ onMounted(() => {
 
   span {
     font-size: 12px;
-    color: #999;
+    color: #ccc;
   }
 }
 
@@ -867,7 +867,7 @@ onMounted(() => {
   letter-spacing: 1px;
   text-align: right;
   padding-right: 80px;
-  color: #999;
+  color: #ccc;
 }
 
 .right {
@@ -879,6 +879,6 @@ onMounted(() => {
 }
 
 .gray {
-  color: #999;
+  color: #ccc;
 }
 </style>
