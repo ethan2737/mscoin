@@ -40,10 +40,10 @@
                             <span>{{fixedScale(item.progress, 2)}}%</span>
                             <span>{{fixedScale(item.totalSupply, item.amountScale)}} {{item.unit}}</span>
                           </div>
-                        </div>
-                        <div class="col-time">
-                          <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
-                          <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          <div class="progress-time-wrap">
+                            <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
+                            <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          </div>
                         </div>
                       </div>
                       <div class="bottom-panel">
@@ -109,10 +109,10 @@
                             <span>{{fixedScale(item.progress, 2)}}%</span>
                             <span>{{fixedScale(item.totalSupply, item.amountScale)}} {{item.unit}}</span>
                           </div>
-                        </div>
-                        <div class="col-time">
-                          <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
-                          <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          <div class="progress-time-wrap">
+                            <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
+                            <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          </div>
                         </div>
                       </div>
                       <div class="bottom-panel">
@@ -178,10 +178,10 @@
                             <span>{{fixedScale(item.progress, 2)}}%</span>
                             <span>{{fixedScale(item.totalSupply, item.amountScale)}} {{item.unit}}</span>
                           </div>
-                        </div>
-                        <div class="col-time">
-                          <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
-                          <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          <div class="progress-time-wrap">
+                            <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
+                            <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          </div>
                         </div>
                       </div>
                       <div class="bottom-panel">
@@ -247,10 +247,10 @@
                             <span>{{fixedScale(item.progress, 2)}}%</span>
                             <span>{{fixedScale(item.totalSupply, item.amountScale)}} {{item.unit}}</span>
                           </div>
-                        </div>
-                        <div class="col-time">
-                          <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
-                          <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          <div class="progress-time-wrap">
+                            <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
+                            <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          </div>
                         </div>
                       </div>
                       <div class="bottom-panel">
@@ -316,10 +316,10 @@
                             <span>{{fixedScale(item.progress, 2)}}%</span>
                             <span>{{fixedScale(item.totalSupply, item.amountScale)}} {{item.unit}}</span>
                           </div>
-                        </div>
-                        <div class="col-time">
-                          <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
-                          <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          <div class="progress-time-wrap">
+                            <p class="progress-time">{{$t('activity.starttime')}}：{{dateFormat(item.startTime)}}</p>
+                            <p class="progress-time">{{$t('activity.endtime')}}：{{dateFormat(item.endTime)}}</p>
+                          </div>
                         </div>
                       </div>
                       <div class="bottom-panel">
@@ -845,9 +845,8 @@ onMounted(() => {
   min-width: 200px;
 }
 
-.col-time {
-  flex: 1;
-  min-width: 200px;
+.progress-time-wrap {
+  margin-top: 15px;
 }
 
 .progress-text {
@@ -901,8 +900,8 @@ onMounted(() => {
 .progress-time {
   font-size: 13px;
   letter-spacing: 1px;
-  text-align: right;
-  padding-right: 80px;
+  text-align: left;
+  margin: 8px 0 0 0;
   color: #ccc;
 }
 
