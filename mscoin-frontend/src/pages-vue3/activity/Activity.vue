@@ -496,29 +496,33 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Tabs 样式完全覆盖 Element Plus 默认蓝色 */
 .activity :deep(.el-tabs-bar) {
   border-bottom: 1px solid #27313e;
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab) {
-  color: #ccc;
+  color: #ccc !important;
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab:hover) {
-  color: #fff;
+  color: #fff !important;
 }
 
-.activity :deep(.el-tabs-nav .el-tabs-tab-active) {
+.activity :deep(.el-tabs-nav .el-tabs-tab.is-active) {
   color: #f0a70a !important;
 }
 
-.activity :deep(.el-tabs-is-top .el-tabs__nav-wrap::after) {
+.activity :deep(.el-tabs__active-bar) {
   background-color: #f0a70a !important;
 }
 
-/* 修复 tabs 底部激活条颜色 */
-.activity :deep(.el-tabs__active-bar) {
-  background-color: #f0a70a !important;
+.activity :deep(.el-tabs__item.is-active) {
+  color: #f0a70a !important;
+}
+
+.activity :deep(.el-tabs__item:hover) {
+  color: #f0a70a !important;
 }
 
 .app_bottom {
@@ -644,7 +648,7 @@ onMounted(() => {
 }
 
 .activity_container {
-  padding: 0 5%;
+  padding: 0 2%;
   text-align: center;
   height: 100%;
   min-height: 600px;
@@ -661,12 +665,13 @@ onMounted(() => {
 .activity .main {
   margin-top: 40px;
   display: flex;
-  justify-content: space-between;
-  flex-direction: row;
-  flex-wrap: wrap;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 .activity-container {
+  width: 100%;
   min-height: 200px;
 }
 
@@ -691,10 +696,10 @@ onMounted(() => {
   position: relative;
   overflow: visible;
   padding: 15px 20px;
-  margin-top: 25px;
-  margin-bottom: 25px;
-  width: 100%;
-  min-height: 20px;
+  margin: 25px auto;
+  max-width: 1200px;
+  width: calc(100% - 40px);
+  min-height: 200px;
   background: #17212e;
   border-radius: 8px;
   border: 1px solid #1f2833;
@@ -727,6 +732,8 @@ onMounted(() => {
     padding-top: 10px;
     display: flex;
     flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
 
     span {
       font-size: 22px;
@@ -742,6 +749,7 @@ onMounted(() => {
       border-top-right-radius: 3px;
       border-bottom-right-radius: 3px;
       position: relative;
+      white-space: nowrap;
 
       &:before {
         content: "●";
@@ -762,7 +770,7 @@ onMounted(() => {
     div.step1 {
       margin-left: 15px;
       color: #ffffff;
-      border: 1px solid #ffffff;
+      border: 1px solid #19be6b;
       background: #19be6b;
       background-image: repeating-linear-gradient(60deg, hsla(0,0%,100%,.1), hsla(0,0%,100%,.1) 10px, transparent 0, transparent 20px);
     }
@@ -770,15 +778,15 @@ onMounted(() => {
     div.step2 {
       margin-left: 15px;
       color: #FFFFFF;
-      border: 1px solid #ffffff;
-      background: #F90;
+      border: 1px solid #f0a70a;
+      background: #f0a70a;
       background-image: repeating-linear-gradient(60deg, hsla(0,0%,100%,.1), hsla(0,0%,100%,.1) 10px, transparent 0, transparent 20px);
     }
 
     div.step3 {
       margin-left: 15px;
       color: #ffffff;
-      border: 1px solid #ffffff;
+      border: 1px solid #828282;
       background: #828282;
       background-image: repeating-linear-gradient(60deg, hsla(0,0%,100%,.1), hsla(0,0%,100%,.1) 10px, transparent 0, transparent 20px);
     }
