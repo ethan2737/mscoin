@@ -2,7 +2,9 @@ package logic
 
 import (
 	"context"
+	"github.com/jinzhu/copier"
 	"github.com/zeromicro/go-zero/core/logx"
+	"grpc-common/market/types/market"
 	"grpc-common/ucenter/types/member"
 	"mscoin-common/tools"
 	"ucenter-api/internal/svc"
@@ -67,6 +69,25 @@ func (a *Approve) FindSecuritySetting(req *types.ApproveReq) (*types.MemberSecur
 		ms.AccountVerified = "true"
 	}
 	return ms, nil
+}
+
+func (a *Approve) FindWalletCoinList() ([]*types.RechargeWalletInfo, error) {
+	// 调用 market rpc 获取所有币种信息
+	coinList, err := a.svcCtx.MarketRpc.FindAllCoin(a.ctx, &market.MarketReq{})
+	if err != nil {
+		return nil, err
+	}
+	// 组装返回数据
+	result := make([]*types.RechargeWalletInfo, 0, len(coinList.List))
+	for _, coin := range coinList.List {
+		rechargeInfo := &types.RechargeWalletInfo{
+			Coin: &types.CoinInfo{},
+		}
+		copier.Copy(rechargeInfo.Coin, coin)
+		rechargeInfo.Address = coin.DepositAddress
+		result = append(result, rechargeInfo)
+	}
+	return result, nil
 }
 
 func NewApproveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Approve {

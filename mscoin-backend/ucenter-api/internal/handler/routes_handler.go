@@ -36,6 +36,7 @@ func RegisterHandlers(r *Routers, serverCtx *svc.ServiceContext) {
 	approve := NewApproveHandler(serverCtx)
 	approveGroup.Use(midd.Auth(serverCtx.Config.JWT.AccessSecret))
 	approveGroup.Post("/uc/approve/security/setting", approve.SecuritySetting)
+	approveGroup.Post("/uc/approve/wallet/coin/list", approve.WalletCoinList)
 	withdrawGroup := r.Group()
 	withdraw := NewWithdrawHandler(serverCtx)
 	withdrawGroup.Use(midd.Auth(serverCtx.Config.JWT.AccessSecret))

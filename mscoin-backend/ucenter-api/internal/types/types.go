@@ -264,3 +264,19 @@ type ActivityAttendReq struct {
 type ActivityAttendResp struct {
 	Success bool `json:"success"`
 }
+
+// RechargeWalletInfo 充值钱包信息
+type RechargeWalletInfo struct {
+	Coin    *CoinInfo `json:"coin"`
+	Address string    `json:"address"`
+	Memo    string    `json:"memo"`
+}
+
+// CoinInfo 币种信息（用于充值页面）
+type CoinInfo struct {
+	Unit              string  `json:"unit"`
+	Name              string  `json:"name"`
+	CanRecharge       int     `json:"canRecharge"`
+	AccountType       int     `json:"accountType"`
+	MinRechargeAmount float64 `json:"minRechargeAmount"`
+}

@@ -21,6 +21,13 @@ func (h *ApproveHandler) SecuritySetting(w http.ResponseWriter, r *http.Request)
 	httpx.OkJsonCtx(r.Context(), w, result)
 }
 
+func (h *ApproveHandler) WalletCoinList(w http.ResponseWriter, r *http.Request) {
+	l := logic.NewApproveLogic(r.Context(), h.svcCtx)
+	resp, err := l.FindWalletCoinList()
+	result := common.NewResult().Deal(resp, err)
+	httpx.OkJsonCtx(r.Context(), w, result)
+}
+
 func NewApproveHandler(svcCtx *svc.ServiceContext) *ApproveHandler {
 	return &ApproveHandler{svcCtx}
 }
