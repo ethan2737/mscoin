@@ -663,7 +663,7 @@ onMounted(() => {
   background: #0b1520;
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   padding-bottom: 50px;
   padding-top: 60px;
   color: #fff;
@@ -674,7 +674,7 @@ onMounted(() => {
 }
 
 .activity_container {
-  padding: 0 20px;
+  padding: 0 150px;
   text-align: center;
   height: 100%;
   min-height: 600px;
@@ -698,11 +698,13 @@ onMounted(() => {
   max-width: 1820px;
   margin-left: auto;
   margin-right: auto;
+  overflow: visible;
 }
 
 .activity-container {
   width: 100%;
   min-height: 200px;
+  overflow: visible;
 }
 
 .tips-line {
@@ -727,7 +729,7 @@ onMounted(() => {
   overflow: visible;
   padding: 15px 20px;
   margin: 25px auto;
-  width: 100%;
+  width: 98%;
   min-height: 200px;
   background: #17212e;
   border-radius: 8px;

@@ -6,13 +6,13 @@
           <div class="money_table">
             <div class="table-header">
               <div class="total-assets">
-                <span>{{ $t('uc.finance.money.totalassets') }}：</span>
+                <span>{{ t('uc.finance.money.totalassets') }}：</span>
                 <span style="font-size: 18px; color: #D8E1EB;">${{ totalUSDT }}</span>
                 <span style="font-size: 10px; color: #828ea1; margin-left: 5px;">≈ ¥{{ totalCny }}</span>
               </div>
               <el-input
                 v-model="searchKey"
-                :placeholder="$t('common.searchplaceholder')"
+                :placeholder="t('common.searchplaceholder')"
                 class="search-input"
                 @input="seachInputChange"
               >
@@ -22,30 +22,30 @@
               </el-input>
             </div>
             <el-table :data="tableMoneyShow" v-loading="loading" border style="width: 100%">
-              <el-table-column prop="coinType" :label="$t('uc.finance.money.cointype')" align="center" width="100" />
-              <el-table-column :label="$t('uc.finance.money.balance')" align="center">
+              <el-table-column prop="coinType" :label="t('uc.finance.money.cointype')" align="center" width="100" />
+              <el-table-column :label="t('uc.finance.money.balance')" align="center">
                 <template #default="{ row }">
                   <span :title="row.balance">{{ toFloor(row.balance || '0') }}</span>
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('uc.finance.money.frozen')" align="center">
+              <el-table-column :label="t('uc.finance.money.frozen')" align="center">
                 <template #default="{ row }">
                   <span :title="row.frozenBalance">{{ toFloor(row.frozenBalance || '0') }}</span>
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('uc.finance.money.needreleased')" align="center">
+              <el-table-column :label="t('uc.finance.money.needreleased')" align="center">
                 <template #default="{ row }">
                   <span :title="row.toReleased">{{ toFloor(row.toReleased || '0') }}</span>
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('uc.finance.money.operate')" align="center">
+              <el-table-column :label="t('uc.finance.money.operate')" align="center">
                 <template #default="{ row }">
                   <el-button
                     type="primary"
                     size="small"
                     @click="openTransfer(row)"
                   >
-                    {{ $t('uc.finance.money.transfer') }}
+                    {{ t('uc.finance.money.transfer') }}
                   </el-button>
                 </template>
               </el-table-column>
@@ -56,14 +56,14 @@
     </div>
 
     <!-- 划转对话框 -->
-    <el-dialog v-model="transferShow" :title="$t('uc.finance.money.transfer')" width="450px">
+    <el-dialog v-model="transferShow" :title="t('uc.finance.money.transfer')" width="450px">
       <div class="transfer-info" style="margin-bottom: 20px;">
         <div style="display: flex; align-items: center; justify-content: space-between;">
           <div>
             <p style="font-size: 12px; color: #828ea1;">
-              {{ direction ? $t('uc.finance.money.from') : $t('uc.finance.money.to') }}
+              {{ direction ? t('uc.finance.money.from') : t('uc.finance.money.to') }}
             </p>
-            <p style="font-size: 16px; color: #fff;">{{ $t('uc.finance.money.exchangeAccount') }}</p>
+            <p style="font-size: 16px; color: #fff;">{{ t('uc.finance.money.exchangeAccount') }}</p>
           </div>
           <el-icon
             :size="24"
@@ -74,18 +74,18 @@
           </el-icon>
           <div>
             <p style="font-size: 12px; color: #828ea1;">
-              {{ direction ? $t('uc.finance.money.to') : $t('uc.finance.money.from') }}
+              {{ direction ? t('uc.finance.money.to') : t('uc.finance.money.from') }}
             </p>
-            <p style="font-size: 16px; color: #fff;">{{ $t('uc.finance.money.swapAccount') }}</p>
+            <p style="font-size: 16px; color: #fff;">{{ t('uc.finance.money.swapAccount') }}</p>
           </div>
         </div>
       </div>
 
       <el-form :inline="true">
-        <el-form-item :label="$t('uc.finance.money.num')">
+        <el-form-item :label="t('uc.finance.money.num')">
           <el-input-number
             v-model="transferAmount"
-            :placeholder="$t('uc.finance.money.transfertip')"
+            :placeholder="t('uc.finance.money.transfertip')"
             :min="0"
             :max="direction ? transfer.mainBalance : transfer.balance"
             style="width: 200px;"
@@ -94,13 +94,13 @@
       </el-form>
 
       <div style="margin-bottom: 15px; color: #ccc;">
-        ({{ $t('uc.finance.money.available') }} {{ transfer.coin?.name }}
+        ({{ t('uc.finance.money.available') }} {{ transfer.coin?.name }}
         {{ direction ? transfer.mainBalance : transfer.balance }})
       </div>
 
       <template #footer>
-        <el-button @click="transferShow = false">{{ $t('common.close') }}</el-button>
-        <el-button type="primary" @click="doTransfer">{{ $t('common.ok') }}</el-button>
+        <el-button @click="transferShow = false">{{ t('common.close') }}</el-button>
+        <el-button type="primary" @click="doTransfer">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -110,14 +110,15 @@
 /**
  * Vue 3 迁移 - 合约资产页面
  */
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, inject } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { useStore } from 'vuex'
+import { useI18n } from 'vue-i18n'
 
 const host = ''
-const store = useStore()
+const store = inject('store')
+const { t } = useI18n()
 
 const direction = ref(true)
 const loading = ref(true)
@@ -131,7 +132,7 @@ const transfer = reactive({
   balance: 0,
   mainBalance: 0
 })
-const memberId = computed(() => store.getters.member?.id || store.state.member?.id || 0)
+const memberId = computed(() => store?.state?.member?.id || 0)
 
 const toFloor = (number, scale = 8) => {
   if (Number(number) === 0) return 0
@@ -167,7 +168,7 @@ const doTransfer = () => {
   const limit = direction.value ? transfer.mainBalance : transfer.balance
 
   if (transferAmount.value > limit) {
-    ElMessage.error($t('uc.finance.money.transferout'))
+    ElMessage.error(t('uc.finance.money.transferout'))
     return
   }
 
@@ -186,7 +187,7 @@ const doTransfer = () => {
   .then(response => {
     const resp = response.data
     if (resp.code === 0 || resp.success === true) {
-      ElMessage.success($t('uc.finance.money.transfersuccess'))
+      ElMessage.success(t('uc.finance.money.transfersuccess'))
       transferShow.value = false
       transfer.coin = null
       transferAmount.value = null
@@ -195,22 +196,35 @@ const doTransfer = () => {
       ElMessage.error(resp.message)
     }
   })
-  .catch(() => {
-    ElMessage.error($t('common.logintip'))
+  .catch((error) => {
+    console.error('transfer error:', error)
+    ElMessage.error('划转失败，请稍后重试')
   })
 }
 
 const getMoney = () => {
+  const token = localStorage.getItem('TOKEN')
+  if (!token) {
+    ElMessage.error(t('common.logintip'))
+    loading.value = false
+    return
+  }
+
   axios.post(`${host}/uc/contract-wallet`, {
     memberId: memberId.value
   }, {
     withCredentials: true,
     headers: {
-      'x-auth-token': localStorage.getItem('TOKEN')
+      'x-auth-token': token
     }
   })
   .then(response => {
     const resp = response.data
+    if (resp.code === 4000) {
+      ElMessage.error(t('common.logintip'))
+      loading.value = false
+      return
+    }
     const rows = Array.isArray(resp?.data) ? resp.data : (Array.isArray(resp) ? resp : [])
     if (Array.isArray(rows)) {
       tableMoney.value = rows
@@ -220,11 +234,13 @@ const getMoney = () => {
       loading.value = false
       tableMoneyShow.value = tableMoney.value
     } else {
-      ElMessage.error($t('common.logintip'))
+      ElMessage.error(resp.message || '获取合约资产信息失败')
+      loading.value = false
     }
   })
-  .catch(() => {
-    ElMessage.error($t('common.logintip'))
+  .catch((error) => {
+    console.error('getMoney error:', error)
+    ElMessage.error('网络请求失败，请稍后重试')
     loading.value = false
   })
 }
@@ -256,6 +272,8 @@ onMounted(() => {
     height: auto;
     overflow: hidden;
     padding: 0 15px;
+    background: #192330;
+    min-height: 600px;
 
     .bill_box {
       .rightarea-con {
@@ -273,6 +291,31 @@ onMounted(() => {
 
             .search-input {
               width: 200px;
+            }
+          }
+        }
+
+        // 覆盖 Element Plus 表格默认白色背景
+        :deep(.el-table) {
+          background-color: transparent !important;
+
+          .el-table__body tr {
+            background-color: #192330 !important;
+
+            td {
+              background-color: #192330 !important;
+              color: #fff !important;
+              border-color: #27313e !important;
+            }
+          }
+
+          .el-table__header tr {
+            background-color: #27313e !important;
+
+            th {
+              background-color: #27313e !important;
+              color: #fff !important;
+              border-color: #27313e !important;
             }
           }
         }

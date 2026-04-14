@@ -41,68 +41,103 @@
     .pc_menu {
       // 菜单样式
       .el-menu {
-        background: #192330;
+        background: #192330 !important;
         border-right: none;
 
         .el-menu-item {
-          background: #27313e;
-          color: #fff;
+          background: #27313e !important;
+          color: #fff !important;
 
           &:hover {
-            background-color: #3c4553;
+            background-color: #3c4553 !important;
+
+            a {
+              color: #f0ac19 !important;
+            }
           }
 
           &.is-active {
-            color: #f0ac19;
+            color: #f0ac19 !important;
 
             a {
-              color: #f0ac19;
+              color: #f0ac19 !important;
             }
           }
 
           a {
-            color: #fff;
+            color: #fff !important;
             display: block;
             height: 100%;
             padding: 14px 24px;
             font-size: 14px;
+            text-decoration: none !important;
           }
         }
 
+        // 子菜单标题样式 - 强制覆盖 Element Plus 默认灰色
         .el-sub-menu__title {
           height: 50px;
           padding: 15px 10px;
-
-          &:hover {
-            background-color: #3c4553;
-
-            .content, .el-icon {
-              color: #fff;
-            }
-          }
-
-          .isclick {
-            width: 6px;
-            height: 6px;
-            background-color: #f0ac19;
-            display: inline-block;
-            border-radius: 50%;
-            margin-top: 16px;
-            line-height: 50px;
-            display: none;
-          }
+          color: #fff !important;
 
           .content {
-            padding-left: 5px;
-            padding-top: 5px;
-            color: #fff;
+            color: #fff !important;
           }
+
+          .el-icon {
+            color: #fff !important;
+          }
+
+          &:hover {
+            background-color: #3c4553 !important;
+
+            .content, .el-icon {
+              color: #fff !important;
+            }
+          }
+        }
+
+        // 展开状态的子菜单标题
+        .el-sub-menu.is-opened > .el-sub-menu__title {
+          background-color: #3c4553 !important;
+
+          .content,
+          .el-icon {
+            color: #fff !important;
+          }
+        }
+
+        // 子菜单内的菜单项（二级菜单）
+        .el-sub-menu .el-menu-item {
+          background: #27313e !important;
+        }
+
+        .el-sub-menu .el-menu-item a {
+          color: #fff !important;
+          text-decoration: none !important;
+        }
+
+        .el-sub-menu .el-menu-item.is-active {
+          color: #f0ac19 !important;
+        }
+
+        .el-sub-menu .el-menu-item.is-active a {
+          color: #f0ac19 !important;
+        }
+
+        // hover 状态 - 金黄色
+        .el-sub-menu .el-menu-item:hover {
+          background-color: #3c4553 !important;
+        }
+
+        .el-sub-menu .el-menu-item:hover a {
+          color: #f0ac19 !important;
         }
       }
 
       .el-sub-menu.is-opened {
-        .el-sub-menu__title {
-          background-color: #3c4553;
+        > .el-sub-menu__title {
+          background-color: #3c4553 !important;
 
           .isclick {
             background-color: #fff;
@@ -110,7 +145,7 @@
 
           .content,
           .el-icon {
-            color: #fff;
+            color: #fff !important;
           }
         }
       }
@@ -169,19 +204,64 @@
 
     .el-menu-item {
       text-align: left;
-      color: #DDD;
+      color: #fff;
 
       a {
-        color: #828ea1;
+        color: #fff;
+      }
+
+      &:hover {
+        background-color: #3c4553;
+
+        .content, a {
+          color: #fff;
+        }
       }
 
       &.is-active {
+        background-color: #3c4553;
+
         a {
           color: #f0a70a !important;
         }
       }
     }
+
+    .el-sub-menu__title {
+      color: #fff;
+
+      .content {
+        color: #fff;
+      }
+
+      &:hover {
+        background-color: #3c4553;
+
+        .content, .el-icon {
+          color: #fff;
+        }
+      }
+    }
+
+    .el-sub-menu.is-opened {
+      .el-sub-menu__title {
+        background-color: #3c4553;
+
+        .content,
+        .el-icon {
+          color: #fff;
+        }
+      }
+    }
   }
+}
+
+// 全局样式覆盖 - 确保 PC 菜单所有子菜单标题都是白色
+.pc_menu .el-sub-menu__title,
+.pc_menu .el-sub-menu__title .content,
+.pc_menu .el-sub-menu:not(.is-opened) > .el-sub-menu__title,
+.pc_menu .el-sub-menu:not(.is-opened) > .el-sub-menu__title .content {
+  color: #fff !important;
 }
 </style>
 

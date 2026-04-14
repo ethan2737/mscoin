@@ -3,22 +3,22 @@
     <div class="nav-right">
       <div class="rightarea">
         <section class="trade-groups merchant-tops">
-          <router-link to="/uc/withdraw/address">{{ $t('uc.finance.withdraw.addressmanager') }}</router-link>
+          <router-link to="/uc/withdraw/address">{{ t('uc.finance.withdraw.addressmanager') }}</router-link>
         </section>
         <section>
           <div class="table-inner action-box">
             <div class="action-inner">
               <div class="inner-left">
-                <p class="describe">{{ $t('uc.finance.withdraw.symbol') }}</p>
+                <p class="describe">{{ t('uc.finance.withdraw.symbol') }}</p>
                 <el-select v-model="coinType" style="width:100px;margin-top: 14px;" @change="getAddrList">
                   <el-option v-for="item in coinList" :key="item.unit" :value="item.unit">{{ item.unit }}</el-option>
                 </el-select>
               </div>
               <div class="inner-box">
                 <div class="form-group form-address">
-                  <label class="describe">{{ $t('uc.finance.withdraw.address') }}</label>
+                  <label class="describe">{{ t('uc.finance.withdraw.address') }}</label>
                   <div class="control-input-group">
-                    <el-select v-model="withdrawAddress" filterable clearable @change="onAddressChange" :placeholder="$t('common.pleaseselect')">
+                    <el-select v-model="withdrawAddress" filterable clearable @change="onAddressChange" :placeholder="t('common.pleaseselect')">
                       <el-option v-for="item in currentCoin.addresses" :key="item.address" :value="item.address">{{ item.remark + '(' + item.address + ')' }}</el-option>
                     </el-select>
                   </div>
@@ -28,11 +28,11 @@
             <div class="form-group-container">
               <div class="form-group form-amount">
                 <label class="label-amount">
-                  {{ $t('uc.finance.withdraw.num') }}
+                  {{ t('uc.finance.withdraw.num') }}
                   <p class="label-fr">
-                    <span>【{{ $t('uc.finance.withdraw.avabalance') }}】：<span class="label-pointer">{{ toFloor(currentCoin.balance) }}</span></span>
+                    <span>【{{ t('uc.finance.withdraw.avabalance') }}】：<span class="label-pointer">{{ toFloor(currentCoin.balance) }}</span></span>
                     <span v-if="currentCoin.enableAutoWithdraw === 0">
-                      【{{ $t('common.tip') }}】：{{ $t('uc.finance.withdraw.msg1') }} {{ currentCoin.threshold }} {{ $t('uc.finance.withdraw.msg2') }}
+                      【{{ t('common.tip') }}】：{{ t('uc.finance.withdraw.msg1') }} {{ currentCoin.threshold }} {{ t('uc.finance.withdraw.msg2') }}
                     </span>
                   </p>
                 </label>
@@ -41,7 +41,7 @@
                     <template #reference>
                       <el-input-number
                         v-model="withdrawAmount"
-                        :placeholder="$t('uc.finance.withdraw.numtip1')"
+                        :placeholder="t('uc.finance.withdraw.numtip1')"
                         size="large"
                         :min="currentCoin.minAmount"
                         :max="currentCoin.maxAmount"
@@ -50,8 +50,8 @@
                       />
                     </template>
                     <div>
-                      <p>{{ $t('uc.finance.withdraw.tip1') }}{{ currentCoin.withdrawScale }}{{ $t('uc.finance.withdraw.tip11') }}</p>
-                      <p>{{ $t('uc.finance.withdraw.tip2') }}{{ currentCoin.minAmount }}, {{ currentCoin.maxAmount }}</p>
+                      <p>{{ t('uc.finance.withdraw.tip1') }}{{ currentCoin.withdrawScale }}{{ t('uc.finance.withdraw.tip11') }}</p>
+                      <p>{{ t('uc.finance.withdraw.tip2') }}{{ currentCoin.minAmount }}, {{ currentCoin.maxAmount }}</p>
                     </div>
                   </el-popover>
                   <span class="input-group-addon addon-tag uppercase firstt">{{ currentCoin.unit }}</span>
@@ -60,7 +60,7 @@
             </div>
             <div class="form-group-container form-group-container2">
               <div class="form-group form-fee">
-                <label class="label-amount">{{ $t('uc.finance.withdraw.fee') }}</label>
+                <label class="label-amount">{{ t('uc.finance.withdraw.fee') }}</label>
                 <div class="input-group" style="margin-top:14px;position:relative;">
                   <el-input-number
                     readonly
@@ -74,12 +74,12 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>{{ $t('uc.finance.withdraw.arriamount') }}</label>
+                <label>{{ t('uc.finance.withdraw.arriamount') }}</label>
                 <div class="input-group" style="margin-top:14px;position:relative;">
                   <el-input-number
                     readonly
                     v-model="withdrawOutAmount"
-                    :placeholder="$t('uc.finance.withdraw.arriamount')"
+                    :placeholder="t('uc.finance.withdraw.arriamount')"
                     size="large"
                     style="width: 100%;"
                   />
@@ -88,37 +88,37 @@
               </div>
             </div>
             <div class="action-foot">
-              <el-button type="warning" size="large" style="height:40px;width: 100%;" @click="apply">{{ $t('uc.finance.withdraw.pickup') }}</el-button>
+              <el-button type="warning" size="large" style="height:40px;width: 100%;" @click="apply">{{ t('uc.finance.withdraw.pickup') }}</el-button>
             </div>
             <div class="action-content pt10">
               <div class="action-body">
-                <p class="acb-p1">{{ $t('common.tip') }}</p>
+                <p class="acb-p1">{{ t('common.tip') }}</p>
                 <p class="acb-p2">
-                  • {{ $t('uc.finance.withdraw.msg3') }}：{{ currentCoin.minAmount }} {{ coinType }}。<br>
-                  • {{ $t('uc.finance.withdraw.msg5') }}<br>
-                  • {{ $t('uc.finance.withdraw.msg6') }}
+                  • {{ t('uc.finance.withdraw.msg3') }}：{{ currentCoin.minAmount }} {{ coinType }}。<br>
+                  • {{ t('uc.finance.withdraw.msg5') }}<br>
+                  • {{ t('uc.finance.withdraw.msg6') }}
                 </p>
               </div>
             </div>
             <div class="action-content">
               <div class="action-body">
-                <p class="acb-p1">{{ $t('uc.finance.withdraw.record') }}</p>
+                <p class="acb-p1">{{ t('uc.finance.withdraw.record') }}</p>
                 <div class="order-table">
-                  <p class="acb-p2" style="margin-bottom:10px;">• {{ $t('uc.finance.withdraw.click') }}<i class="ivu-icon ivu-icon-funnel"></i>{{ $t('uc.finance.withdraw.filtrate') }}</p>
+                  <p class="acb-p2" style="margin-bottom:10px;">• {{ t('uc.finance.withdraw.click') }}<i class="ivu-icon ivu-icon-funnel"></i>{{ t('uc.finance.withdraw.filtrate') }}</p>
                   <el-table :data="tableWithdraw" v-loading="loading" border style="width: 100%">
-                    <el-table-column prop="createTime" :label="$t('uc.finance.withdraw.time')" width="180" />
-                    <el-table-column prop="coin.unit" :label="$t('uc.finance.withdraw.symbol')" />
-                    <el-table-column prop="address" :label="$t('uc.finance.withdraw.address')" />
-                    <el-table-column prop="totalAmount" :label="$t('uc.finance.withdraw.num')" />
-                    <el-table-column prop="fee" :label="$t('uc.finance.withdraw.fee')" />
-                    <el-table-column prop="transactionNumber" :label="$t('uc.finance.withdraw.txid')" />
-                    <el-table-column :label="$t('uc.finance.withdraw.status')">
+                    <el-table-column prop="createTime" :label="t('uc.finance.withdraw.time')" width="180" />
+                    <el-table-column prop="coin.unit" :label="t('uc.finance.withdraw.symbol')" />
+                    <el-table-column prop="address" :label="t('uc.finance.withdraw.address')" />
+                    <el-table-column prop="totalAmount" :label="t('uc.finance.withdraw.num')" />
+                    <el-table-column prop="fee" :label="t('uc.finance.withdraw.fee')" />
+                    <el-table-column prop="transactionNumber" :label="t('uc.finance.withdraw.txid')" />
+                    <el-table-column :label="t('uc.finance.withdraw.status')">
                       <template #default="{ row }">
                         <span>
-                          {{ row.status === 0 ? $t('uc.finance.withdraw.status_1') :
-                             row.status === 1 ? $t('uc.finance.withdraw.status_2') :
-                             row.status === 2 ? $t('uc.finance.withdraw.status_3') :
-                             row.status === 3 ? $t('uc.finance.withdraw.status_4') : '' }}
+                          {{ row.status === 0 ? t('uc.finance.withdraw.status_1') :
+                             row.status === 1 ? t('uc.finance.withdraw.status_2') :
+                             row.status === 2 ? t('uc.finance.withdraw.status_3') :
+                             row.status === 3 ? t('uc.finance.withdraw.status_4') : '' }}
                         </span>
                       </template>
                     </el-table-column>
@@ -145,7 +145,7 @@
         <p>提示</p>
       </template>
       <el-form :model="formInline" label-width="100px">
-        <el-form-item :label="$t('uc.regist.smscode')">
+        <el-form-item :label="t('uc.regist.smscode')">
           <div style="position: relative;">
             <el-input v-model="formInline.code" />
             <el-button
@@ -159,13 +159,13 @@
             </el-button>
           </div>
         </el-form-item>
-        <el-form-item :label="$t('otc.chat.msg7')">
+        <el-form-item :label="t('otc.chat.msg7')">
           <el-input v-model="formInline.fundpwd" type="password" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="cancel">{{ $t('uc.finance.withdraw.cancel') }}</el-button>
-        <el-button type="warning" @click="ok">{{ $t('uc.finance.withdraw.confirm') }}</el-button>
+        <el-button @click="cancel">{{ t('uc.finance.withdraw.cancel') }}</el-button>
+        <el-button type="warning" @click="ok">{{ t('uc.finance.withdraw.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -185,9 +185,11 @@
 import { ref, reactive, watch, inject, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+import { useI18n } from 'vue-i18n'
 
 const store = inject('store')
 const router = inject('router')
+const { t } = useI18n()
 
 const host = ''
 
@@ -402,23 +404,23 @@ const getList = () => {
 
 const valid = () => {
   if (coinType.value === '') {
-    ElMessage.error($t('uc.finance.withdraw.symboltip'))
+    ElMessage.error(t('uc.finance.withdraw.symboltip'))
     return false
   }
   if (!withdrawAddress.value) {
-    ElMessage.error($t('uc.finance.withdraw.addresstip'))
+    ElMessage.error(t('uc.finance.withdraw.addresstip'))
     return false
   }
   if (!withdrawAmount.value || withdrawAmount.value < currentCoin.minAmount) {
-    ElMessage.error($t('uc.finance.withdraw.numtip2') + currentCoin.minAmount)
+    ElMessage.error(t('uc.finance.withdraw.numtip2') + currentCoin.minAmount)
     return false
   }
   if (withdrawAmount.value < withdrawFee.value) {
-    ElMessage.error($t('uc.finance.withdraw.numtip3'))
+    ElMessage.error(t('uc.finance.withdraw.numtip3'))
     return false
   }
   if (!withdrawFee.value || withdrawFee.value > currentCoin.maxTxFee || withdrawFee.value < currentCoin.minTxFee) {
-    ElMessage.error($t('uc.finance.withdraw.feetip1') + currentCoin.minTxFee + ' , ' + $t('uc.finance.withdraw.feetip2') + currentCoin.maxTxFee)
+    ElMessage.error(t('uc.finance.withdraw.feetip1') + currentCoin.minTxFee + ' , ' + t('uc.finance.withdraw.feetip2') + currentCoin.maxTxFee)
     return false
   }
   return true
@@ -441,7 +443,7 @@ const ok = () => {
   }
   if (!formInline.fundpwd) {
     modal.value = true
-    ElMessage.error($t('otc.chat.msg7tip'))
+    ElMessage.error(t('otc.chat.msg7tip'))
     return
   }
 
@@ -494,6 +496,8 @@ onMounted(() => {
     height: auto;
     overflow: hidden;
     padding: 0 15px;
+    background: #192330;
+    min-height: 600px;
 
     .rightarea {
       padding-left: 15px;
@@ -527,6 +531,31 @@ onMounted(() => {
       .action-box {
         padding: 10px 20px 20px;
 
+        // 覆盖 Element Plus 表格默认白色背景
+        :deep(.el-table) {
+          background-color: transparent !important;
+
+          .el-table__body tr {
+            background-color: #192330 !important;
+
+            td {
+              background-color: #192330 !important;
+              color: #fff !important;
+              border-color: #27313e !important;
+            }
+          }
+
+          .el-table__header tr {
+            background-color: #27313e !important;
+
+            th {
+              background-color: #27313e !important;
+              color: #fff !important;
+              border-color: #27313e !important;
+            }
+          }
+        }
+
         .form-group-container {
           .form-group.form-amount {
             .input-group {
@@ -536,53 +565,12 @@ onMounted(() => {
             }
           }
         }
-      }
-    }
-  }
-}
 
-#sendCode {
-  position: absolute;
-  border: none;
-  background: none;
-  top: 10px;
-  outline: none;
-  right: 0;
-  width: 30%;
-  color: #f0ac19;
-  cursor: pointer;
-  height: 20px;
-  line-height: 20px;
-  border-left: 1px solid #dddee1;
-}
-
-.withdraw-form-inline {
-  padding: 20px 40px 0 40px;
-  .el-input {
-    height: 40px;
-    line-height: 40px;
-  }
-}
-
-.nav-rights {
-  .nav-right {
-    .rightarea {
-      .action-box {
         .action-inner {
           .inner-left,
           .inner-box {
             .el-select-dropdown .el-select-item {
               padding: 6px 16px;
-            }
-          }
-        }
-
-        .form-group-container {
-          .form-group {
-            .input-group {
-              .el-input-number {
-                width: 100%;
-              }
             }
           }
         }

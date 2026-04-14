@@ -44,12 +44,6 @@
                 <el-menu-item index="/activity">
                   {{ $t("header.lab") }}
                 </el-menu-item>
-                <el-menu-item index="/mining">
-                  {{ $t("header.mining") }}
-                </el-menu-item>
-                <el-menu-item index="/crowdfunding">
-                  {{ $t("header.crowdfunding") }}
-                </el-menu-item>
               </el-menu>
             </div>
             <div class="header_nav_mobile_triggle" @click="toggleMemu()">
@@ -168,12 +162,6 @@
         </el-menu-item>
         <el-menu-item index="/activity">
           <router-link to="/activity">{{ $t("header.lab") }}</router-link>
-        </el-menu-item>
-        <el-menu-item index="/mining">
-          <router-link to="/mining">{{ $t("header.mining") }}</router-link>
-        </el-menu-item>
-        <el-menu-item index="/crowdfunding">
-          <router-link to="/crowdfunding">{{ $t("header.crowdfunding") }}</router-link>
         </el-menu-item>
         <el-menu-item index="/partner">
           <router-link to="/partner">{{ $t("header.invite") }}</router-link>

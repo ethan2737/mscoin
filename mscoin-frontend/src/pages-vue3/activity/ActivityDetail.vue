@@ -419,8 +419,8 @@ const init = () => {
 }
 
 const getData = () => {
-  const param = { id: route.params.id }
-  axios.post(`${host}/uc/activity/detail`, param, {
+  const id = parseInt(route.params.id)
+  axios.post(`${host}/uc/activity/detail?id=${id}`, {}, {
     withCredentials: true,
     headers: {
       'Content-Type': 'application/json',
@@ -787,7 +787,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .activity {
-  background: rgba(242, 246, 250, 1) !important;
+  background: #0b1520 !important;
   height: 100%;
   background-size: cover;
   position: relative;
@@ -805,14 +805,14 @@ onMounted(() => {
 
     .left-container {
       width: 100%;
-      background: #FFF;
+      background: #17212e;
       min-height: 1600px;
       padding: 20px 20px;
-      box-shadow: 0 0 25px #DDD;
+      box-shadow: 0 0 25px rgba(0,0,0,0.3);
 
       .title {
         padding-bottom: 20px;
-        border-bottom: 1px solid #ededed;
+        border-bottom: 1px solid #27313e;
         display: flex;
         flex-direction: row;
         justify-content: flex-start;
@@ -830,13 +830,13 @@ onMounted(() => {
             margin-top: 5px;
             font-size: 22px;
             font-weight: normal;
-            color: #31363e !important;
+            color: #fff !important;
           }
 
           p {
             margin-top: 10px;
             font-size: 12px;
-            color: #a7a7a7;
+            color: #999;
           }
         }
       }
@@ -844,12 +844,12 @@ onMounted(() => {
       .content-wrap {
         flex: 1 1 100%;
         width: 100%;
-        background: #FFF;
+        background: #17212e;
         min-height: 600px;
 
         .content {
           padding: 20px 10px;
-          color: #74777a;
+          color: #ccc;
           letter-spacing: 1px;
           font-size: 14px;
           text-align: left;
@@ -878,17 +878,17 @@ onMounted(() => {
 
     .right-container {
       width: 100%;
-      background: #FFF;
+      background: #17212e;
       min-height: 300px;
       padding: 20px 20px;
-      color: #31363e !important;
-      box-shadow: 0 0 25px #DDD;
+      color: #fff !important;
+      box-shadow: 0 0 25px rgba(0,0,0,0.3);
 
       p.base {
         text-align: left;
         font-size: 18px;
         margin-bottom: 35px;
-        color: #5d5d5d;
+        color: #fff;
       }
 
       .progress {
@@ -914,16 +914,19 @@ onMounted(() => {
           .title {
             font-size: 13px;
             margin-bottom: 5px;
+            color: #999;
           }
 
           .value {
             font-size: 14px;
             letter-spacing: 1px;
+            color: #fff;
 
             a {
               float: right;
               font-size: 12px;
               margin-top: 5px;
+              color: #f0a70a;
             }
           }
         }
@@ -942,13 +945,14 @@ onMounted(() => {
       }
 
       .tips {
-        background: rgba(240, 245, 249, 1) !important;
+        background: rgba(23, 33, 46, 1) !important;
         padding: 15px 15px;
         border-radius: 3px;
         margin-top: 35px;
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+        border: 1px solid #27313e;
 
         .left-tip {
           text-align: left;
@@ -990,8 +994,9 @@ onMounted(() => {
           justify-content: center;
           width: 100%;
           text-align: center;
-          border-top: 1px solid #cedae3;
+          border-top: 1px solid #27313e;
           margin-top: 10px;
+          color: #ccc;
         }
       }
 
@@ -1065,10 +1070,10 @@ onMounted(() => {
     .memo {
       text-align: left;
       font-size: 12px;
-      color: #959595 !important;
-      background: #fffded;
+      color: #999 !important;
+      background: #1a1f2e;
       padding: 20px 20px 30px 20px;
-      border-top: 1px dashed #CCC;
+      border-top: 1px dashed #27313e;
 
       p {
         margin-top: 5px;
@@ -1079,10 +1084,11 @@ onMounted(() => {
       width: 100%;
       margin-top: 20px;
       border-radius: 3px;
-      background-color: #FFF;
+      background-color: #17212e;
       padding: 8px 0 8px 0;
       display: none;
       color: #f0a70a;
+      border: 1px solid #27313e;
     }
   }
 }
@@ -1096,31 +1102,31 @@ onMounted(() => {
   .el-input-number__input,
   .el-input-number {
     font-size: 14px;
-    background-color: #FFF;
-    color: #000;
-    border-color: #FFF;
-    border: 1px solid #666;
+    background-color: #1f2833;
+    color: #fff;
+    border-color: #27313e;
+    border: 1px solid #27313e;
     border-radius: 0;
 
     &:hover {
-      border-color: #FFF;
-      border: 1px solid #666;
+      border-color: #3a4a5a;
+      border: 1px solid #3a4a5a;
     }
 
     &:focus {
-      border-color: #FFF;
-      border: 1px solid #666;
+      border-color: #f0a70a;
+      border: 1px solid #f0a70a;
       box-shadow: none;
     }
   }
 
   .el-input-group__append {
-    background-color: #ffffff;
-    border: 1px solid #666;
+    background-color: #1f2833;
+    border: 1px solid #27313e;
     border-left: none;
     border-radius: 0;
     font-size: 14px;
-    color: #5f5f5f;
+    color: #fff;
   }
 
   .el-input[disabled]:hover {

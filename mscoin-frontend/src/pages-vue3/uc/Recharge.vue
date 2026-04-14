@@ -6,22 +6,22 @@
           <div class="table-inner action-box open">
             <div class="action-inner">
               <div class="inner-left">
-                <p class="describe">{{ $t('uc.finance.recharge.symbol') }}</p>
+                <p class="describe">{{ t('uc.finance.recharge.symbol') }}</p>
                 <el-select v-model="coinType" style="width:100px;margin-top: 23px;" @change="changeCoin">
                   <el-option v-for="item in coinList" :key="item.coin.unit" :value="item.coin.unit">{{ item.coin.unit }}</el-option>
                 </el-select>
               </div>
               <div class="inner-box deposit-address">
-                <p class="describe">{{ $t('uc.finance.recharge.address') }}</p>
+                <p class="describe">{{ t('uc.finance.recharge.address') }}</p>
                 <div class="title">
                   <el-input v-model="qrcode.value" readonly style="width: 400px;color:#8c979f;"></el-input>
-                  <a v-show="isShowGetAddress" class="link-copy" @click="resetAddress">{{ $t('uc.finance.recharge.getaddress') }}</a>
-                  <a @click="copyAddress" class="link-copy">{{ $t('uc.finance.recharge.copy') }}</a>
+                  <a v-show="isShowGetAddress" class="link-copy" @click="resetAddress">{{ t('uc.finance.recharge.getaddress') }}</a>
+                  <a @click="copyAddress" class="link-copy">{{ t('uc.finance.recharge.copy') }}</a>
                   <a class="link-qrcode" @click="showEwm">
-                    {{ $t('uc.finance.recharge.qrcode') }}
+                    {{ t('uc.finance.recharge.qrcode') }}
                     <el-dialog v-model="isShowEwm" width="280px" :show-close="true">
                       <template #header>
-                        <p style="text-align: center;">{{ $t('uc.finance.recharge.qrcodeaddress') }}</p>
+                        <p style="text-align: center;">{{ t('uc.finance.recharge.qrcodeaddress') }}</p>
                       </template>
                       <div class="show-qrcode" style="text-align: center;padding: 15px 10px;border-radius:10px;background:#FFF;">
                         <qrcode-vue :value="qrcode.value" :size="qrcode.size" level="H" />
@@ -33,32 +33,32 @@
                   Memo：<span style="font-size: 20px;color: #F90;font-weight:bold;">{{ memoCode }}</span>
                 </p>
                 <p v-if="accountType != 0" style="margin-top: 10px;font-size:12px;color:#828ea1;">
-                  {{ $t('uc.finance.recharge.memotips') }}
-                  <a style="color: #f0a70a;" @click="copyMemo" class="link-copy">{{ $t('uc.finance.recharge.copy') }} Memo</a>
+                  {{ t('uc.finance.recharge.memotips') }}
+                  <a style="color: #f0a70a;" @click="copyMemo" class="link-copy">{{ t('uc.finance.recharge.copy') }} Memo</a>
                 </p>
               </div>
             </div>
             <div class="action-content">
               <div class="action-body">
-                <p class="acb-p1">{{ $t('common.tip') }}</p>
+                <p class="acb-p1">{{ t('common.tip') }}</p>
                 <p class="acb-p2">
-                  • {{ $t('uc.finance.recharge.msg3') }}{{ minRechargeAmount }}{{ coinType }}{{ $t('uc.finance.recharge.msg3_1') }}<br>
-                  • {{ $t('uc.finance.recharge.msg1') }}<br>
-                  • {{ $t('uc.finance.recharge.msg2') }}<br>
-                  • {{ $t('uc.finance.recharge.msg4') }}<br>
-                  • {{ $t('uc.finance.recharge.msg5') }}
+                  • {{ t('uc.finance.recharge.msg3') }}{{ minRechargeAmount }}{{ coinType }}{{ t('uc.finance.recharge.msg3_1') }}<br>
+                  • {{ t('uc.finance.recharge.msg1') }}<br>
+                  • {{ t('uc.finance.recharge.msg2') }}<br>
+                  • {{ t('uc.finance.recharge.msg4') }}<br>
+                  • {{ t('uc.finance.recharge.msg5') }}
                 </p>
               </div>
             </div>
             <div class="action-content">
               <div class="action-body">
-                <p class="acb-p1">{{ $t('uc.finance.recharge.record') }}</p>
+                <p class="acb-p1">{{ t('uc.finance.recharge.record') }}</p>
                 <div class="order-table">
                   <el-table :data="tableRecharge" v-loading="loading" border style="width: 100%">
-                    <el-table-column prop="createTime" :label="$t('uc.finance.recharge.time')" align="center" width="200" />
-                    <el-table-column prop="symbol" :label="$t('uc.finance.recharge.symbol')" align="center" width="120" />
-                    <el-table-column prop="address" :label="$t('uc.finance.recharge.address')" align="center" />
-                    <el-table-column prop="amount" :label="$t('uc.finance.recharge.amount')" align="center" width="100" />
+                    <el-table-column prop="createTime" :label="t('uc.finance.recharge.time')" align="center" width="200" />
+                    <el-table-column prop="symbol" :label="t('uc.finance.recharge.symbol')" align="center" width="120" />
+                    <el-table-column prop="address" :label="t('uc.finance.recharge.address')" align="center" />
+                    <el-table-column prop="amount" :label="t('uc.finance.recharge.amount')" align="center" width="100" />
                   </el-table>
                   <div style="margin: 10px;overflow: hidden">
                     <div style="float: right;">
@@ -96,9 +96,11 @@ import { ref, reactive, computed, inject, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import QrcodeVue from 'qrcode-vue'
 import axios from 'axios'
+import { useI18n } from 'vue-i18n'
 
 const store = inject('store')
 const router = inject('router')
+const { t } = useI18n()
 
 const host = ''
 
@@ -125,18 +127,18 @@ const qrcode = reactive({
 const copyAddress = async () => {
   try {
     await navigator.clipboard.writeText(qrcode.value)
-    ElMessage.success($t('uc.finance.recharge.copysuccess') + qrcode.value)
+    ElMessage.success(t('uc.finance.recharge.copysuccess') + qrcode.value)
   } catch (err) {
-    ElMessage.error($t('uc.finance.recharge.copysuccess'))
+    ElMessage.error(t('uc.finance.recharge.copysuccess'))
   }
 }
 
 const copyMemo = async () => {
   try {
     await navigator.clipboard.writeText(memoCode.value)
-    ElMessage.success('Memo ' + $t('uc.finance.recharge.copysuccess'))
+    ElMessage.success('Memo ' + t('uc.finance.recharge.copysuccess'))
   } catch (err) {
-    ElMessage.error($t('uc.finance.recharge.copysuccess'))
+    ElMessage.error(t('uc.finance.recharge.copysuccess'))
   }
 }
 
@@ -375,5 +377,40 @@ p.describe {
   height: auto;
   overflow: hidden;
   padding: 0 15px;
+  background: #192330;
+  min-height: 600px;
+
+  .bill_box {
+    .table-inner {
+      .action-content {
+        .action-body {
+          // 覆盖 Element Plus 表格默认白色背景
+          :deep(.el-table) {
+            background-color: transparent !important;
+
+            .el-table__body tr {
+              background-color: #192330 !important;
+
+              td {
+                background-color: #192330 !important;
+                color: #fff !important;
+                border-color: #27313e !important;
+              }
+            }
+
+            .el-table__header tr {
+              background-color: #27313e !important;
+
+              th {
+                background-color: #27313e !important;
+                color: #fff !important;
+                border-color: #27313e !important;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 </style>

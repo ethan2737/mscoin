@@ -6,13 +6,13 @@
           <div class="money_table">
             <div class="table-header">
               <div class="total-assets">
-                <span>{{ $t('uc.finance.money.totalassets') }}：</span>
+                <span>{{ t('uc.finance.money.totalassets') }}：</span>
                 <span style="font-size: 18px; color: #D8E1EB;">${{ totalUSDT }}</span>
                 <span style="font-size: 10px; color: #828ea1; margin-left: 5px;">≈ ¥{{ totalCny }}</span>
               </div>
               <el-input
                 v-model="searchKey"
-                :placeholder="$t('common.searchplaceholder')"
+                :placeholder="t('common.searchplaceholder')"
                 class="search-input"
                 @input="seachInputChange"
               >
@@ -22,23 +22,23 @@
               </el-input>
             </div>
             <el-table :data="tableMoneyShow" v-loading="loading" border style="width: 100%">
-              <el-table-column prop="coinType" :label="$t('uc.finance.money.cointype')" align="center" width="100" />
-              <el-table-column :label="$t('uc.finance.money.balance')" align="center">
+              <el-table-column prop="coinType" :label="t('uc.finance.money.cointype')" align="center" width="100" />
+              <el-table-column :label="t('uc.finance.money.balance')" align="center">
                 <template #default="{ row }">
                   <span :title="row.balance">{{ toFloor(row.balance || '0') }}</span>
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('uc.finance.money.frozen')" align="center">
+              <el-table-column :label="t('uc.finance.money.frozen')" align="center">
                 <template #default="{ row }">
                   <span :title="row.frozenBalance">{{ toFloor(row.frozenBalance || '0') }}</span>
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('uc.finance.money.needreleased')" align="center">
+              <el-table-column :label="t('uc.finance.money.needreleased')" align="center">
                 <template #default="{ row }">
                   <span :title="row.toReleased">{{ toFloor(row.toReleased || '0') }}</span>
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('uc.finance.money.operate')" align="center">
+              <el-table-column :label="t('uc.finance.money.operate')" align="center">
                 <template #default="{ row }">
                   <el-button
                     v-if="canCharge(row)"
@@ -47,7 +47,7 @@
                     style="margin-right: 8px;"
                     @click="goRecharge(row.coin.unit)"
                   >
-                    {{ $t('uc.finance.money.charge') }}
+                    {{ t('uc.finance.money.charge') }}
                   </el-button>
                   <el-button
                     v-else
@@ -55,7 +55,7 @@
                     disabled
                     style="margin-right: 8px;"
                   >
-                    {{ $t('uc.finance.money.charge') }}
+                    {{ t('uc.finance.money.charge') }}
                   </el-button>
                   <el-button
                     v-if="row.coin.canWithdraw == 1"
@@ -64,7 +64,7 @@
                     style="margin-right: 8px;"
                     @click="goWithdraw(row.coin.unit)"
                   >
-                    {{ $t('uc.finance.money.pickup') }}
+                    {{ t('uc.finance.money.pickup') }}
                   </el-button>
                   <el-button
                     v-else
@@ -72,7 +72,7 @@
                     disabled
                     style="margin-right: 8px;"
                   >
-                    {{ $t('uc.finance.money.pickup') }}
+                    {{ t('uc.finance.money.pickup') }}
                   </el-button>
                 </template>
               </el-table-column>
@@ -81,29 +81,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 配对对话框 -->
-    <el-dialog v-model="modal" :title="$t('uc.finance.money.match')" width="450px">
-      <p style="font-weight: bold; padding: 10px 0;">
-        {{ $t('uc.finance.money.matchtip1') }}：{{ GCCMatchAmount }}
-      </p>
-      <el-form :inline="true">
-        <el-form-item :label="$t('uc.finance.money.matchtip2')">
-          <el-input-number v-model="matchAmount" :placeholder="$t('uc.finance.money.matchtip2')" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button type="warning" @click="matchGCC">{{ $t('uc.finance.money.match') }}</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 消息对话框 -->
-    <el-dialog v-model="modal_msg" :title="$t('uc.finance.money.match')" width="450px">
-      <p>{{ match_msg }}</p>
-      <template #footer>
-        <el-button type="primary" @click="modal_msg = false">{{ $t('common.confirm') }}</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -120,19 +97,15 @@ import { ref, computed, inject, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { useI18n } from 'vue-i18n'
 
 const store = inject('store')
 const router = inject('router')
+const { t } = useI18n()
 
 const host = ''
 
-const GCCMatchAmount = ref(0)
-const matchAmount = ref(0)
-const modal = ref(false)
-const modal_msg = ref(false)
-const match_msg = ref('')
 const loading = ref(true)
-const canMatch = ref(true)
 const searchKey = ref('')
 const tableMoney = ref([])
 const tableMoneyShow = ref([])
@@ -155,14 +128,26 @@ const seachInputChange = () => {
 }
 
 const getMoney = () => {
+  const token = localStorage.getItem('TOKEN')
+  if (!token) {
+    ElMessage.error(t('common.logintip'))
+    loading.value = false
+    return
+  }
+
   axios.post(`${host}/uc/asset/wallet`, {}, {
     withCredentials: true,
     headers: {
-      'x-auth-token': localStorage.getItem('TOKEN')
+      'x-auth-token': token
     }
   })
   .then(response => {
     const resp = response.data
+    if (resp.code === 4000) {
+      ElMessage.error(t('common.logintip'))
+      loading.value = false
+      return
+    }
     if (resp.code === 0) {
       tableMoney.value = resp.data
       for (let i = 0; i < tableMoney.value.length; i++) {
@@ -171,75 +156,15 @@ const getMoney = () => {
       loading.value = false
       tableMoneyShow.value = tableMoney.value
     } else {
-      ElMessage.error($t('common.logintip'))
+      ElMessage.error(resp.message || '获取资产信息失败')
+      loading.value = false
     }
   })
-  .catch(() => {
-    ElMessage.error($t('common.logintip'))
+  .catch((error) => {
+    console.error('getMoney error:', error)
+    ElMessage.error('网络请求失败，请稍后重试')
     loading.value = false
   })
-}
-
-const getGCCMatchAmount = () => {
-  axios.post(`${host}/uc/asset/wallet/match-check`, {}, {
-    withCredentials: true,
-    headers: {
-      'x-auth-token': localStorage.getItem('TOKEN')
-    }
-  })
-  .then(response => {
-    const resp = response.data
-    if (resp.code === 0) {
-      canMatch.value = true
-      GCCMatchAmount.value = resp.data
-    } else {
-      canMatch.value = false
-      match_msg.value = resp.message
-    }
-    showMatchDailog()
-  })
-  .catch(() => {
-    canMatch.value = false
-    match_msg.value = '获取配对信息失败'
-    showMatchDailog()
-  })
-}
-
-const showMatchDailog = () => {
-  if (canMatch.value) {
-    modal.value = true
-  } else {
-    modal_msg.value = true
-  }
-}
-
-const matchGCC = () => {
-  if (matchAmount.value <= 0) {
-    ElMessage.warning($t('uc.finance.money.matcherr1'))
-  } else if (matchAmount.value > GCCMatchAmount.value) {
-    ElMessage.warning($t('uc.finance.money.matcherr2'))
-  } else {
-    axios.post(`${host}/uc/asset/wallet/match`, { amount: matchAmount.value }, {
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-auth-token': localStorage.getItem('TOKEN')
-      }
-    })
-    .then(response => {
-      const resp = response.data
-      if (resp.code === 0) {
-        ElMessage.success($t('uc.finance.money.matchsuccess'))
-        GCCMatchAmount.value = GCCMatchAmount.value - matchAmount.value
-        modal.value = false
-      } else {
-        ElMessage.error(resp.message)
-      }
-    })
-    .catch(() => {
-      ElMessage.error('配对失败')
-    })
-  }
 }
 
 const canCharge = (row) => {
@@ -282,6 +207,8 @@ onMounted(() => {
     height: auto;
     overflow: hidden;
     padding: 0 15px;
+    background: #192330;
+    min-height: 600px;
 
     .bill_box {
       .rightarea-con {
@@ -299,6 +226,31 @@ onMounted(() => {
 
             .search-input {
               width: 200px;
+            }
+          }
+        }
+
+        // 覆盖 Element Plus 表格默认白色背景
+        :deep(.el-table) {
+          background-color: transparent !important;
+
+          .el-table__body tr {
+            background-color: #192330 !important;
+
+            td {
+              background-color: #192330 !important;
+              color: #fff !important;
+              border-color: #27313e !important;
+            }
+          }
+
+          .el-table__header tr {
+            background-color: #27313e !important;
+
+            th {
+              background-color: #27313e !important;
+              color: #fff !important;
+              border-color: #27313e !important;
             }
           }
         }

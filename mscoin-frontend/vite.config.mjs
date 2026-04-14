@@ -30,7 +30,7 @@ export default defineConfig({
     port: 3000,
     host: true,
     proxy: {
-      '/uc/contract': {
+      '/uc/asset/contract-transaction/all': {
         target: 'http://127.0.0.1:8086',
         changeOrigin: true
       },
@@ -38,7 +38,7 @@ export default defineConfig({
         target: 'http://127.0.0.1:8086',
         changeOrigin: true
       },
-      '/uc/asset/contract-transaction/all': {
+      '/uc/contract': {
         target: 'http://127.0.0.1:8086',
         changeOrigin: true
       },

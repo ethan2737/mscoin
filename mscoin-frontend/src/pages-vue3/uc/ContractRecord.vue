@@ -4,7 +4,7 @@
       <div class="bill_flow_box">
         <div class="rightarea-con">
           <div class="form-group">
-            <span>{{ $t('uc.finance.record.start_end') }}：</span>
+            <span>{{ t('uc.finance.record.start_end') }}：</span>
             <el-date-picker
               v-model="rangeDate"
               type="daterange"
@@ -14,35 +14,35 @@
               style="width: 200px; margin-right: 30px;"
               @change="changedate"
             />
-            <span>{{ $t('uc.finance.record.symbol') }}：</span>
-            <el-select v-model="coinType" style="width: 100px; margin-right: 30px;" @change="getAddrList" clearable :placeholder="$t('common.pleaseselect')">
+            <span>{{ t('uc.finance.record.symbol') }}：</span>
+            <el-select v-model="coinType" style="width: 100px; margin-right: 30px;" @change="getAddrList" clearable :placeholder="t('common.pleaseselect')">
               <el-option v-for="item in coinList" :key="item.unit" :value="item.unit">{{ item.unit }}</el-option>
             </el-select>
-            <span>{{ $t('uc.finance.record.operatetype') }}：</span>
-            <el-select v-model="recordValue" clearable style="width: 200px;" @change="getType" :placeholder="$t('common.pleaseselect')">
+            <span>{{ t('uc.finance.record.operatetype') }}：</span>
+            <el-select v-model="recordValue" clearable style="width: 200px;" @change="getType" :placeholder="t('common.pleaseselect')">
               <el-option v-for="item in recordType" :key="item.value" :value="item.value">{{ item.label }}</el-option>
             </el-select>
             <el-button type="warning" @click="queryOrder" style="padding: 6px 30px; margin-left: 10px;">
-              {{ $t('uc.finance.record.search') }}
+              {{ t('uc.finance.record.search') }}
             </el-button>
           </div>
           <div class="order-table">
             <el-table :data="tableRecord" v-loading="loading" border style="width: 100%">
-              <el-table-column prop="createTime" :label="$t('uc.finance.record.chargetime')" align="center" width="160" />
-              <el-table-column :label="$t('uc.finance.record.type')" align="center">
+              <el-table-column prop="createTime" :label="t('uc.finance.record.chargetime')" align="center" width="160" />
+              <el-table-column :label="t('uc.finance.record.type')" align="center">
                 <template #default="{ row }">
                   {{ getRecordTypeName(row.type) }}
                 </template>
               </el-table-column>
-              <el-table-column prop="symbol" :label="$t('uc.finance.record.symbol')" align="center" />
-              <el-table-column :label="$t('uc.finance.record.num')" align="center">
+              <el-table-column prop="symbol" :label="t('uc.finance.record.symbol')" align="center" />
+              <el-table-column :label="t('uc.finance.record.num')" align="center">
                 <template #default="{ row }">
                   <span :title="row.amount">{{ toFloor(row.amount || '0') }}</span>
                 </template>
               </el-table-column>
-              <el-table-column :label="$t('uc.finance.record.status')" align="center">
+              <el-table-column :label="t('uc.finance.record.status')" align="center">
                 <template #default>
-                  {{ $t('uc.finance.record.finish') }}
+                  {{ t('uc.finance.record.finish') }}
                 </template>
               </el-table-column>
             </el-table>
@@ -66,11 +66,13 @@
 /**
  * Vue 3 迁移 - 合约账单页面
  */
-import { ref, reactive, inject, onMounted } from 'vue'
+import { ref, reactive, computed, inject, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+import { useI18n } from 'vue-i18n'
 
 const store = inject('store')
+const { t } = useI18n()
 
 const host = ''
 
@@ -86,12 +88,12 @@ const page = ref(1)
 const total = ref(0)
 const tableRecord = ref([])
 
-const recordType = [
-  { value: 0, label: $t('uc.finance.contractrecord.transferin') },
-  { value: 1, label: $t('uc.finance.contractrecord.transferout') },
-  { value: 2, label: $t('uc.finance.contractrecord.settlement') },
-  { value: 3, label: $t('uc.finance.contractrecord.forcedping') }
-]
+const recordType = computed(() => [
+  { value: 0, label: t('uc.finance.contractrecord.transferin') },
+  { value: 1, label: t('uc.finance.contractrecord.transferout') },
+  { value: 2, label: t('uc.finance.contractrecord.settlement') },
+  { value: 3, label: t('uc.finance.contractrecord.forcedping') }
+])
 
 const toFloor = (number, scale = 8) => {
   if (Number(number) === 0) return 0
@@ -108,10 +110,10 @@ const toFloor = (number, scale = 8) => {
 
 const getRecordTypeName = (type) => {
   const typeMap = {
-    0: $t('uc.finance.contractrecord.transferin'),
-    1: $t('uc.finance.contractrecord.transferout'),
-    2: $t('uc.finance.contractrecord.settlement'),
-    3: $t('uc.finance.contractrecord.forcedping')
+    0: t('uc.finance.contractrecord.transferin'),
+    1: t('uc.finance.contractrecord.transferout'),
+    2: t('uc.finance.contractrecord.settlement'),
+    3: t('uc.finance.contractrecord.forcedping')
   }
   return typeMap[type] || ''
 }
@@ -234,6 +236,8 @@ onMounted(() => {
     height: auto;
     overflow: hidden;
     padding: 0 15px;
+    background: #192330;
+    min-height: 600px;
 
     .bill_flow_box {
       .rightarea-con {
@@ -247,6 +251,31 @@ onMounted(() => {
             margin: 10px;
             overflow: hidden;
             float: right;
+          }
+        }
+
+        // 覆盖 Element Plus 表格默认白色背景
+        :deep(.el-table) {
+          background-color: transparent !important;
+
+          .el-table__body tr {
+            background-color: #192330 !important;
+
+            td {
+              background-color: #192330 !important;
+              color: #fff !important;
+              border-color: #27313e !important;
+            }
+          }
+
+          .el-table__header tr {
+            background-color: #27313e !important;
+
+            th {
+              background-color: #27313e !important;
+              color: #fff !important;
+              border-color: #27313e !important;
+            }
           }
         }
       }
