@@ -2718,6 +2718,29 @@ onBeforeUnmount(() => {
     overflow: hidden;
   }
 
+  /* 左侧列高度对齐 - 以 .trade-form-panel 为基准 */
+  .left-column {
+    .market-rail,
+    .latest-trade-panel {
+      min-height: 494px; /* 与 .trade-form-panel 总高度一致 */
+    }
+
+    .coin-menu.panel-shell,
+    .trade-wrap.panel-shell {
+      min-height: 494px;
+    }
+  }
+
+  /* 调整币种列表表格高度 */
+  .coin-menu .el-table {
+    height: 420px !important;
+  }
+
+  /* 调整最新交易表格高度 */
+  .trade-wrap .el-table {
+    height: 420px !important;
+  }
+
   .market-overview {
     padding-bottom: 8px;
   }
