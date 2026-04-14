@@ -23,11 +23,6 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-error.log*
 
-# Package lock files (optional, keep if you want to commit them)
-# package-lock.json
-# pnpm-lock.yaml
-# yarn.lock
-
 # Build outputs
 dist/
 dist-vite/
@@ -63,7 +58,7 @@ mscoin-backend/docker/*/conf/
 
 # Agent workspaces
 .codex/
-.claude/settings.local.json
+.claude/
 .openspec/
 .playwright-mcp/
 .omc/
@@ -74,3 +69,6 @@ openspec/changes/archive/
 
 # GStack
 .gstack/
+
+# document
+docs/
