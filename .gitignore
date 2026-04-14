@@ -71,3 +71,6 @@ mscoin-backend/docker/*/conf/
 
 # OpenSpec archived changes (local-only storage)
 openspec/changes/archive/
+
+# GStack
+.gstack/
