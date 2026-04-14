@@ -499,6 +499,7 @@ onMounted(() => {
 /* Tabs 样式完全覆盖 Element Plus 默认蓝色 */
 .activity :deep(.el-tabs-bar) {
   border-bottom: 1px solid #27313e;
+  width: 100%;
 }
 
 /* 强制设置所有 tab 项为白色 */
@@ -523,6 +524,16 @@ onMounted(() => {
 /* 底部激活条 */
 .activity :deep(.el-tabs__active-bar) {
   background-color: #f0a70a !important;
+}
+
+/* 让 tabs 内容占满宽度 */
+.activity :deep(.el-tabs__content) {
+  width: 100%;
+}
+
+.activity :deep(.el-tab-pane) {
+  width: 100%;
+  display: block;
 }
 
 .app_bottom {
@@ -682,7 +693,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   max-width: 1820px;
   margin-left: auto;
