@@ -684,6 +684,9 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   width: 100%;
+  max-width: 1820px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .activity-container {
@@ -713,8 +716,7 @@ onMounted(() => {
   overflow: visible;
   padding: 15px 20px;
   margin: 25px auto;
-  max-width: 1400px;
-  width: calc(100% - 80px);
+  width: 100%;
   min-height: 200px;
   background: #17212e;
   border-radius: 8px;
