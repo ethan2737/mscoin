@@ -2727,7 +2727,7 @@ onBeforeUnmount(() => {
 
     .coin-menu.panel-shell,
     .trade-wrap.panel-shell {
-      min-height: 494px;
+      min-height: 616px;
     }
   }
 
