@@ -502,7 +502,7 @@ onMounted(() => {
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab) {
-  color: #ccc !important;
+  color: #fff !important;
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab:hover) {
