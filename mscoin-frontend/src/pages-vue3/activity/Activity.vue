@@ -501,28 +501,28 @@ onMounted(() => {
   border-bottom: 1px solid #27313e;
 }
 
-.activity :deep(.el-tabs-nav .el-tabs-tab) {
+/* 强制设置所有 tab 项为白色 */
+.activity :deep(.el-tabs-nav .el-tabs-tab),
+.activity :deep(.el-tabs__item),
+.activity :deep(.el-tabs--top .el-tabs__item) {
   color: #fff !important;
 }
 
-.activity :deep(.el-tabs-nav .el-tabs-tab:hover) {
+/* hover 状态 */
+.activity :deep(.el-tabs-nav .el-tabs-tab:hover),
+.activity :deep(.el-tabs__item:hover) {
   color: #fff !important;
 }
 
-.activity :deep(.el-tabs-nav .el-tabs-tab.is-active) {
-  color: #f0a70a !important;
-}
-
-.activity :deep(.el-tabs__active-bar) {
-  background-color: #f0a70a !important;
-}
-
+/* 选中状态 */
+.activity :deep(.el-tabs-nav .el-tabs-tab.is-active),
 .activity :deep(.el-tabs__item.is-active) {
   color: #f0a70a !important;
 }
 
-.activity :deep(.el-tabs__item:hover) {
-  color: #f0a70a !important;
+/* 底部激活条 */
+.activity :deep(.el-tabs__active-bar) {
+  background-color: #f0a70a !important;
 }
 
 .app_bottom {
@@ -629,6 +629,21 @@ onMounted(() => {
 
 .banner-mobile {
   display: none;
+}
+</style>
+
+<style lang="scss">
+/* 全局样式，强制覆盖 Element Plus tabs 默认颜色 */
+.activity .el-tabs__item {
+  color: #fff !important;
+
+  &:hover {
+    color: #fff !important;
+  }
+
+  &.is-active {
+    color: #f0a70a !important;
+  }
 }
 </style>
 
