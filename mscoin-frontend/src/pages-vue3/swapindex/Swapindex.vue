@@ -2534,7 +2534,7 @@ onBeforeUnmount(() => {
   .center {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
   }
 
   .trade-form-header {
