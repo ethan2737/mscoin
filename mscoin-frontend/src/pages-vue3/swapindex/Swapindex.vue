@@ -2278,14 +2278,16 @@ onBeforeUnmount(() => {
       min-width: 0;
     }
 
-    .market-rail .panel-header-compact {
-      margin-top: 10px;
-    }
-
     /* 左侧中部：最新交易 */
     .latest-trade-panel {
       grid-area: trade;
       min-width: 0;
+      /* 与中间区域 .symbol + .imgtable 高度对齐 */
+      margin-top: calc(50px + 14px + 518px + 14px);
+    }
+
+    .latest-trade-panel .trade-wrap {
+      margin-top: 0;
     }
 
     /* 中间：K 线图、账户信息和交易表单 */
