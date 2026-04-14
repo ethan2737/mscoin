@@ -663,7 +663,7 @@ onMounted(() => {
 }
 
 .activity_container {
-  padding: 0 2%;
+  padding: 0 20px;
   text-align: center;
   height: 100%;
   min-height: 600px;
@@ -683,6 +683,7 @@ onMounted(() => {
   justify-content: center;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 .activity-container {
@@ -712,8 +713,8 @@ onMounted(() => {
   overflow: visible;
   padding: 15px 20px;
   margin: 25px auto;
-  max-width: 1200px;
-  width: calc(100% - 40px);
+  max-width: 1400px;
+  width: calc(100% - 80px);
   min-height: 200px;
   background: #17212e;
   border-radius: 8px;
