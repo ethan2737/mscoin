@@ -2,87 +2,90 @@
   <div class="container swap" :class="skin">
     <div class="main">
       <div class="trade-workspace">
-        <!-- 左侧：币种列表 -->
-        <div class="market-rail">
-          <div class="coin-menu panel-shell">
-            <div class="panel-header panel-header-compact market-rail-header">
-              <div>
-                <span class="panel-kicker">Perpetual</span>
-                <strong>{{ $t('service.ExchangeNum') }}</strong>
+        <!-- 左侧列：币种列表 + 最新交易 -->
+        <div class="left-column">
+          <!-- 币种列表 -->
+          <div class="market-rail">
+            <div class="coin-menu panel-shell">
+              <div class="panel-header panel-header-compact market-rail-header">
+                <div>
+                  <span class="panel-kicker">Perpetual</span>
+                  <strong>{{ $t('service.ExchangeNum') }}</strong>
+                </div>
+                <span class="panel-meta">{{ dataIndex.length }}</span>
               </div>
-              <span class="panel-meta">{{ dataIndex.length }}</span>
-            </div>
-            <div class="panel-toolbar market-search">
-              <el-input
-                v-model="searchKey"
-                :placeholder="$t('common.searchplaceholder')"
-                @input="seachInputChange"
-                clearable
+              <div class="panel-toolbar market-search">
+                <el-input
+                  v-model="searchKey"
+                  :placeholder="$t('common.searchplaceholder')"
+                  @input="seachInputChange"
+                  clearable
+                >
+                  <template #suffix>
+                    <el-icon><Search /></el-icon>
+                  </template>
+                </el-input>
+              </div>
+              <div class="sc_filter" style="display: none">
+                <span @click="changeBaseCion('usdt')" :class="{ active: basecion === 'usdt' }">USDT</span>
+              </div>
+              <el-table
+                v-show="basecion === 'usdt'"
+                :data="dataIndex"
+                height="463"
+                highlight-row
+                @current-change="gohref"
               >
-                <template #suffix>
-                  <el-icon><Search /></el-icon>
-                </template>
-              </el-input>
+                <el-table-column label="合约/成交量" min-width="40" class-name="coin-menu-symbol swap-coin-menu-symbol">
+                  <template #default="{ row }">
+                    <div style="padding: 5px 0">
+                      <span style="font-size: 14px">{{ row.name }}</span>
+                      <br />
+                      <span style="color: #61688A; font-size: 14px">{{ row.volume?.toFixed(4) }}</span>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="最新价/涨跌幅" min-width="40" class-name="swap-coin-menu-lastprice">
+                  <template #default="{ row }">
+                    <div style="padding: 5px 10px; text-align: right; font-size: 14px">
+                      <span>{{ row.close }}</span>
+                      <br />
+                      <span :class="parseFloat(row.rose) < 0 ? 'sell' : 'buy'">{{ row.rose }}</span>
+                    </div>
+                  </template>
+                </el-table-column>
+              </el-table>
             </div>
-            <div class="sc_filter" style="display: none">
-              <span @click="changeBaseCion('usdt')" :class="{ active: basecion === 'usdt' }">USDT</span>
-            </div>
-            <el-table
-              v-show="basecion === 'usdt'"
-              :data="dataIndex"
-              height="463"
-              highlight-row
-              @current-change="gohref"
-            >
-              <el-table-column label="合约/成交量" min-width="40" class-name="coin-menu-symbol swap-coin-menu-symbol">
-                <template #default="{ row }">
-                  <div style="padding: 5px 0">
-                    <span style="font-size: 14px">{{ row.name }}</span>
-                    <br />
-                    <span style="color: #61688A; font-size: 14px">{{ row.volume?.toFixed(4) }}</span>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="最新价/涨跌幅" min-width="40" class-name="swap-coin-menu-lastprice">
-                <template #default="{ row }">
-                  <div style="padding: 5px 10px; text-align: right; font-size: 14px">
-                    <span>{{ row.close }}</span>
-                    <br />
-                    <span :class="parseFloat(row.rose) < 0 ? 'sell' : 'buy'">{{ row.rose }}</span>
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
           </div>
-        </div>
 
-        <!-- 左侧中部：最新交易 -->
-        <div class="latest-trade-panel">
-          <div class="trade-wrap panel-shell">
-            <div class="panel-header panel-header-compact">
-              <div>
-                <span class="panel-kicker">Tape</span>
-                <strong>{{ $t('swap.latestdeal') }}</strong>
+          <!-- 最新交易 -->
+          <div class="latest-trade-panel">
+            <div class="trade-wrap panel-shell">
+              <div class="panel-header panel-header-compact">
+                <div>
+                  <span class="panel-kicker">Tape</span>
+                  <strong>{{ $t('swap.latestdeal') }}</strong>
+                </div>
+                <span class="panel-meta">{{ trade.rows.length }}</span>
               </div>
-              <span class="panel-meta">{{ trade.rows.length }}</span>
+              <el-table :data="trade.rows" height="430" :no-data-text="$t('common.nodata')">
+                <el-table-column label="价格">
+                  <template #default="{ row }">
+                    <span :class="row.direction === 'BUY' ? 'buy' : 'sell'">{{ row.price }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="数量">
+                  <template #default="{ row }">
+                    {{ row.amount?.toFixed(4) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="时间">
+                  <template #default="{ row }">
+                    {{ timeFormat(row.time) }}
+                  </template>
+                </el-table-column>
+              </el-table>
             </div>
-            <el-table :data="trade.rows" height="430" :no-data-text="$t('common.nodata')">
-              <el-table-column label="价格">
-                <template #default="{ row }">
-                  <span :class="row.direction === 'BUY' ? 'buy' : 'sell'">{{ row.price }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column label="数量">
-                <template #default="{ row }">
-                  {{ row.amount?.toFixed(4) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="时间">
-                <template #default="{ row }">
-                  {{ timeFormat(row.time) }}
-                </template>
-              </el-table-column>
-            </el-table>
           </div>
         </div>
 
@@ -2260,10 +2263,9 @@ onBeforeUnmount(() => {
     margin: 0 auto;
     display: grid;
     grid-template-columns: 320px minmax(0, 1fr) 340px;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto 1fr;
     grid-template-areas:
-      'market chart orderbook'
-      'trade chart orderbook'
+      'left chart orderbook'
       'orders orders orders';
     gap: 14px;
     align-items: start;
@@ -2272,22 +2274,32 @@ onBeforeUnmount(() => {
       display: contents;
     }
 
+    /* 左侧列：币种列表 + 最新交易 */
+    .left-column {
+      grid-area: left;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
     /* 左侧：币种列表 */
     .market-rail {
-      grid-area: market;
+      flex: 0 0 auto;
       min-width: 0;
     }
 
     /* 左侧中部：最新交易 */
     .latest-trade-panel {
-      grid-area: trade;
+      flex: 1 1 auto;
       min-width: 0;
-      /* 与中间区域 .symbol + .imgtable 高度对齐 */
-      margin-top: calc(50px + 14px + 518px + 14px);
+      display: flex;
+      flex-direction: column;
     }
 
     .latest-trade-panel .trade-wrap {
-      margin-top: 0;
+      flex: 1;
+      overflow: hidden;
     }
 
     /* 中间：K 线图、账户信息和交易表单 */
@@ -2298,8 +2310,9 @@ onBeforeUnmount(() => {
       flex-direction: column;
       gap: 14px;
 
+      /* K 线图和深度图 */
       .imgtable {
-        height: 518px;
+        flex: 0 0 518px;
         position: relative;
         overflow: hidden;
 
