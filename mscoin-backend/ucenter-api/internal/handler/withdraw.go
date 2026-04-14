@@ -43,7 +43,7 @@ func (h *WithdrawHandler) WithdrawCode(w http.ResponseWriter, r *http.Request) {
 
 func (h *WithdrawHandler) Record(w http.ResponseWriter, r *http.Request) {
 	var req types.WithdrawReq
-	if err := httpx.ParseJSON(r, &req); err != nil {
+	if err := httpx.ParseJsonBody(r, &req); err != nil {
 		httpx.ErrorCtx(r.Context(), w, err)
 		return
 	}
