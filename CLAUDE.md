@@ -207,3 +207,42 @@ docker-compose up -d
 - 不得补写代码中不存在的接口、校验或状态流转。
 - 不要默认附带优化建议、问题清单、改造方案，除非用户明确要求。
 - 不要输出缺少判断分支的过度简化流程图。
+
+## GStack
+
+**网页浏览**: 所有网页浏览任务必须使用 `/browse` skill (来自 gstack)，不得使用 `mcp__claude-in-chrome__*` 工具。
+
+**可用 skills**:
+- `/office-hours` - YC Office Hours 模式
+- `/plan-ceo-review` - CEO/创始人模式计划审查
+- `/plan-eng-review` - 工程经理模式计划审查
+- `/plan-design-review` - 设计师视角计划审查
+- `/design-consultation` - 设计咨询
+- `/design-shotgun` - 生成多个 AI 设计变体
+- `/design-html` - 生成生产就绪的 HTML/CSS
+- `/review` - PR 审查
+- `/ship` - 合并和部署工作流
+- `/land-and-deploy` - 着陆和部署
+- `/canary` - 部署后金丝雀监控
+- `/benchmark` - 性能回归检测
+- `/browse` - 快速无头浏览器 QA 测试
+- `/connect-chrome` - 连接 Chrome 浏览器
+- `/qa` - 系统性 QA 测试
+- `/qa-only` - 仅报告 QA 测试
+- `/design-review` - 设计视觉审查
+- `/setup-browser-cookies` - 导入浏览器 Cookie
+- `/setup-deploy` - 配置部署设置
+- `/retro` - 每周工程回顾
+- `/investigate` - 系统性调试
+- `/document-release` - 发布后文档更新
+- `/codex` - OpenAI Codex CLI 包装器
+- `/cso` - 首席安全官模式
+- `/autoplan` - 自动审查管道
+- `/plan-devex-review` - 开发者体验计划审查
+- `/devex-review` - 开发者体验审计
+- `/careful` - 破坏性命令安全保护
+- `/freeze` - 限制文件编辑范围
+- `/guard` - 全面安全模式
+- `/unfreeze` - 清除冻结边界
+- `/gstack-upgrade` - 升级 gstack
+- `/learn` - 管理项目学习
