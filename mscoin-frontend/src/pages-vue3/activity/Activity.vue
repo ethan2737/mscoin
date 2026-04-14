@@ -497,7 +497,11 @@ onMounted(() => {
 
 <style scoped>
 .activity :deep(.el-tabs-bar) {
-  border-bottom: 1px solid #dcdee2;
+  border-bottom: 1px solid #27313e;
+}
+
+.activity :deep(.el-tabs-nav .el-tabs-tab) {
+  color: #999;
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab:hover) {
@@ -520,7 +524,8 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 40px;
-  background: rgba(242,246,250,1) !important;
+  background: #17212e !important;
+  border-top: 1px solid #1f2833;
 }
 
 .app_bottom .left_logo img {
@@ -604,7 +609,7 @@ onMounted(() => {
   }
   .bottom-panel .bottom-mobile p span {
     font-size: 12px;
-    color: #a7a7a7;
+    color: #999;
     margin-top: 15px;
   }
 }
@@ -620,9 +625,8 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .activity {
-  background: rgba(242,246,250,1) !important;
-  height: 100%;
-  background-size: cover;
+  background: #0b1520;
+  min-height: 100vh;
   position: relative;
   overflow: hidden;
   padding-bottom: 50px;
@@ -687,13 +691,15 @@ onMounted(() => {
   width: 98%;
   margin-left: 1%;
   min-height: 20px;
-  background: #FFF;
-  border-radius: 5px;
-  transition: transform 0.2s ease;
+  background: #17212e;
+  border-radius: 8px;
+  border: 1px solid #1f2833;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
-    box-shadow: 0 0 25px #DDD;
+    box-shadow: 0 0 25px rgba(240, 167, 10, 0.3);
     transform: scale(1.01, 1.01);
+    border-color: #f0a70a;
   }
 
   .activity-type {
@@ -719,7 +725,7 @@ onMounted(() => {
 
     span {
       font-size: 22px;
-      color: rgba(49,54,62,1) !important;
+      color: #fff !important;
     }
 
     div {
@@ -776,6 +782,7 @@ onMounted(() => {
   img {
     width: 160px;
     height: 160px;
+    border-radius: 8px;
   }
 }
 
@@ -815,11 +822,12 @@ onMounted(() => {
 
   span {
     font-size: 12px;
+    color: #999;
   }
 }
 
 .bottom-panel {
-  border-top: 1px solid rgb(237, 237, 237);
+  border-top: 1px solid #1f2833;
   margin-top: 15px;
 
   .bottom-mobile {
@@ -833,7 +841,7 @@ onMounted(() => {
 
     span {
       font-size: 12px;
-      color: #a7a7a7;
+      color: #999;
       margin-top: 15px;
     }
 
@@ -842,10 +850,13 @@ onMounted(() => {
     }
 
     a.el-button--primary {
-      background: #0095ff;
+      background: #f0a70a;
+      border-color: #f0a70a;
+      color: #fff;
 
       &:hover {
-        background: #2ba7ff;
+        background: #ffb319;
+        border-color: #ffb319;
       }
     }
   }
@@ -856,6 +867,7 @@ onMounted(() => {
   letter-spacing: 1px;
   text-align: right;
   padding-right: 80px;
+  color: #999;
 }
 
 .right {
@@ -867,6 +879,6 @@ onMounted(() => {
 }
 
 .gray {
-  color: #a7a7a7;
+  color: #999;
 }
 </style>

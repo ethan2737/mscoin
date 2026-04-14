@@ -43,4 +43,11 @@ func RegisterHandlers(r *Routers, serverCtx *svc.ServiceContext) {
 	withdrawGroup.Post("/uc/mobile/withdraw/code", withdraw.SendCode)
 	withdrawGroup.Post("/uc/withdraw/apply/code", withdraw.WithdrawCode)
 	withdrawGroup.Post("/uc/withdraw/record", withdraw.Record)
+	// 活动相关路由
+	activityGroup := r.Group()
+	activity := NewActivityHandler(serverCtx)
+	activityGroup.Post("/uc/activity/page-query", activity.ActivityPageQuery)
+	activityGroup.Post("/uc/activity/detail", activity.ActivityDetail)
+	activityGroup.Use(midd.Auth(serverCtx.Config.JWT.AccessSecret))
+	activityGroup.Post("/uc/activity/attend", activity.ActivityAttend)
 }

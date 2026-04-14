@@ -210,3 +210,57 @@ type AnnouncementMoreResp struct {
 	Back *ContentSummary `json:"back,omitempty"`
 	Next *ContentSummary `json:"next,omitempty"`
 }
+
+// Activity 活动数据结构
+type Activity struct {
+	Id             int64   `json:"id"`
+	Title          string  `json:"title"`
+	Detail         string  `json:"detail"`
+	SmallImageUrl  string  `json:"smallImageUrl"`
+	Type           int64   `json:"type"`           // 活动类型 1-5
+	Step           int64   `json:"step"`           // 活动状态 0-3
+	StartTime      int64   `json:"startTime"`      // 开始时间戳 (毫秒)
+	EndTime        int64   `json:"endTime"`        // 结束时间戳 (毫秒)
+	TotalSupply    float64 `json:"totalSupply"`    // 总量
+	TradedAmount   float64 `json:"tradedAmount"`   // 已兑数量
+	Progress       float64 `json:"progress"`       // 进度百分比
+	Price          float64 `json:"price"`          // 价格
+	PriceScale     int     `json:"priceScale"`     // 价格精度
+	Unit           string  `json:"unit"`           // 活动货币单位
+	AcceptUnit     string  `json:"acceptUnit"`     // 接受货币单位
+	AmountScale    int     `json:"amountScale"`    // 数量精度
+	MaxLimitAmout  float64 `json:"maxLimitAmout"`  // 最大限购量
+	MinLimitAmout  float64 `json:"minLimitAmout"`  // 最小限购量
+	LimitTimes     int     `json:"limitTimes"`     // 限购次数
+}
+
+// ActivityPageQueryReq 活动列表请求
+type ActivityPageQueryReq struct {
+	Step     int `json:"step,optional" form:"step,optional"`         // -1=全部，0=准备中，1=进行中，2=派发中，3=已完成
+	PageNo   int `json:"pageNo,optional" form:"pageNo,optional"`
+	PageSize int `json:"pageSize,optional" form:"pageSize,optional"`
+}
+
+// ActivityPageQueryResp 活动列表响应
+type ActivityPageQueryResp struct {
+	Content       []*Activity `json:"content"`
+	TotalElements int64       `json:"totalElements"`
+}
+
+// ActivityDetailReq 活动详情请求
+type ActivityDetailReq struct {
+	Id int64 `json:"id" form:"id"`
+}
+
+// ActivityAttendReq 参与活动请求
+type ActivityAttendReq struct {
+	ActivityId int64  `json:"activityId"`
+	Amount     float64 `json:"amount"`
+	Code       string `json:"code,optional"`
+	Aims       string `json:"aims,optional"`
+}
+
+// ActivityAttendResp 参与活动响应
+type ActivityAttendResp struct {
+	Success bool `json:"success"`
+}
