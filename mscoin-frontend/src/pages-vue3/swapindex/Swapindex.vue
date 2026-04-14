@@ -2278,6 +2278,10 @@ onBeforeUnmount(() => {
       min-width: 0;
     }
 
+    .market-rail .panel-header-compact {
+      margin-top: 10px;
+    }
+
     /* 左侧中部：最新交易 */
     .latest-trade-panel {
       grid-area: trade;
