@@ -674,7 +674,7 @@ onMounted(() => {
 }
 
 .activity_container {
-  padding: 0 50px;
+  padding: 0 20px;
   text-align: center;
   height: 100%;
   min-height: 600px;
