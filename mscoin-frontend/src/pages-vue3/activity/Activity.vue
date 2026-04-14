@@ -509,11 +509,16 @@ onMounted(() => {
 }
 
 .activity :deep(.el-tabs-nav .el-tabs-tab-active) {
-  color: #f0a70a;
+  color: #f0a70a !important;
 }
 
 .activity :deep(.el-tabs-is-top .el-tabs__nav-wrap::after) {
-  background-color: #f0a70a;
+  background-color: #f0a70a !important;
+}
+
+/* 修复 tabs 底部激活条颜色 */
+.activity :deep(.el-tabs__active-bar) {
+  background-color: #f0a70a !important;
 }
 
 .app_bottom {
@@ -639,7 +644,7 @@ onMounted(() => {
 }
 
 .activity_container {
-  padding: 0 12%;
+  padding: 0 5%;
   text-align: center;
   height: 100%;
   min-height: 600px;
@@ -684,17 +689,17 @@ onMounted(() => {
 
 .activity-item {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   padding: 15px 20px;
   margin-top: 25px;
   margin-bottom: 25px;
-  width: 98%;
-  margin-left: 1%;
+  width: 100%;
   min-height: 20px;
   background: #17212e;
   border-radius: 8px;
   border: 1px solid #1f2833;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 
   &:hover {
     box-shadow: 0 0 25px rgba(240, 167, 10, 0.3);
@@ -789,29 +794,37 @@ onMounted(() => {
 .row-container {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .col-img {
   flex: 0 0 auto;
   width: 160px;
+  flex-shrink: 0;
 }
 
 .col-content {
   flex: 1;
   padding-left: 15px;
+  min-width: 0;
 }
 
 .row-inner {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .col-progress {
-  flex: 0 0 40%;
+  flex: 1;
+  min-width: 200px;
 }
 
 .col-time {
   flex: 1;
+  min-width: 200px;
 }
 
 .progress-text {
@@ -841,7 +854,7 @@ onMounted(() => {
 
     span {
       font-size: 12px;
-      color: #999;
+      color: #ccc;
       margin-top: 15px;
     }
 
