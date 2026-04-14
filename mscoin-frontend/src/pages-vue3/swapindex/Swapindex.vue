@@ -2547,7 +2547,7 @@ onBeforeUnmount(() => {
   }
 
   .account-panel {
-    min-height: 352px;
+    min-height: 120px;
     color: var(--swap-text-muted);
     order: 1;
   }
