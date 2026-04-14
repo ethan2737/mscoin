@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
 	"ucenter-api/internal/logic"
 	"ucenter-api/internal/svc"
@@ -37,8 +39,11 @@ func (h *ActivityHandler) ActivityPageQuery(w http.ResponseWriter, r *http.Reque
 // ActivityDetail 活动详情
 func (h *ActivityHandler) ActivityDetail(w http.ResponseWriter, r *http.Request) {
 	var req types.ActivityDetailReq
-	if err := httpx.Parse(r, &req); err != nil {
-		httpx.ErrorCtx(r.Context(), w, err)
+	// 从 URL query 参数解析 id
+	req.Id, _ = strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+
+	if req.Id == 0 {
+		httpx.ErrorCtx(r.Context(), w, errors.New("id is required"))
 		return
 	}
 
